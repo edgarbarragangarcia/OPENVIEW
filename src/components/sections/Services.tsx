@@ -1,7 +1,13 @@
 "use client";
 
 import React from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import {
+    motion,
+    useAnimationFrame,
+    useMotionValue,
+    useTransform,
+    useMotionTemplate
+} from "framer-motion";
 import {
     AppWindow,
     Settings2,
@@ -19,128 +25,82 @@ import {
 import { cn } from "@/lib/utils";
 
 const services = [
-    {
-        title: "Application Services",
-        icon: AppWindow,
-        shade: "sapphire"
-    },
-    {
-        title: "Business Process Services",
-        icon: Settings2,
-        shade: "slate"
-    },
-    {
-        title: "Cloud",
-        icon: Cloud,
-        shade: "silver"
-    },
-    {
-        title: "Consulting",
-        icon: Lightbulb,
-        shade: "gold"
-    },
-    {
-        title: "Cybersecurity",
-        icon: ShieldAlert,
-        shade: "ruby"
-    },
-    {
-        title: "Data and Analytics",
-        icon: BarChart,
-        shade: "emerald"
-    },
-    {
-        title: "Digital Workplace",
-        icon: Laptop,
-        shade: "amethyst"
-    },
-    {
-        title: "Enterprise Platforms",
-        icon: Database,
-        shade: "copper"
-    },
-    {
-        title: "Generative AI",
-        icon: BrainCircuit,
-        shade: "titanium"
-    },
-    {
-        title: "Enterprise Networking",
-        icon: Network,
-        shade: "sapphire"
-    },
-    {
-        title: "Sustainability",
-        icon: Leaf,
-        shade: "emerald"
-    },
-    {
-        title: "Infrastructure",
-        icon: Server,
-        shade: "slate"
-    }
+    { title: "Application Services", icon: AppWindow, shade: "sapphire" },
+    { title: "Business Process", icon: Settings2, shade: "slate" },
+    { title: "Cloud", icon: Cloud, shade: "silver" },
+    { title: "Consulting", icon: Lightbulb, shade: "gold" },
+    { title: "Cybersecurity", icon: ShieldAlert, shade: "ruby" },
+    { title: "Data & Analytics", icon: BarChart, shade: "emerald" },
+    { title: "Digital Workplace", icon: Laptop, shade: "amethyst" },
+    { title: "Platforms", icon: Database, shade: "copper" },
+    { title: "Generative AI", icon: BrainCircuit, shade: "titanium" },
+    { title: "Networking", icon: Network, shade: "sapphire" },
+    { title: "Sustainability", icon: Leaf, shade: "emerald" },
+    { title: "Infrastructure", icon: Server, shade: "slate" }
 ];
 
-const RotatingCard = ({ service, index }: { service: any; index: number }) => {
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
+const RADIUS = 700; // Orbit radius - slightly smaller to keep it in view
 
-    const mouseXSpring = useSpring(x);
-    const mouseYSpring = useSpring(y);
+const SphereCard = ({ service, index, total, rotation }: { service: any; index: number; total: number; rotation: any }) => {
+    const angle = (index / total) * Math.PI * 2;
 
-    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
-    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
+    // Calculate 3D position
+    const x = useTransform(rotation, (r) => Math.sin(angle + r) * RADIUS);
+    const z = useTransform(rotation, (r) => Math.cos(angle + r) * RADIUS);
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const width = rect.width;
-        const height = rect.height;
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        x.set(mouseX / width - 0.5);
-        y.set(mouseY / height - 0.5);
-    };
-
-    const handleMouseLeave = () => {
-        x.set(0);
-        y.set(0);
-    };
+    // Multi-dimensional scaling and opacity based on Z-depth
+    const opacity = useTransform(z, [-RADIUS, 0, RADIUS], [0.1, 0.4, 1]);
+    const scale = useTransform(z, [-RADIUS, RADIUS], [0.6, 1.1]);
+    const blurValue = useTransform(z, [-RADIUS, 0, RADIUS], [8, 2, 0]);
+    const blur = useMotionTemplate`blur(${blurValue}px)`;
 
     return (
         <motion.div
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
             style={{
-                rotateY,
-                rotateX,
+                x,
+                z,
+                opacity,
+                scale,
+                filter: blur,
                 transformStyle: "preserve-3d",
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                marginLeft: "-100px",
+                marginTop: "-110px",
             }}
             className={cn(
-                "relative h-[220px] w-[200px] shrink-0 rounded-[2rem] p-6 metallic-card border border-white/10 group flex flex-col items-center justify-center text-center overflow-hidden",
+                "h-[220px] w-[200px] rounded-[2rem] p-6 metallic-card border border-white/10 flex flex-col items-center justify-center text-center",
                 service.shade
             )}
         >
-            <div style={{ transform: "translateZ(30px)" }} className="relative z-20">
-                <div className="mb-4 p-3 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors inline-block">
-                    <service.icon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+            <div className="relative z-20">
+                <div className="mb-4 p-3 rounded-full bg-white/5 inline-block">
+                    <service.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-white tracking-tight leading-tight">
                     {service.title}
                 </h3>
             </div>
             {/* Reflection */}
-            <div className="absolute inset-0 z-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/10 to-transparent" />
+            <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-white/10 to-transparent opacity-50" />
         </motion.div>
     );
 };
 
 export const Services = () => {
-    // Duplicate services for seamless loop
-    const loopedServices = [...services, ...services, ...services];
+    const rotation = useMotionValue(0);
+
+    useAnimationFrame((time, delta) => {
+        rotation.set(rotation.get() + delta * 0.0004); // Constant smooth rotation
+    });
 
     return (
-        <section id="servicios" className="py-32 relative overflow-hidden bg-black">
-            <div className="max-w-7xl mx-auto px-6 mb-16 text-center">
+        <section id="servicios" className="relative h-[1000px] overflow-hidden bg-black -mt-[45vh] md:-mt-[55vh] pointer-events-none">
+            {/* Background Atmosphere */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03)_0%,_transparent_70%)]" />
+
+            <div className="max-w-7xl mx-auto px-6 pt-[20vh] text-center relative z-50">
                 <motion.h2
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -151,41 +111,27 @@ export const Services = () => {
                 </motion.h2>
             </div>
 
-            {/* Orbiting Carousel Container */}
-            <div className="relative flex items-center">
-                <motion.div
-                    animate={{
-                        x: [0, -200 * services.length - 32 * services.length], // Width of icons + gap
-                    }}
-                    transition={{
-                        x: {
-                            repeat: Infinity,
-                            repeatType: "loop",
-                            duration: 40,
-                            ease: "linear",
-                        },
-                    }}
-                    className="flex gap-8 hover:[animation-play-state:paused]"
+            {/* Sphere Scene */}
+            <div className="absolute inset-x-0 bottom-0 top-[200px] perspective-[2500px] flex items-center justify-center scale-75 md:scale-100">
+                <div
+                    className="relative w-full h-full flex items-center justify-center transform-gpu"
+                    style={{ transformStyle: "preserve-3d" }}
                 >
-                    {loopedServices.map((service, index) => (
-                        <RotatingCard key={`${service.title}-${index}`} service={service} index={index} />
+                    {services.map((service, index) => (
+                        <SphereCard
+                            key={service.title}
+                            service={service}
+                            index={index}
+                            total={services.length}
+                            rotation={rotation}
+                        />
                     ))}
-                </motion.div>
-
-                {/* Fade edges */}
-                <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-black to-transparent z-30 pointer-events-none" />
-                <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-black to-transparent z-30 pointer-events-none" />
+                </div>
             </div>
 
-            <style jsx global>{`
-                .no-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-                .no-scrollbar {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-            `}</style>
+            {/* Atmosphere gradients for depth isolation */}
+            <div className="absolute inset-x-0 top-0 h-[300px] bg-gradient-to-b from-black via-black/80 to-transparent z-40" />
+            <div className="absolute inset-x-0 bottom-0 h-[200px] bg-gradient-to-t from-black to-transparent z-40" />
         </section>
     );
 };
