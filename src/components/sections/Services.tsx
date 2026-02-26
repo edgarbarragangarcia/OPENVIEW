@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
     motion,
     useAnimationFrame,
     useMotionValue,
     useTransform,
-    useMotionTemplate
+    useMotionTemplate,
+    MotionValue
 } from "framer-motion";
 import {
     AppWindow,
@@ -25,33 +26,33 @@ import {
 import { cn } from "@/lib/utils";
 
 const services = [
-    { title: "Application Services", icon: AppWindow, shade: "sapphire" },
-    { title: "Business Process", icon: Settings2, shade: "slate" },
-    { title: "Cloud", icon: Cloud, shade: "silver" },
-    { title: "Consulting", icon: Lightbulb, shade: "gold" },
-    { title: "Cybersecurity", icon: ShieldAlert, shade: "ruby" },
-    { title: "Data & Analytics", icon: BarChart, shade: "emerald" },
-    { title: "Digital Workplace", icon: Laptop, shade: "amethyst" },
-    { title: "Platforms", icon: Database, shade: "copper" },
-    { title: "Generative AI", icon: BrainCircuit, shade: "titanium" },
-    { title: "Networking", icon: Network, shade: "sapphire" },
-    { title: "Sustainability", icon: Leaf, shade: "emerald" },
-    { title: "Infrastructure", icon: Server, shade: "slate" }
+    { title: "Application Services", description: "Diseño y desarrollo de apps de próxima generación.", icon: AppWindow, shade: "sapphire" },
+    { title: "Business Process", description: "Optimización y automatización de procesos críticos.", icon: Settings2, shade: "slate" },
+    { title: "Cloud", description: "Transformación digital con arquitecturas híbridas.", icon: Cloud, shade: "silver" },
+    { title: "Consulting", description: "Estrategias tecnológicas que conectan con el negocio.", icon: Lightbulb, shade: "gold" },
+    { title: "Cybersecurity", description: "Protección integral de activos digitales.", icon: ShieldAlert, shade: "ruby" },
+    { title: "Data & Analytics", description: "Inteligencia accionable mediante analítica avanzada.", icon: BarChart, shade: "emerald" },
+    { title: "Digital Workplace", description: "Entornos de trabajo modernos y fluidos.", icon: Laptop, shade: "amethyst" },
+    { title: "Platforms", description: "Optimización de plataformas SAP y Salesforce.", icon: Database, shade: "copper" },
+    { title: "Generative AI", description: "Innovación con modelos de IA personalizados.", icon: BrainCircuit, shade: "titanium" },
+    { title: "Networking", description: "Conectividad robusta a escala global.", icon: Network, shade: "sapphire" },
+    { title: "Sustainability", description: "Tecnología para objetivos ambientales ESG.", icon: Leaf, shade: "emerald" },
+    { title: "Infrastructure", description: "Sistemas de alto rendimiento para demandas tecnológicas.", icon: Server, shade: "slate" }
 ];
 
-const RADIUS = 700; // Orbit radius - slightly smaller to keep it in view
+const RADIUS = 500; // Much closer cards
 
-const SphereCard = ({ service, index, total, rotation }: { service: any; index: number; total: number; rotation: any }) => {
+const SphereCard = ({ service, index, total, rotation }: { service: any; index: number; total: number; rotation: MotionValue<number> }) => {
     const angle = (index / total) * Math.PI * 2;
 
     // Calculate 3D position
     const x = useTransform(rotation, (r: number) => Math.sin(angle + r) * RADIUS);
     const z = useTransform(rotation, (r: number) => Math.cos(angle + r) * RADIUS);
 
-    // Multi-dimensional scaling and opacity based on Z-depth
-    const opacity = useTransform(z, [-RADIUS, 0, RADIUS], [0.1, 0.4, 1]);
-    const scale = useTransform(z, [-RADIUS, RADIUS], [0.6, 1.1]);
-    const blurValue = useTransform(z, [-RADIUS, 0, RADIUS], [8, 2, 0]);
+    // Dynamic effects based on Z-depth
+    const opacity = useTransform(z, [-RADIUS, 0, RADIUS], [0.05, 0.3, 1]);
+    const scale = useTransform(z, [-RADIUS, RADIUS], [0.6, 1.3]);
+    const blurValue = useTransform(z, [-RADIUS, 0, RADIUS], [15, 3, 0]);
     const blur = useMotionTemplate`blur(${blurValue}px)`;
 
     return (
@@ -66,53 +67,94 @@ const SphereCard = ({ service, index, total, rotation }: { service: any; index: 
                 position: "absolute",
                 left: "50%",
                 top: "50%",
-                marginLeft: "-100px",
-                marginTop: "-110px",
+                marginLeft: "-120px",
+                marginTop: "-150px",
             }}
             className={cn(
-                "h-[220px] w-[200px] rounded-[2rem] p-6 metallic-card border border-white/10 flex flex-col items-center justify-center text-center",
+                "h-[300px] w-[240px] rounded-[3rem] p-10 metallic-card border border-white/5 flex flex-col items-center justify-center text-center",
                 service.shade
             )}
         >
-            <div className="relative z-20">
-                <div className="mb-4 p-3 rounded-full bg-white/5 inline-block">
-                    <service.icon className="w-6 h-6 text-white" />
+            <div className="relative z-20 flex flex-col items-center h-full justify-center">
+                <div className="mb-6 p-4 rounded-full bg-white/5 inline-block">
+                    <service.icon className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-white tracking-tight leading-tight">
+                <h3 className="text-xl font-bold text-white tracking-tight leading-none mb-4">
                     {service.title}
                 </h3>
+                <p className="text-[12px] text-white/40 leading-relaxed font-medium">
+                    {service.description}
+                </p>
             </div>
-            {/* Reflection */}
-            <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-white/10 to-transparent opacity-50" />
+            {/* Glossy reflection layer */}
+            <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-white/10 to-transparent opacity-30" />
         </motion.div>
     );
 };
 
 export const Services = () => {
     const rotation = useMotionValue(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const lastX = useRef(0);
+    const autoRotateSpeed = useRef(0.0001); // Even slower for elegance
+    const dragFactor = 0.005;
 
+    // Automatic smooth orbit
     useAnimationFrame((time, delta) => {
-        rotation.set(rotation.get() + delta * 0.0004); // Constant smooth rotation
+        if (!isDragging) {
+            rotation.set(rotation.get() + delta * autoRotateSpeed.current);
+        }
     });
 
-    return (
-        <section id="servicios" className="relative h-[1000px] overflow-hidden bg-transparent -mt-[45vh] md:-mt-[55vh] pointer-events-none">
-            {/* Background Atmosphere */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03)_0%,_transparent_70%)]" />
+    const handlePointerDown = (e: React.PointerEvent) => {
+        setIsDragging(true);
+        lastX.current = e.clientX;
+    };
 
-            <div className="max-w-7xl mx-auto px-6 pt-[20vh] text-center relative z-50">
+    const handlePointerUp = () => setIsDragging(false);
+
+    const handlePointerMove = (e: React.PointerEvent) => {
+        if (!isDragging) return;
+
+        const deltaX = e.clientX - lastX.current;
+        lastX.current = e.clientX;
+
+        // Direct control of rotation
+        rotation.set(rotation.get() + deltaX * dragFactor);
+
+        // Reverse auto-rotate direction based on drag
+        if (Math.abs(deltaX) > 2) {
+            autoRotateSpeed.current = deltaX > 0 ? 0.0001 : -0.0001;
+        }
+    };
+
+    return (
+        <section
+            id="servicios"
+            className="relative h-[1100px] overflow-visible bg-transparent -mt-[48vh] md:-mt-[58vh] border-none outline-none select-none"
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            onPointerMove={handlePointerMove}
+            style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
+        >
+            {/* Blending layers to eliminate any visible split line */}
+            <div className="absolute inset-0 bg-transparent pointer-events-none" />
+
+            <div className="max-w-7xl mx-auto px-6 pt-[20vh] text-center relative z-50 pointer-events-none">
                 <motion.h2
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="text-4xl md:text-6xl font-bold text-white tracking-tighter"
+                    className="text-5xl md:text-8xl font-bold text-white tracking-tighter"
                 >
-                    Ecosistema de <span className="text-white/40">Servicios.</span>
+                    Ecosistema de <br />
+                    <span className="text-white/20">Nuestros Servicios.</span>
                 </motion.h2>
             </div>
 
-            {/* Sphere Scene */}
-            <div className="absolute inset-x-0 bottom-0 top-[200px] perspective-[2500px] flex items-center justify-center scale-75 md:scale-100">
+            {/* 3D Sphere Scene */}
+            <div className="absolute inset-0 perspective-[4000px] flex items-center justify-center">
                 <div
                     className="relative w-full h-full flex items-center justify-center transform-gpu"
                     style={{ transformStyle: "preserve-3d" }}
@@ -129,8 +171,8 @@ export const Services = () => {
                 </div>
             </div>
 
-            {/* Atmosphere gradients for depth isolation */}
-            <div className="absolute inset-x-0 bottom-0 h-[200px] bg-gradient-to-t from-black to-transparent z-40" />
+            {/* Bottom shadow blend */}
+            <div className="absolute inset-x-0 bottom-0 h-[400px] bg-gradient-to-t from-black via-black/40 to-transparent z-40 pointer-events-none" />
         </section>
     );
 };
