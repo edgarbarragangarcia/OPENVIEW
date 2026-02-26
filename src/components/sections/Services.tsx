@@ -45,8 +45,8 @@ const SphereCard = ({ service, index, total, rotation }: { service: any; index: 
     const angle = (index / total) * Math.PI * 2;
 
     // Calculate 3D position
-    const x = useTransform(rotation, (r) => Math.sin(angle + r) * RADIUS);
-    const z = useTransform(rotation, (r) => Math.cos(angle + r) * RADIUS);
+    const x = useTransform(rotation, (r: number) => Math.sin(angle + r) * RADIUS);
+    const z = useTransform(rotation, (r: number) => Math.cos(angle + r) * RADIUS);
 
     // Multi-dimensional scaling and opacity based on Z-depth
     const opacity = useTransform(z, [-RADIUS, 0, RADIUS], [0.1, 0.4, 1]);
@@ -96,7 +96,7 @@ export const Services = () => {
     });
 
     return (
-        <section id="servicios" className="relative h-[1000px] overflow-hidden bg-black -mt-[45vh] md:-mt-[55vh] pointer-events-none">
+        <section id="servicios" className="relative h-[1000px] overflow-hidden bg-transparent -mt-[45vh] md:-mt-[55vh] pointer-events-none">
             {/* Background Atmosphere */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03)_0%,_transparent_70%)]" />
 
@@ -130,7 +130,6 @@ export const Services = () => {
             </div>
 
             {/* Atmosphere gradients for depth isolation */}
-            <div className="absolute inset-x-0 top-0 h-[300px] bg-gradient-to-b from-black via-black/80 to-transparent z-40" />
             <div className="absolute inset-x-0 bottom-0 h-[200px] bg-gradient-to-t from-black to-transparent z-40" />
         </section>
     );
