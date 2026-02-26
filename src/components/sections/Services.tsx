@@ -99,7 +99,7 @@ const services = [
     }
 ];
 
-const RADIUS = 650; // Cards closer together as requested
+const RADIUS = 520; // Even tighter grouping for a dense ecosystem feel
 
 const SphereCard = ({ service, index, total, rotation }: { service: any; index: number; total: number; rotation: MotionValue<number> }) => {
     const angle = (index / total) * Math.PI * 2;
@@ -203,7 +203,7 @@ export const Services = () => {
             </div>
 
             {/* 3D Sphere Scene - Adjusted push to respect the title padding */}
-            <div className="absolute inset-0 perspective-[4000px] flex items-center justify-center pt-[300px]">
+            <div className="absolute inset-0 perspective-[4000px] flex items-center justify-center pt-[180px]">
                 <div
                     className="relative w-full h-full flex items-center justify-center transform-gpu"
                     style={{ transformStyle: "preserve-3d" }}
