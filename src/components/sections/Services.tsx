@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useRef } from "react";
+import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import {
     AppWindow,
     Settings2,
@@ -105,6 +105,67 @@ const services = [
     }
 ];
 
+const ServiceCard = ({ service, index }: { service: any; index: number }) => {
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    function onMouseMove({ currentTarget, clientX, clientY }: any) {
+        const { left, top } = currentTarget.getBoundingClientRect();
+        mouseX.set(clientX - left);
+        mouseY.set(clientY - top);
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: (index % 3) * 0.1 }}
+            onMouseMove={onMouseMove}
+            whileHover={{ scale: 1.02 }}
+            className={cn(
+                "group relative p-10 flex flex-col items-center text-center rounded-[2.5rem] overflow-hidden metallic-card border border-white/5",
+                service.shade
+            )}
+            style={{
+                perspective: 1000
+            }}
+        >
+            {/* Shine Overlay tracking mouse position */}
+            <motion.div
+                className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                    background: useMotionTemplate`
+                        radial-gradient(
+                            600px circle at ${mouseX}px ${mouseY}px,
+                            rgba(255, 255, 255, 0.1),
+                            transparent 80%
+                        )
+                    `
+                }}
+            />
+
+            <div className="relative z-20">
+                <div className="mb-6 p-4 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors inline-block">
+                    <service.icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform duration-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">
+                    {service.title}
+                </h3>
+                <p className="text-white/70 text-sm leading-relaxed mb-8 font-medium">
+                    {service.description}
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                    {service.tech.map((t: string) => (
+                        <span key={t} className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-bold">
+                            {t}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
 export const Services = () => {
     return (
         <section id="servicios" className="py-32 relative px-6 overflow-hidden bg-black">
@@ -124,34 +185,7 @@ export const Services = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {services.map((service, index) => (
-                        <motion.div
-                            key={service.title}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true, margin: "-50px" }}
-                            transition={{ duration: 0.8, delay: (index % 3) * 0.1 }}
-                            className={cn(
-                                "apple-card p-10 flex flex-col items-center text-center group metallic-card",
-                                service.shade
-                            )}
-                        >
-                            <div className="mb-6 p-4 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                                <service.icon className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">
-                                {service.title}
-                            </h3>
-                            <p className="text-white/80 text-sm leading-relaxed mb-8 flex-grow font-medium">
-                                {service.description}
-                            </p>
-                            <div className="flex flex-wrap justify-center gap-3">
-                                {service.tech.map((t) => (
-                                    <span key={t} className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-bold">
-                                        {t}
-                                    </span>
-                                ))}
-                            </div>
-                        </motion.div>
+                        <ServiceCard key={service.title} service={service} index={index} />
                     ))}
                 </div>
             </div>
