@@ -3,31 +3,127 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --primary: 0 0% 0%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 0 0% 92%;
+  --border: 0 0% 90%;
+  --radius: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+.dark {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 4%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 60%;
+  --accent: 0 0% 10%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 15%;
+  --input: 0 0% 15%;
+  --ring: 0 0% 100%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: -0.01em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight font-bold;
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+.text-gradient {
+  background: linear-gradient(to right, #fff 20%, rgba(255, 255, 255, 0.4) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.section-padding {
+  @apply py-32 px-6;
+}
+
+.apple-card {
+  @apply bg-[#141415] rounded-[2.5rem] overflow-hidden transition-all duration-700 hover:scale-[1.02] border border-white/5;
+}
+
+.metallic-card {
+  background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 50%, #1c1c1e 100%);
+  position: relative;
+}
+
+.metallic-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.02) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+.titanium {
+  background: linear-gradient(135deg, #232325 0%, #38383b 50%, #232325 100%);
+}
+
+.silver {
+  background: linear-gradient(135deg, #444446 0%, #5a5a5d 50%, #444446 100%);
+}
+
+.slate {
+  background: linear-gradient(135deg, #161617 0%, #252526 50%, #161617 100%);
+}
+
+.gold {
+  background: linear-gradient(135deg, #4a3a0f 0%, #a67c00 50%, #4a3a0f 100%);
+}
+
+.ruby {
+  background: linear-gradient(135deg, #4a0f0f 0%, #a60000 50%, #4a0f0f 100%);
+}
+
+.emerald {
+  background: linear-gradient(135deg, #0f4a1a 0%, #00a635 50%, #0f4a1a 100%);
+}
+
+.sapphire {
+  background: linear-gradient(135deg, #0f1a4a 0%, #0035a6 50%, #0f1a4a 100%);
+}
+
+.copper {
+  background: linear-gradient(135deg, #4a1d0f 0%, #a63500 50%, #4a1d0f 100%);
+}
+
+.amethyst {
+  background: linear-gradient(135deg, #2d0f4a 0%, #6200a6 50%, #2d0f4a 100%);
 }
