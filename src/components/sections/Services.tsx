@@ -99,7 +99,7 @@ const services = [
     }
 ];
 
-const RADIUS = 950; // Spacious orbit
+const RADIUS = 650; // Cards closer together as requested
 
 const SphereCard = ({ service, index, total, rotation }: { service: any; index: number; total: number; rotation: MotionValue<number> }) => {
     const angle = (index / total) * Math.PI * 2;
