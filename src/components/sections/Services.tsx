@@ -186,14 +186,14 @@ export const Services = () => {
     return (
         <section
             id="servicios"
-            className="relative h-[800px] md:h-[1100px] overflow-visible bg-transparent -mt-[15vh] md:-mt-[45vh] border-none outline-none select-none"
+            className="relative h-[800px] md:h-[1100px] overflow-visible bg-transparent -mt-[55vh] md:-mt-[45vh] border-none outline-none select-none"
             onPointerDown={handlePointerDown}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
             onPointerMove={handlePointerMove}
             style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
         >
-            <div className="max-w-7xl mx-auto px-6 pt-[10vh] md:pt-[5vh] mb-[20px] md:mb-[40px] text-center relative z-50 pointer-events-none">
+            <div className="max-w-7xl mx-auto px-6 pt-0 md:pt-[5vh] mb-[20px] md:mb-[40px] text-center relative z-50 pointer-events-none">
                 <motion.h2
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
