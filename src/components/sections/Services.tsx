@@ -159,15 +159,15 @@ export const Services = () => {
     return (
         <section
             id="servicios"
-            className="relative h-[1100px] overflow-visible bg-transparent -mt-[20vh] md:-mt-[25vh] border-none outline-none select-none"
+            className="relative h-[1100px] overflow-visible bg-transparent -mt-[35vh] md:-mt-[45vh] border-none outline-none select-none"
             onPointerDown={handlePointerDown}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
             onPointerMove={handlePointerMove}
             style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
         >
-            {/* Reduced padding to raise it slightly */}
-            <div className="max-w-7xl mx-auto px-6 pt-[10vh] mb-[60px] text-center relative z-50 pointer-events-none">
+            {/* Even less padding to move the header higher */}
+            <div className="max-w-7xl mx-auto px-6 pt-[5vh] mb-[40px] text-center relative z-50 pointer-events-none">
                 <motion.h2
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
