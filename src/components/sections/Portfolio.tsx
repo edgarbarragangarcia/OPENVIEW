@@ -27,8 +27,8 @@ const projects = [
 
 export const Portfolio = () => {
     return (
-        <section id="portafolio" className="py-32 relative px-6 bg-black">
-            <div className="max-w-7xl mx-auto mb-24">
+        <section id="portafolio" className="pt-0 pb-32 relative px-6 bg-transparent -mt-[35vh] md:-mt-[40vh]">
+            <div className="max-w-7xl mx-auto mb-12 text-center">
                 <motion.h2
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

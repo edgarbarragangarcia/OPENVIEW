@@ -12,90 +12,67 @@ import {
 import {
     SiNextdotjs,
     SiSalesforce,
-    SiAmazon,
-    SiCloudflare,
     SiSnowflake,
     SiSlack,
-    SiSap,
-    SiOpenai,
-    SiCisco,
-    SiDocker
+    SiOpenai
 } from "react-icons/si";
-import { Leaf, Layout, Monitor, ShieldCheck, Database, BrainCircuit, Network, Server, Settings2, Cloud, AppWindow } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Layout, Monitor, BrainCircuit, Settings2, AppWindow, Rocket, Palette, Zap, Megaphone } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 const services = [
     {
-        title: "Application Services",
-        description: "Diseño y desarrollo de apps de próxima generación con Next.js y React.",
+        title: "Product Engineering",
+        description: "Construcción de productos digitales escalables con tecnologías de vanguardia.",
         icon: SiNextdotjs,
         shade: "sapphire"
     },
     {
-        title: "Business Process",
-        description: "Optimización y automatización con Salesforce y soluciones CRM.",
-        icon: SiSalesforce,
-        shade: "slate"
-    },
-    {
-        title: "Cloud",
-        description: "Infraestructura escalable y segura potenciada por AWS.",
-        icon: SiAmazon,
-        shade: "silver"
-    },
-    {
-        title: "Consulting",
-        description: "Estrategias de transformación digital con el ecosistema moderno.",
-        icon: Layout,
+        title: "Strategy & UX",
+        description: "Diseño de experiencias centradas en el usuario y rutas estratégicas de innovación.",
+        icon: Palette,
         shade: "gold"
     },
     {
-        title: "Cybersecurity",
-        description: "Protección integral de red y datos con Cloudflare Zero Trust.",
-        icon: SiCloudflare,
-        shade: "ruby"
-    },
-    {
-        title: "Data & Analytics",
-        description: "Inteligencia de datos avanzada con Snowflake y Big Data.",
-        icon: SiSnowflake,
-        shade: "emerald"
-    },
-    {
-        title: "Digital Workplace",
-        description: "Entornos de colaboración fluidos integrando Slack y Teams.",
-        icon: SiSlack,
-        shade: "amethyst"
-    },
-    {
-        title: "Platforms",
-        description: "Implementación y consultoría experta en ERP con SAP.",
-        icon: SiSap,
-        shade: "copper"
-    },
-    {
         title: "Generative AI",
-        description: "Innovación exponencial con modelos de OpenAI y LLMs.",
+        description: "Soluciones disruptivas con IA generativa para transformar operaciones de negocio.",
         icon: SiOpenai,
         shade: "titanium"
     },
     {
-        title: "Networking",
-        description: "Conectividad robusta y segura con tecnología Cisco.",
-        icon: SiCisco,
-        shade: "sapphire"
+        title: "Digital Strategy",
+        description: "Hoja de ruta para la transformación y competitividad en la era digital.",
+        icon: Rocket,
+        shade: "silver"
     },
     {
-        title: "Sustainability",
-        description: "Tecnología para objetivos ambientales y reportes ESG.",
-        icon: Leaf,
+        title: "Business Process",
+        description: "Optimización de flujos de trabajo con ecosistemas CRM modernos como Salesforce.",
+        icon: SiSalesforce,
+        shade: "slate"
+    },
+    {
+        title: "Data Intelligence",
+        description: "Analítica avanzada y Big Data para decisiones basadas en el conocimiento.",
+        icon: SiSnowflake,
         shade: "emerald"
     },
     {
-        title: "Infrastructure",
-        description: "Modernización de sistemas mediante contenedores Docker.",
-        icon: SiDocker,
-        shade: "slate"
+        title: "Growth Acceleration",
+        description: "Estrategias digitales de alto impacto para escalar el alcance y mercado.",
+        icon: Zap,
+        shade: "ruby"
+    },
+    {
+        title: "E-commerce Tech",
+        description: "Plataformas de comercio digital optimizadas para conversión y escala.",
+        icon: AppWindow,
+        shade: "amethyst"
+    },
+    {
+        title: "Enterprise Solutions",
+        description: "Ecosistemas de colaboración y plataformas corporativas integradas.",
+        icon: SiSlack,
+        shade: "copper"
     }
 ];
 
@@ -182,20 +159,20 @@ export const Services = () => {
     return (
         <section
             id="servicios"
-            className="relative h-[1100px] overflow-visible bg-transparent -mt-[40vh] md:-mt-[50vh] border-none outline-none select-none"
+            className="relative h-[1100px] overflow-visible bg-transparent -mt-[20vh] md:-mt-[25vh] border-none outline-none select-none"
             onPointerDown={handlePointerDown}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
             onPointerMove={handlePointerMove}
             style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
         >
-            {/* Header with padding */}
-            <div className="max-w-7xl mx-auto px-6 pt-[12vh] mb-[150px] text-center relative z-50 pointer-events-none">
+            {/* Reduced padding to raise it slightly */}
+            <div className="max-w-7xl mx-auto px-6 pt-[10vh] mb-[60px] text-center relative z-50 pointer-events-none">
                 <motion.h2
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="text-6xl md:text-9xl font-bold text-white tracking-tighter"
+                    className="text-4xl md:text-7xl font-bold text-white tracking-tighter"
                 >
                     Ecosistema de <br />
                     <span className="text-white/20">Nuestros Servicios.</span>
@@ -203,7 +180,7 @@ export const Services = () => {
             </div>
 
             {/* 3D Sphere Scene - Adjusted push to respect the title padding */}
-            <div className="absolute inset-0 perspective-[4000px] flex items-center justify-center pt-[180px]">
+            <div className="absolute inset-0 perspective-[4000px] flex items-center justify-center pt-0">
                 <div
                     className="relative w-full h-full flex items-center justify-center transform-gpu"
                     style={{ transformStyle: "preserve-3d" }}

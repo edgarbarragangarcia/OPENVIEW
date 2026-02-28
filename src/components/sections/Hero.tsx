@@ -44,21 +44,6 @@ export const Hero = () => {
                     Construimos productos digitales a la medida que transforman la manera en que las empresas operan, venden y se conectan con sus usuarios.
                 </motion.p>
 
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 0.8 }}
-                    className="flex flex-col sm:flex-row items-center justify-center gap-8 mt-20"
-                >
-                    <button className="text-white font-medium hover:text-primary transition-colors flex items-center gap-2 group">
-                        Conoce más
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-
-                    <button className="text-white font-medium hover:text-primary transition-colors">
-                        Ver video
-                    </button>
-                </motion.div>
             </motion.div>
 
             {/* Scroll Indicator */}
