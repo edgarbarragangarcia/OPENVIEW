@@ -27,20 +27,20 @@ const projects = [
 
 export const Portfolio = () => {
     return (
-        <section id="portafolio" className="pt-0 pb-32 relative px-6 bg-transparent -mt-[25vh] md:-mt-[30vh]">
-            <div className="max-w-7xl mx-auto mb-12 text-center">
+        <section id="portafolio" className="pt-0 pb-32 relative px-6 bg-transparent -mt-[10vh] md:-mt-[30vh]">
+            <div className="max-w-7xl mx-auto mb-16 md:mb-24 text-center">
                 <motion.h2
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight"
+                    className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight"
                 >
-                    Proyectos Seleccionados. <br />
-                    <span className="text-white/40">Calidad sobre cantidad.</span>
+                    Proyectos Seleccionados. <br className="hidden sm:block" />
+                    <span className="text-white/40"> Calidad sobre cantidad.</span>
                 </motion.h2>
             </div>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                 {projects.map((project, index) => (
                     <motion.div
                         key={project.title}

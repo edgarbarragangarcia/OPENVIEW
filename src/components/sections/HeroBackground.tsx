@@ -29,19 +29,22 @@ const Starfield = () => {
 
         let animationFrameId: number;
         let stars: Star[] = [];
-        const STAR_COUNT = 450;
+        let isMobile = false;
+
         const colors = ["#ffffff", "#e0f2fe", "#fef9c3", "#fee2e2"];
 
         const initStars = () => {
             const width = canvas.width = container.offsetWidth;
             const height = canvas.height = container.offsetHeight;
+            isMobile = window.innerWidth < 768;
+            const STAR_COUNT = isMobile ? 150 : 450;
             stars = [];
 
             for (let i = 0; i < STAR_COUNT; i++) {
                 stars.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    size: Math.random() * 2.5 + 0.8,
+                    size: Math.random() * (isMobile ? 1.5 : 2.5) + 0.5,
                     speed: Math.random() * 0.12 + 0.04,
                     opacity: Math.random() * 0.4 + 0.5,
                     twinkle: Math.random() * Math.PI,
@@ -57,9 +60,9 @@ const Starfield = () => {
 
             ctx.clearRect(0, 0, width, height);
 
-            // Subtle parallax based on mouse
-            const parallaxX = (mousePos.current.x - width / 2) * 0.015;
-            const parallaxY = (mousePos.current.y - height / 2) * 0.015;
+            // Parallax based on mouse/touch
+            const parallaxX = (mousePos.current.x - width / 2) * (isMobile ? 0.03 : 0.015);
+            const parallaxY = (mousePos.current.y - height / 2) * (isMobile ? 0.03 : 0.015);
 
             stars.forEach((star) => {
                 // Update twinkling
@@ -69,9 +72,11 @@ const Starfield = () => {
                 ctx.globalAlpha = currentOpacity;
                 ctx.fillStyle = star.color;
 
-                // Add a stronger glowing bloom effect
-                ctx.shadowBlur = star.size * 5;
-                ctx.shadowColor = star.color;
+                // Disable heavy shadowBlur on mobile for performance
+                if (!isMobile) {
+                    ctx.shadowBlur = star.size * 5;
+                    ctx.shadowColor = star.color;
+                }
 
                 ctx.beginPath();
 
@@ -86,8 +91,7 @@ const Starfield = () => {
                 );
                 ctx.fill();
 
-                // Reset shadow for performance
-                ctx.shadowBlur = 0;
+                if (!isMobile) ctx.shadowBlur = 0;
 
                 // Slow vertical drift
                 star.y -= star.speed;
@@ -106,17 +110,24 @@ const Starfield = () => {
         const handleMouseMove = (e: MouseEvent) => {
             mousePos.current = { x: e.clientX, y: e.clientY };
         };
+        const handleTouchMove = (e: TouchEvent) => {
+            if (e.touches[0]) {
+                mousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        };
 
         initStars();
         draw();
 
         window.addEventListener("resize", handleResize);
         window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("touchmove", handleTouchMove, { passive: true });
 
         return () => {
             cancelAnimationFrame(animationFrameId);
             window.removeEventListener("resize", handleResize);
             window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("touchmove", handleTouchMove);
         };
     }, []);
 
