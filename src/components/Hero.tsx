@@ -53,7 +53,7 @@ export function Hero() {
           </div>
 
           {/* Right Content - Abstract Sphere */}
-          <div className="lg:col-span-5 xl:col-span-4 relative flex justify-center lg:justify-end">
+          <div className="hidden lg:flex lg:col-span-5 xl:col-span-4 relative justify-center lg:justify-end">
             <div className="relative w-full aspect-square max-w-[500px] lg:max-w-full pointer-events-none">
 
               {/* Lightning/Electric Flashes */}
