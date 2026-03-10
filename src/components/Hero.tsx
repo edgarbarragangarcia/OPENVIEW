@@ -55,18 +55,59 @@ export function Hero() {
           {/* Right Content - Abstract Sphere */}
           <div className="lg:col-span-5 xl:col-span-4 relative flex justify-center lg:justify-end">
             <div className="relative w-full aspect-square max-w-[500px] lg:max-w-full pointer-events-none">
-              {/* Enhanced Glow */}
+
+              {/* Lightning/Electric Flashes */}
+              {[1, 2, 3, 4].map((i) => (
+                <motion.div
+                  key={`lightning-${i}`}
+                  animate={{
+                    opacity: [0, 0.8, 0, 0.6, 0],
+                    scale: [0.9, 1.2, 0.95, 1.4, 1],
+                  }}
+                  transition={{
+                    duration: 0.1 + (i * 0.05),
+                    repeat: Infinity,
+                    repeatDelay: 2 + Math.random() * 4,
+                    ease: "linear"
+                  }}
+                  className="absolute inset-0 bg-primary/40 blur-2xl rounded-full"
+                  style={{
+                    clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+                  }}
+                />
+              ))}
+
+              {/* High-frequency Aura Rays */}
+              {[1, 2, 3].map((i) => (
+                <motion.div
+                  key={`ray-${i}`}
+                  animate={{
+                    opacity: [0, 1, 0],
+                    rotate: [i * 120, i * 120 + 30],
+                    scaleY: [0, 1.5, 0],
+                  }}
+                  transition={{
+                    duration: 0.1,
+                    repeat: Infinity,
+                    repeatDelay: 1.5 + Math.random() * 3,
+                  }}
+                  className="absolute left-1/2 top-1/2 w-px h-[400px] bg-linear-to-t from-transparent via-primary to-white blur-px"
+                  style={{ originY: 1, x: "-50%", y: "-100%" }}
+                />
+              ))}
+
+              {/* Central Core Lightning Glow */}
               <motion.div
                 animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.5, 0.3],
+                  opacity: [0.4, 1, 0.4, 0.9, 0.4],
+                  scale: [1, 1.05, 0.98, 1.08, 1],
                 }}
                 transition={{
-                  duration: 4,
+                  duration: 0.4,
                   repeat: Infinity,
-                  ease: "easeInOut"
+                  ease: "linear"
                 }}
-                className="absolute inset-0 bg-primary/30 blur-[120px] rounded-full"
+                className="absolute inset-0 bg-primary/50 blur-[130px] rounded-full"
               />
 
               {imageUrl && (
@@ -74,25 +115,43 @@ export function Hero() {
                   initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
                   animate={{
                     opacity: 1,
-                    scale: [1.1, 1.15, 1.1],
-                    rotate: [0, 5, -5, 0],
-                    y: [0, -15, 0],
+                    scale: [1.1, 1.14, 1.1],
+                    rotate: [0, 3, -3, 0],
+                    y: [0, -8, 0],
                   }}
                   transition={{
                     opacity: { duration: 1.5, delay: 0.3 },
-                    scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-                    rotate: { duration: 8, repeat: Infinity, ease: "easeInOut" },
-                    y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+                    scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                    rotate: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+                    y: { duration: 3, repeat: Infinity, ease: "easeInOut" }
                   }}
-                  className="relative w-full h-full rounded-full overflow-hidden shadow-[0_0_50px_rgba(13,89,242,0.3)]"
-                  style={{
-                    backgroundImage: `url('${imageUrl}')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    maskImage: 'radial-gradient(circle, black 55%, transparent 100%)',
-                    WebkitMaskImage: 'radial-gradient(circle, black 55%, transparent 100%)',
-                  }}
-                />
+                  className="relative w-full h-full rounded-full overflow-hidden shadow-[0_0_120px_rgba(13,89,242,0.7)]"
+                >
+                  {/* BASE LAYER: Sharp image, fades out at edges */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url('${imageUrl}')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      maskImage: 'radial-gradient(circle, black 55%, transparent 80%)',
+                      WebkitMaskImage: 'radial-gradient(circle, black 55%, transparent 80%)',
+                      filter: 'contrast(1.1) brightness(1.1)',
+                    }}
+                  />
+                  {/* BLUR LAYER: Blurred image, only visible at edges via ring mask */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url('${imageUrl}')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      maskImage: 'radial-gradient(circle, transparent 50%, black 70%, transparent 100%)',
+                      WebkitMaskImage: 'radial-gradient(circle, transparent 50%, black 70%, transparent 100%)',
+                      filter: 'blur(8px) contrast(1.1) brightness(1.1)',
+                    }}
+                  />
+                </motion.div>
               )}
             </div>
           </div>
