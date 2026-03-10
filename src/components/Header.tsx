@@ -9,7 +9,7 @@ export function Header() {
             <img
               src="/Gemini_Generated_Image_8demn8demn8demn8.png"
               alt="Open View Logo"
-              className="h-10 w-10 rounded-lg object-cover"
+              className="h-10 w-24 rounded-lg object-contain"
             />
             <span className="font-display text-xl font-bold tracking-tight text-white whitespace-nowrap">
               Open View <span className="text-primary">Consultants</span>

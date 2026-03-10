@@ -33,7 +33,7 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="text-xl lg:text-2xl font-medium leading-relaxed text-white/80 mb-12 max-w-2xl"
             >
-              Cómo lograr un crecimiento sostenible en la era de la inteligencia masiva
+              Uniendo tecnología y visión estratégica para diseñar el futuro de las organizaciones líderes.
             </motion.p>
 
             <motion.div
