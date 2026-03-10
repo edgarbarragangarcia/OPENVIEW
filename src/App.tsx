@@ -15,10 +15,9 @@ import { GalaxyBackground } from './components/GalaxyBackground';
 
 export default function App() {
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden text-gray-900 font-body antialiased selection:bg-primary/20">
-      <GalaxyBackground />
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[#000511] text-white font-body antialiased selection:bg-primary/20">
       <Header />
-      <main className="flex-grow pt-8">
+      <main className="flex-grow">
         <Hero />
         <Features />
         <Products />
