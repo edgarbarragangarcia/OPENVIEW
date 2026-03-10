@@ -11,7 +11,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative isolate overflow-hidden bg-[#000511] min-h-screen flex items-center pt-20">
+    <section ref={containerRef} className="relative isolate overflow-hidden bg-ntt-dark min-h-screen flex items-center pt-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 w-full relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Content */}
@@ -42,11 +42,11 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="flex flex-col sm:flex-row items-center gap-5"
             >
-              <button className="group relative flex h-14 items-center justify-center rounded-full bg-[#fcc400] px-10 text-[17px] font-bold text-black transition-all hover:bg-[#fcc400]/90">
+              <button className="group relative flex h-14 items-center justify-center rounded-full bg-ntt-yellow px-10 text-[17px] font-bold text-black transition-all hover:bg-ntt-yellow/90">
                 Descubre más
                 <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={20} />
               </button>
-              <button className="group relative flex h-14 items-center justify-center rounded-full bg-[#fcc400] px-10 text-[17px] font-bold text-black transition-all hover:bg-[#fcc400]/90">
+              <button className="group relative flex h-14 items-center justify-center rounded-full bg-ntt-yellow px-10 text-[17px] font-bold text-black transition-all hover:bg-ntt-yellow/90">
                 Lee la noticia
                 <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={20} />
               </button>
@@ -78,7 +78,7 @@ export function Hero() {
       </div>
 
       {/* Subtle bottom gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-[#000511] via-[#000511]/40 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-ntt-dark via-ntt-dark/40 to-transparent" />
     </section>
   );
 }
