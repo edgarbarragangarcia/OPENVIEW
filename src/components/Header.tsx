@@ -5,13 +5,15 @@ export function Header() {
     <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-ntt-dark/80 backdrop-blur-lg">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
         <div className="flex items-center gap-10">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
             <img
               src="/Gemini_Generated_Image_8demn8demn8demn8.png"
               alt="Open View Logo"
               className="h-10 w-10 rounded-lg object-cover"
             />
-            <span className="font-display text-2xl font-black tracking-tighter text-white">OPEN<span className="text-primary">VIEW</span></span>
+            <span className="font-display text-xl font-bold tracking-tight text-white whitespace-nowrap">
+              Open View <span className="text-primary">Consultants</span>
+            </span>
           </div>
 
           <nav className="hidden lg:flex items-center gap-6">
