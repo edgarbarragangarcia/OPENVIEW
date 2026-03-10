@@ -70,10 +70,7 @@ export function Hero() {
                     repeatDelay: 2 + Math.random() * 4,
                     ease: "linear"
                   }}
-                  className="absolute inset-0 bg-primary/40 blur-2xl rounded-full"
-                  style={{
-                    clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-                  }}
+                  className="absolute inset-0 bg-primary/40 blur-3xl rounded-full"
                 />
               ))}
 
