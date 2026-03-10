@@ -23,8 +23,7 @@ export function Hero() {
               className="font-serif text-5xl font-bold tracking-tight text-white sm:text-7xl lg:text-[85px] mb-8 leading-[1.05]"
             >
               Open View <br />
-              Technology <br />
-              Foresight 2026
+              <span className="text-primary">Consultants</span>
             </motion.h1>
 
             <motion.p
@@ -33,7 +32,7 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="text-xl lg:text-2xl font-medium leading-relaxed text-white/80 mb-12 max-w-2xl"
             >
-              Uniendo tecnología y visión estratégica para diseñar el futuro de las organizaciones líderes.
+              Soluciones de software a la medida para impulsar tu negocio al siguiente nivel.
             </motion.p>
 
             <motion.div
