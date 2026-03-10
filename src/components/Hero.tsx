@@ -55,19 +55,42 @@ export function Hero() {
           {/* Right Content - Abstract Sphere */}
           <div className="lg:col-span-5 xl:col-span-4 relative flex justify-center lg:justify-end">
             <div className="relative w-full aspect-square max-w-[500px] lg:max-w-full pointer-events-none">
-              <div className="absolute inset-0 bg-primary/30 blur-[100px] rounded-full animate-pulse" />
+              {/* Enhanced Glow */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.5, 0.3],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute inset-0 bg-primary/30 blur-[120px] rounded-full"
+              />
+
               {imageUrl && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
-                  animate={{ opacity: 1, scale: 1.1, rotate: 0 }}
-                  transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
-                  className="relative w-full h-full rounded-full overflow-hidden"
+                  animate={{
+                    opacity: 1,
+                    scale: [1.1, 1.15, 1.1],
+                    rotate: [0, 5, -5, 0],
+                    y: [0, -15, 0],
+                  }}
+                  transition={{
+                    opacity: { duration: 1.5, delay: 0.3 },
+                    scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+                    rotate: { duration: 8, repeat: Infinity, ease: "easeInOut" },
+                    y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+                  }}
+                  className="relative w-full h-full rounded-full overflow-hidden shadow-[0_0_50px_rgba(13,89,242,0.3)]"
                   style={{
                     backgroundImage: `url('${imageUrl}')`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    maskImage: 'radial-gradient(circle, black 50%, transparent 90%)',
-                    WebkitMaskImage: 'radial-gradient(circle, black 50%, transparent 90%)',
+                    maskImage: 'radial-gradient(circle, black 55%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(circle, black 55%, transparent 100%)',
                   }}
                 />
               )}
