@@ -41,10 +41,6 @@ export function Header() {
 
         {/* Actions - Right */}
         <div className="flex flex-1 justify-end items-center gap-3 sm:gap-6">
-          <div className="hidden sm:flex items-center gap-2 cursor-pointer group">
-            <Globe size={18} className="text-primary group-hover:scale-110 transition-all" />
-            <ChevronDown size={14} className="text-gray-400 group-hover:text-ntt-dark" />
-          </div>
           <button className="text-emerald-500 hover:text-emerald-600 transition-all hover:scale-110">
             <Search size={20} />
           </button>
