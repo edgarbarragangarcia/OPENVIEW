@@ -27,10 +27,10 @@ export function Header() {
         </div>
 
         {/* Nav - Center (Desktop Only) */}
-        <nav className="hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+        <nav className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2 w-max">
           {['Services', 'Industries', 'Products', 'Insights', 'About us', 'Careers'].map((item) => (
-            <div key={item} className="group relative flex items-center gap-1 cursor-pointer">
-              <span className="text-[14px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-ntt-dark transition-all duration-300">{item}</span>
+            <div key={item} className="group relative flex items-center gap-1 cursor-pointer whitespace-nowrap">
+              <span className="text-[13px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-ntt-dark transition-all duration-300">{item}</span>
               {item !== 'Products' && (
                 <ChevronDown size={12} className="text-gray-400 group-hover:text-primary transition-colors duration-300" />
               )}
