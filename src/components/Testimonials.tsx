@@ -1,5 +1,6 @@
-import { motion } from 'motion/react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { Quote } from 'lucide-react';
+import { useRef } from 'react';
 
 const testimonials = [
   {
@@ -36,52 +37,101 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section id="nosotros" className="py-24 relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center mb-16">
-          <h2 className="text-base font-semibold leading-7 text-primary">Testimonios</h2>
-          <p className="mt-2 font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Lo que dicen nuestros aliados</p>
-          <p className="mt-6 text-lg font-light leading-8 text-gray-600">
+    <section id="nosotros" className="py-24 relative overflow-hidden bg-transparent">
+      {/* Background Decorative Glows */}
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+        <div className="mx-auto max-w-2xl lg:text-center mb-20">
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-base font-black uppercase tracking-[0.2em] text-primary"
+          >
+            Testimonios
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="mt-4 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl"
+          >
+            Lo que dicen nuestros aliados
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 text-lg font-light leading-relaxed text-slate-400"
+          >
             Nuestra misión es simple: elevar el estándar del software en Latinoamérica a través de ingeniería impecable y diseño de primer nivel.
-          </p>
+          </motion.p>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
-            <motion.div
-              key={testimonial.name}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className={`relative p-8 rounded-[2rem] bg-white/40 backdrop-blur-md border ${testimonial.border} shadow-xl flex flex-col justify-between group hover:scale-[1.02] transition-all duration-500`}
-            >
-              <div className={`absolute -top-4 -left-4 h-12 w-12 flex items-center justify-center rounded-2xl ${testimonial.accent.replace('text-', 'bg-')} text-white shadow-lg shadow-current`}>
-                <Quote size={24} />
-              </div>
-              
-              <p className="text-lg font-light italic leading-relaxed text-gray-700 mb-8">
-                {testimonial.quote}
-              </p>
-              
-              <div className="flex items-center gap-4">
-                <img 
-                  src={testimonial.avatar} 
-                  alt={testimonial.name}
-                  className={`h-12 w-12 rounded-full object-cover border-2 ${testimonial.border} group-hover:border-primary transition-colors duration-500`}
-                  referrerPolicy="no-referrer"
-                />
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900">{testimonial.name}</h4>
-                  <p className={`text-xs ${testimonial.accent} font-medium uppercase tracking-wider`}>
-                    {testimonial.role} · {testimonial.company}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+            <TestimonialCard key={testimonial.name} testimonial={testimonial} index={index} />
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function TestimonialCard({ testimonial, index }: { testimonial: typeof testimonials[0]; index: number }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ["start end", "end start"]
+  });
+
+  const scale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.8, 1, 1, 0.8]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      style={{ scale, opacity }}
+      className={`relative p-10 rounded-[3rem] bg-slate-900/40 backdrop-blur-2xl border ${testimonial.border} shadow-2xl flex flex-col justify-between group hover:-translate-y-2 transition-all duration-700`}
+    >
+      {/* Card Internal Glow */}
+      <div className={`absolute inset-0 bg-linear-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[3rem]`} />
+
+      <div className="relative z-10">
+        <div className={`mb-8 h-12 w-12 flex items-center justify-center rounded-2xl ${testimonial.accent.replace('text-', 'bg-')} bg-opacity-10 border ${testimonial.border} ${testimonial.accent} shadow-lg shadow-black/20 group-hover:scale-110 transition-transform duration-500`}>
+          <Quote size={20} />
+        </div>
+
+        <p className="text-lg font-light italic leading-relaxed text-slate-300 mb-10 group-hover:text-white transition-colors duration-500">
+          {testimonial.quote}
+        </p>
+      </div>
+
+      <div className="relative z-10 flex items-center gap-5">
+        <div className="relative">
+          <div className={`absolute inset-0 bg-linear-to-br ${testimonial.gradient} blur-lg opacity-40 group-hover:opacity-100 transition-opacity duration-500`} />
+          <img
+            src={testimonial.avatar}
+            alt={testimonial.name}
+            className={`relative h-14 w-14 rounded-2xl object-cover border border-white/10 group-hover:border-primary/50 transition-colors duration-500 grayscale group-hover:grayscale-0`}
+            referrerPolicy="no-referrer"
+          />
+        </div>
+        <div>
+          <h4 className="text-base font-bold text-white group-hover:translate-x-1 transition-transform duration-500">{testimonial.name}</h4>
+          <p className={`text-[10px] sm:text-xs ${testimonial.accent} font-black uppercase tracking-widest mt-1`}>
+            {testimonial.role} · {testimonial.company}
+          </p>
+        </div>
+      </div>
+
+      {/* Decorative Corner Element */}
+      <div className={`absolute -right-2 -bottom-2 h-24 w-24 rounded-full bg-linear-to-br ${testimonial.gradient} opacity-0 blur-[60px] group-hover:opacity-30 transition-all duration-1000`} />
+    </motion.div>
   );
 }

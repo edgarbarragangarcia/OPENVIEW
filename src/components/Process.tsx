@@ -46,20 +46,20 @@ const steps = [
 
 export function Process() {
   return (
-    <section id="proceso" className="py-24 relative overflow-hidden">
+    <section id="proceso" className="py-24 relative overflow-hidden bg-transparent">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center mb-16">
-          <h2 className="text-base font-semibold leading-7 text-primary">Metodología</h2>
-          <p className="mt-2 font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Cómo lo hacemos realidad</p>
-          <p className="mt-6 text-lg font-light leading-8 text-gray-600">
+        <div className="mx-auto max-w-2xl lg:text-center mb-20">
+          <h2 className="text-base font-black uppercase tracking-[0.2em] text-primary">Metodología</h2>
+          <p className="mt-4 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">Cómo lo hacemos realidad</p>
+          <p className="mt-6 text-lg font-light leading-relaxed text-slate-400">
             Un proceso iterativo y transparente diseñado para minimizar riesgos y maximizar el impacto de tu inversión tecnológica.
           </p>
         </div>
 
         <div className="relative">
           {/* Connection Line */}
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-y-1/2 hidden lg:block" />
-          
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-y-1/2 hidden lg:block" />
+
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
             {steps.map((step, index) => (
               <motion.div
@@ -73,13 +73,13 @@ export function Process() {
                 <div className={`mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/50 border ${step.border} backdrop-blur-sm transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_30px_rgba(0,0,0,0.05)]`}>
                   <step.icon size={36} className={`${step.accent} transition-transform duration-500 group-hover:rotate-12`} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                <p className="text-sm font-light leading-relaxed text-gray-600 px-4">
+                <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                <p className="text-sm font-light leading-relaxed text-slate-400 px-4">
                   {step.description}
                 </p>
-                
+
                 {/* Step Number */}
-                <div className={`absolute -top-4 -right-2 text-4xl font-black ${step.accent} opacity-10 select-none`}>
+                <div className={`absolute -top-4 -right-2 text-4xl font-black ${step.accent} opacity-40 group-hover:opacity-60 select-none transition-opacity duration-500`}>
                   0{index + 1}
                 </div>
               </motion.div>

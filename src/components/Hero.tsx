@@ -41,11 +41,11 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="flex flex-col sm:flex-row items-center gap-5"
             >
-              <button className="group relative flex h-14 items-center justify-center rounded-full bg-ntt-yellow px-10 text-[17px] font-bold text-black transition-all hover:bg-ntt-yellow/90">
+              <button className="group relative flex h-14 items-center justify-center rounded-full bg-primary px-10 text-[17px] font-bold text-white transition-all hover:bg-primary/90 shadow-[0_0_30px_rgba(13,89,242,0.3)] hover:shadow-[0_0_50px_rgba(13,89,242,0.5)] scale-100 hover:scale-105">
                 Descubre más
                 <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={20} />
               </button>
-              <button className="group relative flex h-14 items-center justify-center rounded-full bg-ntt-yellow px-10 text-[17px] font-bold text-black transition-all hover:bg-ntt-yellow/90">
+              <button className="group relative flex h-14 items-center justify-center rounded-full bg-emerald-600 px-10 text-[17px] font-bold text-white transition-all hover:bg-emerald-500 shadow-[0_0_30px_rgba(5,150,105,0.2)] hover:shadow-[0_0_50px_rgba(5,150,105,0.4)] scale-100 hover:scale-105">
                 Lee la noticia
                 <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={20} />
               </button>

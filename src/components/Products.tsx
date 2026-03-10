@@ -52,16 +52,16 @@ const products = [
 
 export function Products() {
   return (
-    <section id="portafolio" className="py-12 sm:py-16 bg-transparent overflow-hidden">
+    <section id="portafolio" className="py-24 bg-transparent overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center mb-16">
-          <h2 className="text-base font-semibold leading-7 text-primary">Portafolio</h2>
-          <p className="mt-2 font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Proyectos Seleccionados</p>
-          <p className="mt-6 text-lg font-light leading-8 text-gray-600">
+        <div className="mx-auto max-w-2xl lg:text-center mb-20">
+          <h2 className="text-base font-black uppercase tracking-[0.2em] text-primary">Portafolio</h2>
+          <p className="mt-4 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">Proyectos Seleccionados</p>
+          <p className="mt-6 text-lg font-light leading-relaxed text-slate-400">
             Calidad sobre cantidad. Construimos herramientas que se sienten como una extensión de tu visión.
           </p>
         </div>
-        
+
         <div className="mt-12">
           <BentoGrid items={products} />
         </div>
