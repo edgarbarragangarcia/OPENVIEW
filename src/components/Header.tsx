@@ -2,7 +2,7 @@ import { ChevronDown, Search, Globe, Menu } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl bg-white/95 backdrop-blur-md shadow-2xl rounded-full border border-gray-100">
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl bg-white shadow-2xl rounded-full border border-gray-100">
       <div className="relative flex h-20 items-center justify-between px-10">
 
         {/* Mobile Menu - Left (Only visible on Mobile) */}
