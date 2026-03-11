@@ -5,39 +5,39 @@ import { Globe, BrainCircuit, Zap, Lightbulb } from 'lucide-react';
 const services = [
   {
     title: 'Plataformas Web',
-    description: 'Desarrollo de aplicaciones web robustas, escalables y con interfaces elegantes.',
+    description: 'Desarrollo de aplicaciones web robustas, escalables y con interfaces elegantes de alto impacto.',
     icon: Globe,
-    gradient: 'from-blue-500/5 via-blue-600/10 to-blue-500/5',
-    border: 'border-blue-500/20',
-    glow: 'shadow-blue-500/20',
-    accent: 'text-blue-600',
+    gradient: 'from-blue-600 to-cyan-500',
+    border: 'border-blue-500/30',
+    glow: 'shadow-blue-500/40',
+    accent: 'text-blue-400',
   },
   {
     title: 'Inteligencia Artificial',
-    description: 'Integración de modelos de IA para potenciar tus productos y automatizar procesos.',
+    description: 'Integración de modelos de IA de vanguardia para potenciar tus productos y automatizar flujos complejos.',
     icon: BrainCircuit,
-    gradient: 'from-emerald-500/5 via-emerald-600/10 to-emerald-500/5',
-    border: 'border-emerald-500/20',
-    glow: 'shadow-emerald-500/20',
-    accent: 'text-emerald-600',
+    gradient: 'from-emerald-600 to-teal-400',
+    border: 'border-emerald-500/30',
+    glow: 'shadow-emerald-500/40',
+    accent: 'text-emerald-400',
   },
   {
     title: 'Automatización',
-    description: 'Optimización de flujos de trabajo mediante herramientas de automatización avanzadas.',
+    description: 'Optimización inteligente de flujos de trabajo mediante herramientas de automatización de última generación.',
     icon: Zap,
-    gradient: 'from-orange-500/5 via-orange-600/10 to-orange-500/5',
-    border: 'border-orange-500/20',
-    glow: 'shadow-orange-500/20',
-    accent: 'text-orange-600',
+    gradient: 'from-orange-600 to-amber-400',
+    border: 'border-orange-500/30',
+    glow: 'shadow-orange-500/40',
+    accent: 'text-orange-400',
   },
   {
     title: 'Consultoría IT',
-    description: 'Asesoramiento experto para definir la arquitectura y estrategia tecnológica de tu negocio.',
+    description: 'Asesoramiento experto para definir la arquitectura y estrategia tecnológica que escalará tu visión.',
     icon: Lightbulb,
-    gradient: 'from-red-500/5 via-red-600/10 to-red-500/5',
-    border: 'border-red-500/20',
-    glow: 'shadow-red-500/20',
-    accent: 'text-red-600',
+    gradient: 'from-rose-600 to-pink-500',
+    border: 'border-rose-500/30',
+    glow: 'shadow-rose-500/40',
+    accent: 'text-rose-400',
   },
 ];
 
@@ -116,30 +116,38 @@ export function SphericalCarousel() {
                   stiffness: 200,
                   damping: 25,
                 }}
-                className={`absolute w-[280px] sm:w-[320px] p-10 rounded-[2rem] bg-white/40 backdrop-blur-xl border ${service.border} shadow-xl flex flex-col items-center text-center cursor-grab active:cursor-grabbing transition-all duration-500 ${isActive ? `shadow-[0_0_50px_rgba(0,0,0,0.05)] ${service.glow} scale-105` : 'opacity-40'}`}
+                className={`absolute w-[280px] sm:w-[320px] p-8 rounded-[2.5rem] bg-white/5 backdrop-blur-2xl border ${service.border} shadow-2xl flex flex-col items-center text-center cursor-grab active:cursor-grabbing transition-all duration-500 ${isActive ? `bg-white/10 ${service.glow} scale-105` : 'opacity-40'}`}
                 style={{
                   zIndex: isActive ? 20 : 10,
                   transformStyle: 'preserve-3d',
                   backfaceVisibility: 'hidden',
                 }}
               >
-                <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/50 ${service.accent} transition-all duration-300 ${isActive ? 'scale-110 shadow-md' : ''}`}>
-                  <service.icon size={32} />
+                {/* Decorative background glow */}
+                {isActive && (
+                  <div className={`absolute inset-0 -z-10 bg-linear-to-br ${service.gradient} opacity-10 blur-3xl rounded-full`} />
+                )}
+
+                <div className={`mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-linear-to-br ${service.gradient} p-0.5 shadow-lg transition-all duration-500 ${isActive ? 'scale-110 rotate-3 shadow-glow' : ''}`}>
+                  <div className="flex h-full w-full items-center justify-center rounded-[1.4rem] bg-slate-900/90 backdrop-blur-sm">
+                    <service.icon size={36} className={`${service.accent} transition-transform duration-500 ${isActive ? 'scale-110' : ''}`} />
+                  </div>
                 </div>
-                <h3 className={`text-xl font-bold mb-4 ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>{service.title}</h3>
-                <p className={`font-light leading-relaxed ${isActive ? 'text-gray-700' : 'text-gray-400'}`}>
+
+                <h3 className={`font-display text-2xl font-bold mb-4 tracking-tight transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/40'}`}>
+                  {service.title}
+                </h3>
+                
+                <p className={`text-sm font-light leading-relaxed transition-colors duration-300 ${isActive ? 'text-slate-300' : 'text-slate-500'}`}>
                   {service.description}
                 </p>
 
-                {isActive && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`mt-6 ${service.accent} text-sm font-medium`}
-                  >
-                    Desliza para explorar →
-                  </motion.div>
-                )}
+                <div className={`mt-8 flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-500 ${isActive ? `opacity-100 translate-y-0 border-white/10 bg-white/5` : 'opacity-0 translate-y-4 border-transparent'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${service.accent}`}>
+                    Explorar Servicio
+                  </span>
+                  <div className={`h-1 w-1 rounded-full ${service.accent.replace('text-', 'bg-')}`} />
+                </div>
               </motion.div>
             );
           })}

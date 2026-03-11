@@ -66,16 +66,16 @@ function BentoCard({ project, index }: { project: Project; index: number }) {
         opacity,
       }}
       onMouseMove={handleMouseMove}
-      className={`group relative overflow-hidden rounded-[3rem] bg-slate-900/50 backdrop-blur-2xl border border-white/5 p-10 flex flex-col justify-between transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(13,89,242,0.15)] hover:-translate-y-2 hover:border-primary/30 ${spans[index] || 'md:col-span-2'}`}
+      className={`group relative overflow-hidden rounded-[2.5rem] bg-white/5 backdrop-blur-2xl border ${project.border} p-8 flex flex-col justify-between transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(13,89,242,0.15)] hover:-translate-y-2 hover:bg-white/10 ${spans[index] || 'md:col-span-2'}`}
     >
       {/* Dynamic Spotlight Glow */}
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-[3rem] opacity-0 transition duration-500 group-hover:opacity-100"
+        className="pointer-events-none absolute -inset-px rounded-[2.5rem] opacity-0 transition duration-500 group-hover:opacity-100"
         style={{
           background: useMotionTemplate`
             radial-gradient(
               600px circle at ${mouseX}px ${mouseY}px,
-              rgba(13, 89, 242, 0.15),
+              rgba(13, 89, 242, 0.1),
               transparent 80%
             )
           `,
@@ -83,29 +83,29 @@ function BentoCard({ project, index }: { project: Project; index: number }) {
       />
 
       {/* Animated Gradient Background Overlay */}
-      <div className={`absolute inset-0 bg-linear-to-br ${project.gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700`} />
+      <div className={`absolute inset-0 bg-linear-to-br ${project.gradient} opacity-[0.05] group-hover:opacity-[0.1] transition-opacity duration-700`} />
 
       <div className="relative z-10">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex gap-3 flex-wrap">
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex gap-2 flex-wrap">
             {project.tags.map(tag => (
-              <span key={tag} className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-slate-400 backdrop-blur-sm group-hover:bg-primary/20 group-hover:text-white group-hover:border-primary/30 transition-all duration-500">
+              <span key={tag} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-slate-400 backdrop-blur-sm group-hover:bg-primary/20 group-hover:text-white group-hover:border-primary/30 transition-all duration-500">
                 {tag}
               </span>
             ))}
           </div>
           <motion.div
-            whileHover={{ rotate: 45, scale: 1.2 }}
-            className={`h-12 w-12 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center shadow-sm ${project.accent} transition-all duration-500 group-hover:bg-primary group-hover:text-white group-hover:border-primary group-hover:shadow-lg group-hover:shadow-primary/20`}
+            whileHover={{ rotate: 45, scale: 1.1 }}
+            className={`h-11 w-11 rounded-2xl bg-slate-900/80 border border-white/10 flex items-center justify-center shadow-lg ${project.accent} transition-all duration-500 group-hover:bg-primary group-hover:text-white group-hover:border-primary group-hover:shadow-primary/20`}
           >
-            <ArrowUpRight size={24} />
+            <ArrowUpRight size={20} />
           </motion.div>
         </div>
 
-        <h3 className="text-3xl font-bold tracking-tight text-white mb-4 group-hover:translate-x-1 transition-transform duration-500">
+        <h3 className="font-display text-3xl font-bold tracking-tight text-white mb-4 group-hover:translate-x-1 transition-transform duration-500">
           {project.name}
         </h3>
-        <p className="text-base font-light leading-relaxed text-slate-400 max-w-md group-hover:text-slate-200 transition-colors duration-500">
+        <p className="text-sm font-light leading-relaxed text-slate-400 max-w-md group-hover:text-slate-200 transition-colors duration-500">
           {project.description}
         </p>
       </div>

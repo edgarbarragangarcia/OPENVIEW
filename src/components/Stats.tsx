@@ -2,11 +2,12 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import { useRef } from 'react';
 
 const stats = [
-  { label: 'Proyectos Entregados', value: '50+', gradient: 'from-blue-500/5 via-blue-600/10 to-blue-500/5', border: 'border-blue-500/20', accent: 'text-blue-600' },
-  { label: 'Clientes Activos', value: '20+', gradient: 'from-emerald-500/5 via-emerald-600/10 to-emerald-500/5', border: 'border-emerald-500/20', accent: 'text-emerald-600' },
-  { label: 'Países Alcanzados', value: '5', gradient: 'from-orange-500/5 via-orange-600/10 to-orange-500/5', border: 'border-orange-500/20', accent: 'text-orange-600' },
-  { label: 'Satisfacción Cliente', value: '99%', gradient: 'from-red-500/5 via-red-600/10 to-red-500/5', border: 'border-red-500/20', accent: 'text-red-600' },
+  { label: 'Proyectos Entregados', value: '50+', gradient: 'from-blue-600 to-cyan-500', border: 'border-blue-500/30', accent: 'text-blue-400' },
+  { label: 'Clientes Activos', value: '20+', gradient: 'from-emerald-600 to-teal-400', border: 'border-emerald-500/30', accent: 'text-emerald-400' },
+  { label: 'Países Alcanzados', value: '5', gradient: 'from-orange-600 to-amber-400', border: 'border-orange-500/30', accent: 'text-orange-400' },
+  { label: 'Satisfacción Cliente', value: '99%', gradient: 'from-rose-600 to-pink-500', border: 'border-rose-500/30', accent: 'text-rose-400' },
 ];
+
 
 export function Stats() {
   return (
@@ -46,13 +47,13 @@ function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
         delay: index * 0.1,
         ease: [0.23, 1, 0.32, 1]
       }}
-      whileHover={{ y: -5, scale: 1.02 }}
-      className={`group relative flex flex-col items-center text-center p-6 sm:p-10 rounded-[2.5rem] bg-slate-900/40 backdrop-blur-2xl border ${stat.border} shadow-2xl transition-all duration-500`}
+      whileHover={{ y: -10, scale: 1.05 }}
+      className={`group relative flex flex-col items-center text-center p-8 sm:p-10 rounded-[3rem] bg-white/5 backdrop-blur-3xl border ${stat.border} shadow-2xl transition-all duration-500 hover:bg-white/10`}
     >
       {/* Internal Gradient Glow */}
       <div className={`absolute inset-0 bg-linear-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2.5rem]`} />
 
-      <dt className="relative z-10 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4 group-hover:text-white transition-colors duration-500">
+      <dt className="relative z-10 text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-slate-300 mb-4 group-hover:text-white transition-colors duration-500">
         {stat.label}
       </dt>
       <dd className={`relative z-10 text-4xl sm:text-6xl font-black tracking-tighter ${stat.accent} drop-shadow-2xl`}>

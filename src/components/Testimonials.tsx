@@ -9,9 +9,9 @@ const testimonials = [
     company: 'APEG Golf',
     quote: '"Open View transformó por completo nuestra gestión administrativa. Su capacidad técnica y diseño elegante superó nuestras expectativas."',
     avatar: 'https://picsum.photos/seed/camilo/200/200',
-    gradient: 'from-blue-500/5 via-blue-600/10 to-blue-500/5',
-    border: 'border-blue-500/20',
-    accent: 'text-blue-600',
+    gradient: 'from-blue-600 to-cyan-500',
+    border: 'border-blue-500/30',
+    accent: 'text-blue-400',
   },
   {
     name: 'Marta Rodríguez',
@@ -19,9 +19,9 @@ const testimonials = [
     company: 'Gymboree Colombia',
     quote: '"El sistema de pagos que desarrollaron es impecable. La atención al detalle y la rapidez de respuesta son su mayor diferencial."',
     avatar: 'https://picsum.photos/seed/marta/200/200',
-    gradient: 'from-emerald-500/5 via-emerald-600/10 to-emerald-500/5',
-    border: 'border-emerald-500/20',
-    accent: 'text-emerald-600',
+    gradient: 'from-emerald-600 to-teal-400',
+    border: 'border-emerald-500/30',
+    accent: 'text-emerald-400',
   },
   {
     name: 'Andrés Felipe',
@@ -29,9 +29,9 @@ const testimonials = [
     company: 'KREO Dashboard',
     quote: '"La visualización de datos que implementaron nos ha permitido tomar decisiones estratégicas en tiempo real. Un aliado indispensable."',
     avatar: 'https://picsum.photos/seed/andres/200/200',
-    gradient: 'from-purple-500/5 via-purple-600/10 to-purple-500/5',
-    border: 'border-purple-500/20',
-    accent: 'text-purple-600',
+    gradient: 'from-purple-600 to-indigo-500',
+    border: 'border-purple-500/30',
+    accent: 'text-purple-400',
   },
 ];
 
@@ -97,7 +97,7 @@ function TestimonialCard({ testimonial, index }: { testimonial: typeof testimoni
     <motion.div
       ref={cardRef}
       style={{ scale, opacity }}
-      className={`relative p-10 rounded-[3rem] bg-slate-900/40 backdrop-blur-2xl border ${testimonial.border} shadow-2xl flex flex-col justify-between group hover:-translate-y-2 transition-all duration-700`}
+      className={`relative p-8 sm:p-10 rounded-[3rem] bg-white/5 backdrop-blur-3xl border ${testimonial.border} shadow-2xl flex flex-col justify-between group hover:-translate-y-4 hover:bg-white/10 transition-all duration-700`}
     >
       {/* Card Internal Glow */}
       <div className={`absolute inset-0 bg-linear-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[3rem]`} />
