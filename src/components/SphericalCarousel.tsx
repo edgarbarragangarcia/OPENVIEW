@@ -79,11 +79,11 @@ export function SphericalCarousel() {
           {services.map((service, index) => {
             const total = services.length;
             const diff = (index - currentIndex + total) % total;
-            
+
             // Normalize diff to be between -floor(total/2) and floor(total/2)
             let normalizedDiff = diff;
             if (normalizedDiff > total / 2) normalizedDiff -= total;
-            
+
             const isActive = normalizedDiff === 0;
             const isVisible = Math.abs(normalizedDiff) <= 1;
 
@@ -130,15 +130,15 @@ export function SphericalCarousel() {
                 <p className={`font-light leading-relaxed ${isActive ? 'text-gray-700' : 'text-gray-400'}`}>
                   {service.description}
                 </p>
-                
+
                 {isActive && (
-                   <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`mt-6 ${service.accent} text-sm font-medium`}
-                   >
-                     Desliza para explorar →
-                   </motion.div>
+                  >
+                    Desliza para explorar →
+                  </motion.div>
                 )}
               </motion.div>
             );

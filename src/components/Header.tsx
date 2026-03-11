@@ -2,8 +2,8 @@ import { ChevronDown, Search, Globe, Menu } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="fixed top-0 z-50 w-full bg-white shadow-md border-b border-gray-100">
-      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl bg-white/95 backdrop-blur-md shadow-2xl rounded-full border border-gray-100">
+      <div className="relative flex h-20 items-center justify-between px-10">
 
         {/* Mobile Menu - Left (Only visible on Mobile) */}
         <div className="flex lg:hidden flex-1 justify-start">
