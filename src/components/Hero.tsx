@@ -11,7 +11,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative isolate overflow-hidden bg-ntt-dark min-h-screen flex items-center pt-20">
+    <section ref={containerRef} className="relative isolate overflow-hidden bg-transparent min-h-screen flex items-center pt-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 w-full relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Content */}

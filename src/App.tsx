@@ -4,26 +4,21 @@
  */
 
 import { Header } from './components/Header';
-import { Hero } from './components/Hero';
-import { Features } from './components/Features';
-import { Products } from './components/Products';
-import { Stats } from './components/Stats';
-import { Process } from './components/Process';
-import { Testimonials } from './components/Testimonials';
 import { Footer } from './components/Footer';
-import { GalaxyBackground } from './components/GalaxyBackground';
+import { LightGradientBackground } from './components/LightGradientBackground';
+import { LMSHero } from './components/LMSHero';
+import { CourseGrid } from './components/CourseGrid';
+import { FeaturesLMS } from './components/FeaturesLMS';
 
 export default function App() {
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[#000511] text-white font-body antialiased selection:bg-primary/20">
+    <div className="relative w-full overflow-x-hidden bg-slate-50 text-slate-900 font-body antialiased selection:bg-primary/20">
+      <LightGradientBackground />
       <Header />
-      <main className="grow">
-        <Hero />
-        <Features />
-        <Products />
-        <Stats />
-        <Process />
-        <Testimonials />
+      <main>
+        <LMSHero />
+        <FeaturesLMS />
+        <CourseGrid />
       </main>
       <Footer />
     </div>
