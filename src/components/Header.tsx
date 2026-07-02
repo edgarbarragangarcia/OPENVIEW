@@ -1,52 +1,78 @@
-import { ChevronDown, Search, Globe, Menu } from 'lucide-react';
+import { ChevronDown, Search, Menu, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl bg-white/80 shadow-lg rounded-full border border-slate-200 backdrop-blur-xl">
-      <div className="relative flex h-20 items-center justify-between px-10">
-
-        {/* Mobile Menu - Left (Only visible on Mobile) */}
-        <div className="flex lg:hidden flex-1 justify-start">
-          <button className="text-slate-500 hover:text-slate-800 transition-colors p-2">
-            <Menu size={24} />
-          </button>
-        </div>
-
-        {/* Logo - Center on Mobile, Left on Desktop */}
-        <div className="flex items-center lg:flex-none lg:justify-start flex-1 justify-center lg:static absolute left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-0">
-          <div className="flex flex-col items-center gap-0 group cursor-pointer">
-            <img
-              src="/Gemini_Generated_Image_8demn8demn8demn8.png"
-              alt="Open View Logo"
-              className="relative h-10 w-24 sm:h-12 sm:w-28 object-contain transition-transform group-hover:scale-102 filter brightness-0"
-            />
-            <span className="font-display text-[9px] sm:text-[11px] font-bold tracking-widest text-slate-800 whitespace-nowrap uppercase">
-              Open View <span className="text-primary">Academy</span>
+    <header 
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
+        isScrolled 
+          ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' 
+          : 'bg-transparent border-b border-transparent py-5'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between">
+        
+        {/* Left: Logo */}
+        <div className="flex items-center gap-3 cursor-pointer group">
+          <img
+            src="/Gemini_Generated_Image_8demn8demn8demn8.png"
+            alt="Open View Logo"
+            className="relative h-9 sm:h-11 object-contain transition-transform duration-500 group-hover:scale-105 filter brightness-0"
+          />
+          <div className="hidden sm:flex flex-col justify-center border-l-2 border-slate-200 pl-3">
+            <span className="font-display text-sm font-extrabold tracking-tight text-slate-900 leading-none">
+              Open View
+            </span>
+            <span className="text-[10px] font-bold tracking-widest text-sky-500 uppercase mt-1">
+              Academy
             </span>
           </div>
         </div>
 
-        {/* Nav - Center (Desktop Only) */}
-        <nav className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2 w-max">
-          {['Explorar Cursos', 'Rutas de Aprendizaje', 'Comunidad', 'Planes', 'Para Empresas'].map((item) => (
-            <div key={item} className="group relative flex items-center gap-1 cursor-pointer whitespace-nowrap">
-              <span className="text-[13px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-slate-900 transition-all duration-300">{item}</span>
-              {item !== 'Planes' && item !== 'Para Empresas' && (
-                <ChevronDown size={12} className="text-slate-400 group-hover:text-primary transition-colors duration-300" />
+        {/* Center: Desktop Nav */}
+        <nav className="hidden lg:flex items-center p-1.5 rounded-full bg-slate-100/50 border border-slate-200/50 backdrop-blur-md">
+          {['Explorar Cursos', 'Rutas de Aprendizaje', 'Comunidad', 'Planes'].map((item) => (
+            <div 
+              key={item} 
+              className="relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-pointer flex items-center gap-1.5 group"
+            >
+              {item}
+              {(item === 'Explorar Cursos' || item === 'Rutas de Aprendizaje') && (
+                <ChevronDown size={14} className="text-slate-400 group-hover:text-sky-500 transition-colors" />
               )}
-              <div className="absolute -bottom-1 left-0 h-px w-0 bg-primary transition-all duration-300 group-hover:w-full" />
             </div>
           ))}
         </nav>
 
-        {/* Actions - Right */}
-        <div className="flex flex-1 justify-end items-center gap-3 sm:gap-6">
-          <button className="text-slate-500 hover:text-slate-800 transition-all hover:scale-110">
-            <Search size={20} />
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button className="hidden md:flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:text-sky-500 hover:bg-sky-50 transition-all">
+            <Search size={18} />
           </button>
-          <a href="#login" className="hidden sm:flex h-11 items-center justify-center rounded-full px-8 text-xs font-black uppercase tracking-widest text-white bg-gradient-primary hover:scale-105 transition-all shadow-[0_4px_12px_rgba(14,165,233,0.3)] hover:shadow-[0_8px_20px_rgba(14,165,233,0.5)]">
-            Iniciar Sesión
+          
+          <a 
+            href="#login" 
+            className="group relative inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden"
+          >
+            <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <span className="relative z-10">Ingresar</span>
+            <ArrowRight size={16} className="relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
           </a>
+
+          {/* Mobile Menu Button */}
+          <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-slate-600 hover:bg-slate-100 transition-colors">
+            <Menu size={20} />
+          </button>
         </div>
       </div>
     </header>
