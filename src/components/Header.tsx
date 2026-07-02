@@ -30,7 +30,7 @@ export function Header() {
           {/* Left: Logo */}
           <div className="flex items-center gap-3 cursor-pointer group">
             <img
-              src="/Gemini_Generated_Image_8demn8demn8demn8.png"
+              src="/logo.png"
               alt="Open View Logo"
               className="relative h-9 sm:h-11 object-contain transition-transform duration-500 group-hover:scale-105 filter brightness-0"
             />
