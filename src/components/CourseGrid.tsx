@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Calendar, Clock } from 'lucide-react';
 
 const WORKSHOPS = [
   {
@@ -39,12 +39,12 @@ export function CourseGrid() {
           <div>
             <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 mb-4 leading-tight">
               Programas <br />
-              <span className="text-primary italic">Ejecutivos</span>
+              <span className="text-gradient italic font-black">Ejecutivos</span>
             </h2>
           </div>
-          <button className="group flex items-center gap-3 text-slate-900 font-bold tracking-widest uppercase text-sm border-b-2 border-primary pb-2 hover:text-primary transition-colors">
+          <button className="group flex items-center gap-3 text-slate-900 font-bold tracking-widest uppercase text-sm border-b-2 border-primary-light pb-2 hover:text-primary transition-colors">
             Ver Catálogo Completo 
-            <ArrowRight className="h-5 w-5 transform group-hover:translate-x-2 transition-transform" />
+            <ArrowRight className="h-5 w-5 transform group-hover:translate-x-2 text-primary transition-transform" />
           </button>
         </div>
 
@@ -56,31 +56,37 @@ export function CourseGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: idx * 0.15 }}
-              className="group cursor-pointer flex flex-col"
+              className="group cursor-pointer flex flex-col bg-slate-50 rounded-[2rem] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(14,165,233,0.1)] transition-all duration-500 hover:-translate-y-2"
             >
-              {/* Image Container with dramatic hover effect */}
-              <div className="relative aspect-[4/5] overflow-hidden mb-6 bg-slate-100">
+              {/* Image Container with pill badge */}
+              <div className="relative h-64 overflow-hidden bg-slate-200">
                 <img
                   src={workshop.image}
                   alt={workshop.title}
-                  className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
-                <div className="absolute top-0 left-0 bg-primary text-white text-xs font-bold uppercase tracking-widest px-4 py-2">
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-primary-dark text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full shadow-sm">
                   {workshop.category}
                 </div>
               </div>
 
               {/* Content */}
-              <div className="flex flex-col flex-1">
-                <h3 className="text-2xl font-serif text-slate-900 leading-tight mb-3 group-hover:text-primary transition-colors">
+              <div className="flex flex-col flex-1 p-8">
+                <h3 className="text-2xl font-serif font-bold text-slate-900 leading-tight mb-4 group-hover:text-primary transition-colors">
                   {workshop.title}
                 </h3>
                 
-                <p className="text-slate-500 font-light mb-6">Dirigido por {workshop.director}</p>
+                <p className="text-slate-500 font-medium mb-8">Dirigido por {workshop.director}</p>
                 
-                <div className="mt-auto pt-4 border-t border-slate-200 flex justify-between items-center text-sm">
-                  <span className="font-semibold text-slate-900">{workshop.date}</span>
-                  <span className="text-slate-500">{workshop.duration}</span>
+                <div className="mt-auto pt-6 border-t border-slate-200/60 flex flex-col sm:flex-row justify-between sm:items-center text-sm gap-4">
+                  <div className="flex items-center gap-2 text-slate-700 font-semibold">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span>{workshop.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-500 font-medium">
+                    <Clock className="w-4 h-4 text-slate-400" />
+                    <span>{workshop.duration}</span>
+                  </div>
                 </div>
               </div>
             </motion.div>

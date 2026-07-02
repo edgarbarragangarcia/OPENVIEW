@@ -44,7 +44,7 @@ export function Header() {
           <button className="text-slate-500 hover:text-slate-800 transition-all hover:scale-110">
             <Search size={20} />
           </button>
-          <a href="#login" className="hidden sm:flex h-11 items-center justify-center rounded-full px-8 text-xs font-black uppercase tracking-widest text-white bg-primary hover:bg-primary/90 transition-all shadow-[0_4px_12px_rgba(13,89,242,0.3)] hover:scale-105">
+          <a href="#login" className="hidden sm:flex h-11 items-center justify-center rounded-full px-8 text-xs font-black uppercase tracking-widest text-white bg-gradient-primary hover:scale-105 transition-all shadow-[0_4px_12px_rgba(14,165,233,0.3)] hover:shadow-[0_8px_20px_rgba(14,165,233,0.5)]">
             Iniciar Sesión
           </a>
         </div>

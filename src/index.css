@@ -7,7 +7,9 @@
   :root {
     --color-bg: #FFFFFF;
     --color-text: #111111;
-    --color-primary: #D90429;
+    --color-primary: #0ea5e9; /* Sky 500 */
+    --color-primary-light: #38bdf8; /* Sky 400 */
+    --color-primary-dark: #0284c7; /* Sky 600 */
   }
 
   body {
@@ -21,7 +23,9 @@
 }
 
 @theme {
-  --color-primary: #D90429;
+  --color-primary: #0ea5e9;
+  --color-primary-light: #38bdf8;
+  --color-primary-dark: #0284c7;
   --color-ntt-dark: #f8fafc;
   --color-ntt-yellow: #fcc400;
   --color-background-light: #ffffff;
@@ -50,8 +54,19 @@
   }
 
   .glass-button:hover {
-    box-shadow: 0 0 20px rgba(13, 89, 242, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.5);
-    border-color: rgba(13, 89, 242, 0.3);
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.5);
+    border-color: rgba(14, 165, 233, 0.3);
+  }
+
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light));
+  }
+  
+  .bg-gradient-primary {
+    background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light));
   }
 
   .perspective-1000 {
