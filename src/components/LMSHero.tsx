@@ -6,18 +6,6 @@ export function LMSHero() {
     <section className="relative min-h-screen flex items-center pt-20 z-10 overflow-hidden bg-white text-slate-900">
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 w-full grid md:grid-cols-2 gap-10">
         <div className="space-y-10">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 text-xs tracking-[0.2em] uppercase font-semibold"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 bg-primary"></span>
-            </span>
-            Matrículas Abiertas 2026
-          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
