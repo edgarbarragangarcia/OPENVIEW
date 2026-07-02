@@ -1,8 +1,12 @@
-import { ChevronDown, Search, Menu, ArrowRight } from 'lucide-react';
+import { ChevronDown, Search, Menu, ArrowRight, User, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { AuthModal } from './AuthModal';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user, signOut, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -13,68 +17,98 @@ export function Header() {
   }, []);
 
   return (
-    <header 
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
-        isScrolled 
-          ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' 
-          : 'bg-transparent border-b border-transparent py-5'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between">
-        
-        {/* Left: Logo */}
-        <div className="flex items-center gap-3 cursor-pointer group">
-          <img
-            src="/Gemini_Generated_Image_8demn8demn8demn8.png"
-            alt="Open View Logo"
-            className="relative h-9 sm:h-11 object-contain transition-transform duration-500 group-hover:scale-105 filter brightness-0"
-          />
-          <div className="hidden sm:flex flex-col justify-center border-l-2 border-slate-200 pl-3">
-            <span className="font-display text-sm font-extrabold tracking-tight text-slate-900 leading-none">
-              Open View
-            </span>
-            <span className="text-[10px] font-bold tracking-widest text-sky-500 uppercase mt-1">
-              Academy
-            </span>
+    <>
+      <header 
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
+          isScrolled 
+            ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3' 
+            : 'bg-transparent border-b border-transparent py-5'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between">
+          
+          {/* Left: Logo */}
+          <div className="flex items-center gap-3 cursor-pointer group">
+            <img
+              src="/Gemini_Generated_Image_8demn8demn8demn8.png"
+              alt="Open View Logo"
+              className="relative h-9 sm:h-11 object-contain transition-transform duration-500 group-hover:scale-105 filter brightness-0"
+            />
+            <div className="hidden sm:flex flex-col justify-center border-l-2 border-slate-200 pl-3">
+              <span className="font-display text-sm font-extrabold tracking-tight text-slate-900 leading-none">
+                Open View
+              </span>
+              <span className="text-[10px] font-bold tracking-widest text-sky-500 uppercase mt-1">
+                Academy
+              </span>
+            </div>
+          </div>
+
+          {/* Center: Desktop Nav */}
+          <nav className="hidden lg:flex items-center p-1.5 rounded-full bg-slate-100/50 border border-slate-200/50 backdrop-blur-md">
+            {['Explorar Cursos', 'Rutas de Aprendizaje', 'Comunidad', 'Planes'].map((item) => (
+              <div 
+                key={item} 
+                className="relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-pointer flex items-center gap-1.5 group"
+              >
+                {item}
+                {(item === 'Explorar Cursos' || item === 'Rutas de Aprendizaje') && (
+                  <ChevronDown size={14} className="text-slate-400 group-hover:text-sky-500 transition-colors" />
+                )}
+              </div>
+            ))}
+          </nav>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button className="hidden md:flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:text-sky-500 hover:bg-sky-50 transition-all">
+              <Search size={18} />
+            </button>
+            
+            {!isLoading && (
+              user ? (
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
+                      <User size={16} />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700">
+                      {user.email?.split('@')[0]}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={signOut}
+                    className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                    title="Cerrar sesión"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="group relative inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden"
+                >
+                  <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <span className="relative z-10">Ingresar</span>
+                  <ArrowRight size={16} className="relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
+                </button>
+              )
+            )}
+
+            {/* Mobile Menu Button */}
+            <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-slate-600 hover:bg-slate-100 transition-colors">
+              <Menu size={20} />
+            </button>
           </div>
         </div>
+      </header>
 
-        {/* Center: Desktop Nav */}
-        <nav className="hidden lg:flex items-center p-1.5 rounded-full bg-slate-100/50 border border-slate-200/50 backdrop-blur-md">
-          {['Explorar Cursos', 'Rutas de Aprendizaje', 'Comunidad', 'Planes'].map((item) => (
-            <div 
-              key={item} 
-              className="relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-pointer flex items-center gap-1.5 group"
-            >
-              {item}
-              {(item === 'Explorar Cursos' || item === 'Rutas de Aprendizaje') && (
-                <ChevronDown size={14} className="text-slate-400 group-hover:text-sky-500 transition-colors" />
-              )}
-            </div>
-          ))}
-        </nav>
-
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button className="hidden md:flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:text-sky-500 hover:bg-sky-50 transition-all">
-            <Search size={18} />
-          </button>
-          
-          <a 
-            href="#login" 
-            className="group relative inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden"
-          >
-            <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <span className="relative z-10">Ingresar</span>
-            <ArrowRight size={16} className="relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
-          </a>
-
-          {/* Mobile Menu Button */}
-          <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-slate-600 hover:bg-slate-100 transition-colors">
-            <Menu size={20} />
-          </button>
-        </div>
-      </div>
-    </header>
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
+    </>
   );
 }
+
