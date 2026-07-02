@@ -1,10 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&display=swap');
 @import "tailwindcss";
 @source "../src";
 @plugin "@tailwindcss/typography";
 
+@layer base {
+  :root {
+    --color-bg: #FFFFFF;
+    --color-text: #111111;
+    --color-primary: #D90429;
+  }
+
+  body {
+    @apply bg-[var(--color-bg)] text-[var(--color-text)] antialiased font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    @apply tracking-tight;
+  }
+}
+
 @theme {
-  --color-primary: #0d59f2;
+  --color-primary: #D90429;
   --color-ntt-dark: #f8fafc;
   --color-ntt-yellow: #fcc400;
   --color-background-light: #ffffff;
