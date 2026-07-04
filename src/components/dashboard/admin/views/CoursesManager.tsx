@@ -1,121 +1,194 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Eye, EyeOff } from 'lucide-react';
-import { Course, getCourses, updateCourse } from '../../../../lib/courses';
+import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users } from 'lucide-react';
+import { Course, getCourses, updateCourse, deleteCourse } from '../../../../lib/courses';
 
 interface CoursesManagerProps {
   onEdit: (courseId?: string) => void;
 }
 
+const LEVEL_LABELS: Record<string, string> = {
+  beginner: 'Principiante',
+  intermediate: 'Intermedio',
+  advanced: 'Avanzado',
+};
+
+const LEVEL_COLORS: Record<string, string> = {
+  beginner: 'bg-emerald-500/10 text-emerald-400',
+  intermediate: 'bg-amber-500/10 text-amber-400',
+  advanced: 'bg-red-500/10 text-red-400',
+};
+
 export function CoursesManager({ onEdit }: CoursesManagerProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
-  useEffect(() => {
-    loadCourses();
-  }, []);
-
-  const loadCourses = async () => {
-    setLoading(true);
-    const data = await getCourses(false); // get all, not just published
-    setCourses(data);
-    setLoading(false);
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
   };
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await getCourses(false);
+      setCourses(data);
+    } catch (e: any) {
+      showToast(e.message, false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
 
   const togglePublish = async (course: Course) => {
-    await updateCourse(course.id, { published: !course.published });
-    loadCourses();
+    try {
+      await updateCourse(course.id, { published: !course.published });
+      showToast(course.published ? 'Curso despublicado' : 'Curso publicado ✓');
+      load();
+    } catch (e: any) {
+      showToast(e.message, false);
+    }
   };
+
+  const handleDelete = async (course: Course) => {
+    if (!confirm(`¿Eliminar "${course.title}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await deleteCourse(course.id);
+      showToast('Curso eliminado');
+      load();
+    } catch (e: any) {
+      showToast(e.message, false);
+    }
+  };
+
+  const filtered = courses.filter(c => c.title?.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl font-semibold text-sm
+          ${toast.ok ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+          {toast.ok ? '✓' : '✕'} {toast.msg}
+        </div>
+      )}
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 mb-2">Mis Cursos</h1>
-          <p className="text-slate-500">Administra el catálogo de la academia</p>
+          <h1 className="text-2xl font-black text-lms-text-primary">Cursos</h1>
+          <p className="text-sm text-lms-text-muted mt-1">{courses.length} cursos en total</p>
         </div>
         <button
-          onClick={() => onEdit()} // null id = create new
-          className="inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-sky-600 transition-colors shadow-sm"
+          onClick={() => onEdit()}
+          className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-violet-500/20"
         >
-          <Plus size={18} />
-          Nuevo Curso
+          <Plus size={18} /> Nuevo Curso
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-sm uppercase tracking-wider text-slate-500">
-                <th className="p-4 font-bold">Curso</th>
-                <th className="p-4 font-bold">Categoría</th>
-                <th className="p-4 font-bold">Precio</th>
-                <th className="p-4 font-bold">Inscritos</th>
-                <th className="p-4 font-bold text-center">Estado</th>
-                <th className="p-4 font-bold text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">Cargando cursos...</td>
-                </tr>
-              ) : courses.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">No hay cursos creados aún.</td>
-                </tr>
-              ) : (
-                courses.map(course => (
-                  <tr key={course.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
-                          {course.cover_url && <img src={course.cover_url} alt="" className="w-full h-full object-cover" />}
-                        </div>
-                        <span className="font-bold text-slate-800 line-clamp-2">{course.title}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-sm text-slate-600">{course.categories?.name || '-'}</td>
-                    <td className="p-4 text-sm text-slate-600 font-medium">
-                      {course.price > 0 ? `$${course.price}` : 'Gratis'}
-                    </td>
-                    <td className="p-4 text-sm text-slate-600">
-                      {course.enrollments?.[0]?.count || 0}
-                    </td>
-                    <td className="p-4 text-center">
-                      <button
-                        onClick={() => togglePublish(course)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                          course.published 
-                            ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' 
-                            : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-                        }`}
-                      >
-                        {course.published ? <Eye size={14} /> : <EyeOff size={14} />}
-                        {course.published ? 'Publicado' : 'Borrador'}
-                      </button>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => onEdit(course.id)}
-                          className="p-2 text-slate-400 hover:text-sky-500 bg-white hover:bg-sky-50 rounded-lg border border-slate-200 transition-colors"
-                          title="Editar Curso"
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button className="p-2 text-slate-400 hover:text-red-500 bg-white hover:bg-red-50 rounded-lg border border-slate-200 transition-colors">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Search */}
+      <div className="relative">
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lms-text-muted" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Buscar cursos..."
+          className="w-full pl-10 pr-4 py-3 bg-lms-surface border border-lms-border rounded-xl text-sm text-lms-text-primary placeholder-lms-text-muted focus:outline-none focus:border-violet-500 transition-colors"
+        />
       </div>
+
+      {/* Courses Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1,2,3].map(i => <div key={i} className="h-64 bg-lms-surface rounded-2xl animate-pulse border border-lms-border" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-lms-surface border border-lms-border rounded-2xl flex flex-col items-center justify-center py-20 gap-4 text-lms-text-muted">
+          <BookOpen size={40} className="opacity-20" />
+          <p className="font-semibold">{search ? 'Sin resultados.' : 'Aún no hay cursos. ¡Crea el primero!'}</p>
+          {!search && (
+            <button onClick={() => onEdit()} className="mt-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold text-sm transition-colors">
+              + Crear Primer Curso
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map(course => (
+            <div key={course.id} className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-200 group flex flex-col">
+              {/* Cover */}
+              <div className="relative h-44 bg-lms-hover overflow-hidden">
+                {course.cover_url ? (
+                  <img src={course.cover_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <BookOpen size={36} className="text-lms-text-muted/30" />
+                  </div>
+                )}
+                {/* Status badge */}
+                <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border ${
+                  course.published
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                }`}>
+                  {course.published ? <Eye size={11} /> : <EyeOff size={11} />}
+                  {course.published ? 'Publicado' : 'Borrador'}
+                </div>
+                {/* Quick actions overlay */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => onEdit(course.id)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-xl text-xs font-bold border border-white/20 transition-colors"
+                  >
+                    <Edit3 size={13} /> Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(course)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-md text-red-300 rounded-xl text-xs font-bold border border-red-500/30 transition-colors"
+                  >
+                    <Trash2 size={13} /> Eliminar
+                  </button>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="p-4 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="text-sm font-bold text-lms-text-primary line-clamp-2 flex-1">{course.title}</h3>
+                  {course.level && (
+                    <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${LEVEL_COLORS[course.level] ?? 'bg-lms-hover text-lms-text-muted'}`}>
+                      {LEVEL_LABELS[course.level] ?? course.level}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-lms-text-muted line-clamp-2 flex-1">{course.description || 'Sin descripción'}</p>
+
+                {/* Footer */}
+                <div className="mt-4 pt-3 border-t border-lms-border flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-xs text-lms-text-muted">
+                    <Users size={12} />
+                    {(course.enrollments as any)?.[0]?.count ?? 0} inscritos
+                  </div>
+                  <button
+                    onClick={() => togglePublish(course)}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                      course.published
+                        ? 'bg-lms-hover text-lms-text-muted hover:text-amber-400'
+                        : 'bg-violet-600/20 text-violet-400 hover:bg-violet-600/30'
+                    }`}
+                  >
+                    {course.published ? 'Despublicar' : 'Publicar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

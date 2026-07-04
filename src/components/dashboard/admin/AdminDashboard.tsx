@@ -1,60 +1,174 @@
 import { useState } from 'react';
-import { LayoutDashboard, BookOpen, Users, Settings } from 'lucide-react';
-import { Sidebar, SidebarItem } from '../shared/Sidebar';
-import { DashboardHeader } from '../shared/DashboardHeader';
+import {
+  LayoutDashboard, BookOpen, Users, ListChecks,
+  Settings, LogOut, Menu, X, ChevronRight, Bell
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
 import { Overview } from './views/Overview';
 import { CoursesManager } from './views/CoursesManager';
-import { CourseForm } from './views/CourseForm';
 import { StudentsView } from './views/StudentsView';
+import { EnrollmentsView } from './views/EnrollmentsView';
+import { CourseForm } from './views/CourseForm';
 
-const NAV_ITEMS: SidebarItem[] = [
-  { id: 'overview', label: 'Resumen', icon: <LayoutDashboard size={20} /> },
-  { id: 'courses', label: 'Cursos', icon: <BookOpen size={20} /> },
-  { id: 'students', label: 'Estudiantes', icon: <Users size={20} /> },
-  { id: 'settings', label: 'Configuración', icon: <Settings size={20} /> },
+type AdminView = 'overview' | 'courses' | 'students' | 'enrollments' | 'settings';
+
+const NAV = [
+  { id: 'overview',     label: 'Dashboard',   icon: LayoutDashboard },
+  { id: 'courses',      label: 'Cursos',       icon: BookOpen },
+  { id: 'students',     label: 'Estudiantes',  icon: Users },
+  { id: 'enrollments',  label: 'Matrículas',   icon: ListChecks },
+  { id: 'settings',     label: 'Configuración',icon: Settings },
 ];
 
 export function AdminDashboard() {
-  const [activeView, setActiveView] = useState('overview');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // States para manejar la navegación interna (ej: al editar un curso)
-  const [editingCourseId, setEditingCourseId] = useState<string | undefined>();
+  const { user, signOut } = useAuth();
+  const [view, setView] = useState<AdminView>('overview');
+  const [editingCourseId, setEditingCourseId] = useState<string | null | undefined>(undefined);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleNavigate = (id: string) => {
-    setActiveView(id);
-    if (id === 'courses') setEditingCourseId(undefined);
-  };
+  const handleEditCourse = (id?: string) => setEditingCourseId(id ?? null);
+  const handleBackFromCourse = () => setEditingCourseId(undefined);
 
   const renderView = () => {
-    switch (activeView) {
-      case 'overview': return <Overview />;
-      case 'students': return <StudentsView />;
-      case 'courses': 
-        if (editingCourseId !== undefined) {
-          return <CourseForm courseId={editingCourseId === 'new' ? undefined : editingCourseId} onBack={() => setEditingCourseId(undefined)} />;
-        }
-        return <CoursesManager onEdit={(id) => setEditingCourseId(id || 'new')} />;
-      case 'settings': 
-        return <div className="p-8 text-slate-500">Configuración (Próximamente)</div>;
-      default: return <Overview />;
+    if (editingCourseId !== undefined) {
+      return <CourseForm courseId={editingCourseId ?? undefined} onBack={handleBackFromCourse} />;
+    }
+    switch (view) {
+      case 'overview':    return <Overview onNavigate={(v: AdminView) => setView(v)} />;
+      case 'courses':     return <CoursesManager onEdit={handleEditCourse} />;
+      case 'students':    return <StudentsView />;
+      case 'enrollments': return <EnrollmentsView />;
+      case 'settings':    return <div className="p-8 text-lms-text-muted">Configuración próximamente.</div>;
     }
   };
 
+  const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'AD';
+
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar 
-        items={NAV_ITEMS}
-        activeId={activeView}
-        onNavigate={handleNavigate}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-      
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <DashboardHeader 
-          onMenuClick={() => setIsSidebarOpen(true)} 
+    <div className="flex h-screen bg-lms-bg overflow-hidden font-sans">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
         />
+      )}
+
+      {/* ── SIDEBAR ── */}
+      <aside className={`
+        fixed lg:relative z-30 flex flex-col w-64 h-full bg-lms-surface border-r border-lms-border
+        transition-transform duration-300
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Logo */}
+        <div className="flex items-center justify-between px-5 h-16 border-b border-lms-border shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+              <BookOpen size={16} className="text-white" />
+            </div>
+            <div>
+              <p className="font-black text-sm text-lms-text-primary tracking-wide">OpenView</p>
+              <p className="text-[10px] text-violet-400 font-semibold uppercase tracking-widest">Admin</p>
+            </div>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-lms-text-muted hover:text-lms-text-primary">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Principal</p>
+          {NAV.slice(0, 4).map(({ id, label, icon: Icon }) => {
+            const isActive = view === id && editingCourseId === undefined;
+            return (
+              <button
+                key={id}
+                onClick={() => { setView(id as AdminView); setEditingCourseId(undefined); setSidebarOpen(false); }}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group
+                  ${isActive
+                    ? 'bg-violet-500/15 text-violet-400 shadow-inner'
+                    : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'}
+                `}
+              >
+                <Icon size={18} className={isActive ? 'text-violet-400' : 'text-lms-text-muted group-hover:text-lms-text-primary transition-colors'} />
+                {label}
+                {isActive && <ChevronRight size={14} className="ml-auto text-violet-400" />}
+              </button>
+            );
+          })}
+
+          <div className="pt-4 mt-2 border-t border-lms-border">
+            <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Sistema</p>
+            {NAV.slice(4).map(({ id, label, icon: Icon }) => {
+              const isActive = view === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => { setView(id as AdminView); setEditingCourseId(undefined); setSidebarOpen(false); }}
+                  className={`
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group
+                    ${isActive
+                      ? 'bg-violet-500/15 text-violet-400'
+                      : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'}
+                  `}
+                >
+                  <Icon size={18} className={isActive ? 'text-violet-400' : 'text-lms-text-muted group-hover:text-lms-text-primary transition-colors'} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* User footer */}
+        <div className="shrink-0 px-4 py-4 border-t border-lms-border">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-violet-500/20 shrink-0">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-lms-text-primary truncate">{user?.email}</p>
+              <p className="text-[10px] text-violet-400 font-semibold">Administrador</p>
+            </div>
+            <button
+              onClick={signOut}
+              title="Cerrar sesión"
+              className="text-lms-text-muted hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-400/10"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── MAIN ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Topbar */}
+        <header className="flex items-center justify-between px-6 h-16 bg-lms-surface border-b border-lms-border shrink-0">
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-lms-text-muted hover:text-lms-text-primary">
+            <Menu size={22} />
+          </button>
+          <div className="hidden lg:block">
+            <h2 className="text-sm font-bold text-lms-text-primary">
+              {editingCourseId !== undefined
+                ? (editingCourseId ? 'Editar Curso' : 'Nuevo Curso')
+                : NAV.find(n => n.id === view)?.label ?? 'Dashboard'}
+            </h2>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            <button className="relative p-2 rounded-xl text-lms-text-muted hover:text-lms-text-primary hover:bg-lms-hover transition-colors">
+              <Bell size={18} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-violet-500 rounded-full" />
+            </button>
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-violet-500/20">
+              {initials}
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
         <main className="flex-1 overflow-y-auto">
           {renderView()}
         </main>

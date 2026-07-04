@@ -5,28 +5,66 @@ export interface Enrollment {
   user_id: string;
   course_id: string;
   enrolled_at: string;
-}
-
-export interface Progress {
-  id: string;
-  user_id: string;
-  lesson_id: string;
-  completed: boolean;
   completed_at: string | null;
+  // Joined
+  profiles?: { full_name: string; email: string; avatar_url: string | null };
+  courses?: { title: string; cover_url: string | null };
 }
 
-// ── Enrollments ──────────────────────────────────────────────
+/** Matricular al usuario actual en un curso */
+export async function enrollInCourse(courseId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No autenticado');
 
-export async function getMyEnrollments(userId: string) {
   const { data, error } = await supabase
     .from('enrollments')
-    .select('*, courses(*, categories(*), modules(*, lessons(*)))')
-    .eq('user_id', userId);
+    .insert({ user_id: user.id, course_id: courseId })
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }
 
-export async function enrollInCourse(userId: string, courseId: string) {
+/** Verificar si el usuario actual está matriculado en un curso */
+export async function isEnrolled(courseId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('course_id', courseId)
+    .single();
+  return !!data;
+}
+
+/** Obtener todos los cursos del usuario actual (estudiante) */
+export async function getMyEnrollments() {
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select('*, courses(id, title, cover_url, description, duration_hrs, level, category_id, categories(name))')
+    .order('enrolled_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+/** [ADMIN] Obtener todas las matrículas con detalle de usuario y curso */
+export async function getAllEnrollments() {
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select(`
+      *,
+      profiles(full_name, email, avatar_url),
+      courses(title, cover_url)
+    `)
+    .order('enrolled_at', { ascending: false });
+  if (error) throw error;
+  return data as Enrollment[];
+}
+
+/** [ADMIN] Matricular manualmente a un estudiante en un curso */
+export async function adminEnrollStudent(userId: string, courseId: string) {
   const { data, error } = await supabase
     .from('enrollments')
     .insert({ user_id: userId, course_id: courseId })
@@ -36,83 +74,81 @@ export async function enrollInCourse(userId: string, courseId: string) {
   return data;
 }
 
-export async function isEnrolled(userId: string, courseId: string): Promise<boolean> {
-  const { data } = await supabase
+/** [ADMIN] Eliminar una matrícula */
+export async function adminRemoveEnrollment(enrollmentId: string) {
+  const { error } = await supabase
     .from('enrollments')
-    .select('id')
+    .delete()
+    .eq('id', enrollmentId);
+  if (error) throw error;
+}
+
+/** Calcular el progreso de un estudiante en un curso (0-100) */
+export async function getCourseProgress(userId: string, courseId: string): Promise<number> {
+  // Contar lecciones totales del curso
+  const { count: totalLessons } = await supabase
+    .from('lessons')
+    .select('id', { count: 'exact' })
+    .in('module_id', supabase.from('modules').select('id').eq('course_id', courseId) as any);
+
+  if (!totalLessons || totalLessons === 0) return 0;
+
+  // Contar lecciones completadas por el usuario
+  const { count: completedLessons } = await supabase
+    .from('progress')
+    .select('id', { count: 'exact' })
     .eq('user_id', userId)
-    .eq('course_id', courseId)
-    .single();
-  return !!data;
+    .eq('completed', true)
+    .in('lesson_id', 
+      supabase
+        .from('lessons')
+        .select('id')
+        .in('module_id', supabase.from('modules').select('id').eq('course_id', courseId) as any) as any
+    );
+
+  return Math.round(((completedLessons ?? 0) / totalLessons) * 100);
 }
 
-export async function getEnrollmentsByCourse(courseId: string) {
-  const { data, error } = await supabase
-    .from('enrollments')
-    .select('*, profiles(full_name, avatar_url)')
-    .eq('course_id', courseId);
-  if (error) throw error;
-  return data;
-}
+/** Marcar una lección como completada */
+export async function markLessonComplete(lessonId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No autenticado');
 
-// ── Progress ─────────────────────────────────────────────────
-
-export async function getMyProgress(userId: string, courseId?: string) {
-  let query = supabase
+  const { error } = await supabase
     .from('progress')
-    .select('*')
-    .eq('user_id', userId);
-
-  if (courseId) {
-    // filtrar por lecciones de este curso
-    query = supabase
-      .from('progress')
-      .select('*, lessons!inner(module_id, modules!inner(course_id))')
-      .eq('user_id', userId)
-      .eq('lessons.modules.course_id', courseId);
-  }
-
-  const { data, error } = await query;
+    .upsert({ user_id: user.id, lesson_id: lessonId, completed: true, completed_at: new Date().toISOString() },
+      { onConflict: 'user_id,lesson_id' });
   if (error) throw error;
-  return data as Progress[];
 }
 
-export async function markLessonComplete(userId: string, lessonId: string) {
-  const { data, error } = await supabase
+/** Marcar una lección como incompleta */
+export async function markLessonIncomplete(lessonId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No autenticado');
+
+  const { error } = await supabase
     .from('progress')
-    .upsert(
-      { user_id: userId, lesson_id: lessonId, completed: true, completed_at: new Date().toISOString() },
-      { onConflict: 'user_id,lesson_id' }
-    )
-    .select()
-    .single();
+    .upsert({ user_id: user.id, lesson_id: lessonId, completed: false, completed_at: null },
+      { onConflict: 'user_id,lesson_id' });
   if (error) throw error;
-  return data;
 }
 
-export async function markLessonIncomplete(userId: string, lessonId: string) {
-  const { data, error } = await supabase
+/** Obtener IDs de lecciones completadas por el usuario en un curso */
+export async function getCompletedLessonIds(courseId: string): Promise<Set<string>> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return new Set();
+
+  const { data } = await supabase
     .from('progress')
-    .upsert(
-      { user_id: userId, lesson_id: lessonId, completed: false, completed_at: null },
-      { onConflict: 'user_id,lesson_id' }
-    )
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
+    .select('lesson_id')
+    .eq('user_id', user.id)
+    .eq('completed', true)
+    .in('lesson_id',
+      supabase
+        .from('lessons')
+        .select('id')
+        .in('module_id', supabase.from('modules').select('id').eq('course_id', courseId) as any) as any
+    );
 
-// ── Course progress % ─────────────────────────────────────────
-
-export function calcProgress(
-  lessons: { id: string }[],
-  progressRecords: Progress[]
-): number {
-  if (!lessons.length) return 0;
-  const completedIds = new Set(
-    progressRecords.filter((p) => p.completed).map((p) => p.lesson_id)
-  );
-  const completed = lessons.filter((l) => completedIds.has(l.id)).length;
-  return Math.round((completed / lessons.length) * 100);
+  return new Set((data ?? []).map(r => r.lesson_id));
 }

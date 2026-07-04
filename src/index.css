@@ -1,15 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Outfit:wght@400;600;700;800;900&display=swap');
 @import "tailwindcss";
 @source "../src";
 @plugin "@tailwindcss/typography";
 
+@theme {
+  /* ── Landing Brand Colors ── */
+  --color-primary:          #0ea5e9;
+  --color-primary-light:    #38bdf8;
+  --color-primary-dark:     #0284c7;
+  --color-ntt-dark:         #f8fafc;
+  --color-ntt-yellow:       #fcc400;
+  --color-background-light: #ffffff;
+  --color-background-dark:  #f8fafc;
+  --color-text-primary:     #0f172a;
+  --color-text-secondary:   #475569;
+
+  /* ── LMS Dashboard Dark Palette ── */
+  --color-lms-bg:           #0d0f16;
+  --color-lms-surface:      #13161f;
+  --color-lms-hover:        #1c2030;
+  --color-lms-border:       #1e2235;
+  --color-lms-text-primary: #e8eaf0;
+  --color-lms-text-muted:   #5c6478;
+
+  /* ── Fonts ── */
+  --font-sans:    "Inter",           ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit",          sans-serif;
+  --font-serif:   "Playfair Display", serif;
+  --font-body:    "Inter",           sans-serif;
+
+  /* ── Shadows ── */
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 15px rgba(13, 89, 242, 0.15);
+}
+
 @layer base {
   :root {
-    --color-bg: #FFFFFF;
+    --color-bg:   #FFFFFF;
     --color-text: #111111;
-    --color-primary: #0ea5e9; /* Sky 500 */
-    --color-primary-light: #38bdf8; /* Sky 400 */
-    --color-primary-dark: #0284c7; /* Sky 600 */
   }
 
   body {
@@ -22,37 +50,14 @@
   }
 }
 
-@theme {
-  --color-primary: #0ea5e9;
-  --color-primary-light: #38bdf8;
-  --color-primary-dark: #0284c7;
-  --color-ntt-dark: #f8fafc;
-  --color-ntt-yellow: #fcc400;
-  --color-background-light: #ffffff;
-  --color-background-dark: #f8fafc;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", sans-serif;
-  --font-serif: "Playfair Display", serif;
-  --font-body: "Inter", sans-serif;
-  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 15px rgba(13, 89, 242, 0.15);
-}
-
-:root {
-  --color-ntt-dark: #f8fafc;
-  --color-ntt-yellow: #fcc400;
-}
-
 @layer utilities {
+  /* ── Landing utilities ── */
   .glass-button {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
   }
-
   .glass-button:hover {
     box-shadow: 0 0 20px rgba(14, 165, 233, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.5);
     border-color: rgba(14, 165, 233, 0.3);
@@ -64,20 +69,17 @@
     -webkit-text-fill-color: transparent;
     background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light));
   }
-  
+
   .bg-gradient-primary {
     background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light));
   }
 
-  .perspective-1000 {
-    perspective: 1000px;
-  }
+  .perspective-1000 { perspective: 1000px; }
+  .preserve-3d      { transform-style: preserve-3d; }
+  .backface-hidden  { backface-visibility: hidden; }
 
-  .preserve-3d {
-    transform-style: preserve-3d;
-  }
-
-  .backface-hidden {
-    backface-visibility: hidden;
-  }
+  /* ── LMS Dark Scrollbar ── */
+  .lms-scroll::-webkit-scrollbar       { width: 4px; }
+  .lms-scroll::-webkit-scrollbar-track { background: transparent; }
+  .lms-scroll::-webkit-scrollbar-thumb { background: var(--color-lms-border); border-radius: 4px; }
 }

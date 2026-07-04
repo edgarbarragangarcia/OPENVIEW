@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
+import { UserPlus, Search, X, Users, BookOpen, Mail, Calendar } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
-import { User as UserIcon, UserPlus, X } from 'lucide-react';
+import { adminEnrollStudent } from '../../../../lib/enrollments';
 import { createClient } from '@supabase/supabase-js';
-import toast from 'react-hot-toast';
 
 interface Student {
   id: string;
@@ -10,129 +10,222 @@ interface Student {
   email: string;
   role: string;
   created_at: string;
+  enrollmentCount?: number;
 }
 
 export function StudentsView() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  
-  const [newStudent, setNewStudent] = useState({
-    email: '',
-    password: '',
-    full_name: ''
-  });
-  const [creating, setCreating] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [showEnroll, setShowEnroll] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selCourse, setSelCourse] = useState('');
+  const [form, setForm] = useState({ full_name: '', email: '', password: '' });
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
-  const loadStudents = async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', 'student')
-      .order('created_at', { ascending: false });
-      
-    if (data) setStudents(data as unknown as Student[]);
-    setLoading(false);
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
   };
 
-  useEffect(() => {
-    loadStudents();
-  }, []);
-
-  const handleCreateStudent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newStudent.email || !newStudent.password || !newStudent.full_name) {
-      return toast.error('Todos los campos son obligatorios');
-    }
-    setCreating(true);
-
+  const load = async () => {
+    setLoading(true);
     try {
-      // Usamos un cliente temporal sin persistencia para no cerrar la sesión del admin
+      // Load students with their enrollment count
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, role, created_at')
+        .eq('role', 'student')
+        .order('created_at', { ascending: false });
+
+      if (!data) return setStudents([]);
+
+      // Fetch enrollment counts
+      const withCounts = await Promise.all(
+        data.map(async s => {
+          const { count } = await supabase
+            .from('enrollments')
+            .select('id', { count: 'exact' })
+            .eq('user_id', s.id);
+          return { ...s, enrollmentCount: count ?? 0 };
+        })
+      );
+      setStudents(withCounts);
+    } catch (e: any) {
+      showToast(e.message, false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleCreate = async () => {
+    if (!form.full_name || !form.email || !form.password) {
+      return showToast('Completa todos los campos', false);
+    }
+    setSaving(true);
+    try {
+      // Use a secondary Supabase client to avoid disrupting the admin session
       const tempClient = createClient(
         import.meta.env.VITE_SUPABASE_URL,
         import.meta.env.VITE_SUPABASE_ANON_KEY,
         { auth: { persistSession: false, autoRefreshToken: false } }
       );
-
       const { error } = await tempClient.auth.signUp({
-        email: newStudent.email,
-        password: newStudent.password,
-        options: {
-          data: {
-            full_name: newStudent.full_name,
-          }
-        }
+        email: form.email,
+        password: form.password,
+        options: { data: { full_name: form.full_name } }
       });
-
       if (error) throw error;
-      
-      toast.success('Estudiante creado exitosamente');
-      setShowModal(false);
-      setNewStudent({ email: '', password: '', full_name: '' });
-      loadStudents();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al crear estudiante');
+
+      showToast(`Estudiante "${form.full_name}" creado exitosamente ✓`);
+      setShowAdd(false);
+      setForm({ full_name: '', email: '', password: '' });
+      setTimeout(load, 1500);
+    } catch (e: any) {
+      showToast(e.message, false);
     } finally {
-      setCreating(false);
+      setSaving(false);
     }
   };
 
+  const openEnrollModal = async (student: Student) => {
+    setSelectedStudent(student);
+    const { data } = await supabase.from('courses').select('id, title').order('title');
+    setCourses(data ?? []);
+    setSelCourse('');
+    setShowEnroll(true);
+  };
+
+  const handleEnroll = async () => {
+    if (!selectedStudent || !selCourse) return showToast('Selecciona un curso', false);
+    setSaving(true);
+    try {
+      await adminEnrollStudent(selectedStudent.id, selCourse);
+      showToast(`${selectedStudent.full_name} matriculado exitosamente ✓`);
+      setShowEnroll(false);
+      load();
+    } catch (e: any) {
+      showToast(e.message.includes('unique') ? 'Ya está matriculado en ese curso' : e.message, false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filtered = students.filter(s => {
+    const q = search.toLowerCase();
+    return s.full_name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q);
+  });
+
   return (
-    <div className="p-6 lg:p-8 space-y-6 relative">
+    <div className="p-6 lg:p-8 space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl font-semibold text-sm
+          ${toast.ok ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+          {toast.ok ? '✓' : '✕'} {toast.msg}
+        </div>
+      )}
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 mb-2">Estudiantes</h1>
-          <p className="text-slate-500">Administra los usuarios registrados en la plataforma</p>
+          <h1 className="text-2xl font-black text-lms-text-primary">Estudiantes</h1>
+          <p className="text-sm text-lms-text-muted mt-1">{students.length} estudiantes registrados</p>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 bg-sky-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-sky-600 transition-colors shadow-sm"
+        <button
+          onClick={() => setShowAdd(true)}
+          className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-violet-500/20"
         >
           <UserPlus size={18} /> Añadir Estudiante
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+      {/* Search */}
+      <div className="relative">
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lms-text-muted" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Buscar por nombre o email..."
+          className="w-full pl-10 pr-4 py-3 bg-lms-surface border border-lms-border rounded-xl text-sm text-lms-text-primary placeholder-lms-text-muted focus:outline-none focus:border-violet-500 transition-colors"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-sm uppercase tracking-wider text-slate-500">
-                <th className="p-4 font-bold">Estudiante</th>
-                <th className="p-4 font-bold">Rol</th>
-                <th className="p-4 font-bold">Fecha de Registro</th>
+              <tr className="border-b border-lms-border text-xs uppercase tracking-wider text-lms-text-muted">
+                <th className="px-5 py-4 font-bold">Estudiante</th>
+                <th className="px-5 py-4 font-bold">Email</th>
+                <th className="px-5 py-4 font-bold text-center">Cursos</th>
+                <th className="px-5 py-4 font-bold">Registro</th>
+                <th className="px-5 py-4 font-bold text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-lms-border">
               {loading ? (
+                [1,2,3].map(i => (
+                  <tr key={i}>
+                    <td colSpan={5} className="px-5 py-4">
+                      <div className="h-8 bg-lms-hover rounded-lg animate-pulse" />
+                    </td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="p-8 text-center text-slate-400">Cargando estudiantes...</td>
-                </tr>
-              ) : students.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="p-8 text-center text-slate-400">No hay estudiantes registrados.</td>
+                  <td colSpan={5} className="px-5 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3 text-lms-text-muted">
+                      <Users size={32} className="opacity-30" />
+                      <p className="text-sm">{search ? 'Sin resultados.' : 'Aún no hay estudiantes. ¡Añade el primero!'}</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
-                students.map(student => (
-                  <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="p-4">
+                filtered.map(s => (
+                  <tr key={s.id} className="hover:bg-lms-hover transition-colors group">
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                          <UserIcon size={20} />
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                          {(s.full_name || s.email || 'U').slice(0,2).toUpperCase()}
                         </div>
-                        <div>
-                          <span className="font-bold text-slate-800 block">{student.full_name || 'Sin nombre'}</span>
-                          <span className="text-xs text-slate-500">{student.id}</span>
-                        </div>
+                        <p className="text-sm font-semibold text-lms-text-primary">{s.full_name || '—'}</p>
                       </div>
                     </td>
-                    <td className="p-4">
-                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-bold bg-sky-50 text-sky-600 capitalize">
-                        {student.role}
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1.5 text-sm text-lms-text-muted">
+                        <Mail size={13} />
+                        {s.email}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black ${
+                        (s.enrollmentCount ?? 0) > 0
+                          ? 'bg-violet-500/15 text-violet-400'
+                          : 'bg-lms-hover text-lms-text-muted'
+                      }`}>
+                        {s.enrollmentCount ?? 0}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-slate-600">
-                      {new Date(student.created_at).toLocaleDateString()}
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1.5 text-xs text-lms-text-muted">
+                        <Calendar size={12} />
+                        {new Date(s.created_at).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => openEnrollModal(s)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-violet-400 border border-violet-500/30 hover:bg-violet-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <BookOpen size={12} /> Matricular
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -142,60 +235,70 @@ export function StudentsView() {
         </div>
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-xl font-black text-slate-900">Añadir Estudiante</h2>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X size={20} />
+      {/* Add Student Modal */}
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-lms-surface border border-lms-border rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-lms-border">
+              <h2 className="font-black text-lms-text-primary">Nuevo Estudiante</h2>
+              <button onClick={() => setShowAdd(false)} className="text-lms-text-muted hover:text-lms-text-primary"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              {[
+                { label: 'Nombre Completo', key: 'full_name', type: 'text', placeholder: 'Ej: Juan Pérez' },
+                { label: 'Email', key: 'email', type: 'email', placeholder: 'juan@email.com' },
+                { label: 'Contraseña', key: 'password', type: 'password', placeholder: 'Mínimo 6 caracteres' },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-lms-text-muted mb-2">{f.label}</label>
+                  <input
+                    type={f.type}
+                    placeholder={f.placeholder}
+                    value={form[f.key as keyof typeof form]}
+                    onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                    className="w-full px-4 py-3 bg-lms-bg border border-lms-border rounded-xl text-sm text-lms-text-primary placeholder-lms-text-muted focus:outline-none focus:border-violet-500 transition-colors"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 px-6 pb-6">
+              <button onClick={() => setShowAdd(false)} className="flex-1 py-3 rounded-xl border border-lms-border text-lms-text-muted hover:bg-lms-hover font-semibold text-sm transition-colors">Cancelar</button>
+              <button onClick={handleCreate} disabled={saving} className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm transition-colors disabled:opacity-50 shadow-lg shadow-violet-500/20">
+                {saving ? 'Creando...' : 'Crear Estudiante'}
               </button>
             </div>
-            
-            <form onSubmit={handleCreateStudent} className="p-6 space-y-4">
+          </div>
+        </div>
+      )}
+
+      {/* Enroll Modal */}
+      {showEnroll && selectedStudent && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-lms-surface border border-lms-border rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-lms-border">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Nombre Completo</label>
-                <input 
-                  type="text" required
-                  value={newStudent.full_name} onChange={e => setNewStudent({...newStudent, full_name: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
-                  placeholder="Ej. Juan Pérez"
-                />
+                <h2 className="font-black text-lms-text-primary">Matricular Estudiante</h2>
+                <p className="text-xs text-lms-text-muted mt-0.5">{selectedStudent.full_name}</p>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Correo Electrónico</label>
-                <input 
-                  type="email" required
-                  value={newStudent.email} onChange={e => setNewStudent({...newStudent, email: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
-                  placeholder="juan@ejemplo.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Contraseña</label>
-                <input 
-                  type="password" required minLength={6}
-                  value={newStudent.password} onChange={e => setNewStudent({...newStudent, password: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </div>
-              
-              <div className="pt-4 flex gap-3">
-                <button 
-                  type="button" onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit" disabled={creating}
-                  className="flex-1 px-4 py-2.5 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-600 transition-colors disabled:opacity-50"
-                >
-                  {creating ? 'Creando...' : 'Crear Estudiante'}
-                </button>
-              </div>
-            </form>
+              <button onClick={() => setShowEnroll(false)} className="text-lms-text-muted hover:text-lms-text-primary"><X size={20} /></button>
+            </div>
+            <div className="p-6">
+              <label className="block text-xs font-bold uppercase tracking-wider text-lms-text-muted mb-2">Selecciona el Curso</label>
+              <select
+                value={selCourse}
+                onChange={e => setSelCourse(e.target.value)}
+                className="w-full px-4 py-3 bg-lms-bg border border-lms-border rounded-xl text-sm text-lms-text-primary focus:outline-none focus:border-violet-500 transition-colors"
+              >
+                <option value="">-- Selecciona un curso --</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </div>
+            <div className="flex gap-3 px-6 pb-6">
+              <button onClick={() => setShowEnroll(false)} className="flex-1 py-3 rounded-xl border border-lms-border text-lms-text-muted hover:bg-lms-hover font-semibold text-sm transition-colors">Cancelar</button>
+              <button onClick={handleEnroll} disabled={saving} className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm transition-colors disabled:opacity-50 shadow-lg shadow-violet-500/20">
+                {saving ? 'Matriculando...' : 'Confirmar Matrícula'}
+              </button>
+            </div>
           </div>
         </div>
       )}

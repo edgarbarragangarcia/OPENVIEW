@@ -1,172 +1,352 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, PlayCircle, FileText, CheckCircle } from 'lucide-react';
-import { getCourseById } from '../../../../lib/courses';
-import { markLessonComplete, markLessonIncomplete, getMyProgress } from '../../../../lib/enrollments';
-import { useAuth } from '../../../../contexts/AuthContext';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock } from 'lucide-react';
+import { supabase } from '../../../../lib/supabase';
+import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 
-interface LessonViewerProps {
+interface Props {
   courseId: string;
   onBack: () => void;
 }
 
-export function LessonViewer({ courseId, onBack }: LessonViewerProps) {
-  const { user } = useAuth();
-  const [course, setCourse] = useState<any>(null);
-  const [activeLesson, setActiveLesson] = useState<any>(null);
-  const [progress, setProgress] = useState<any[]>([]);
+interface Lesson {
+  id: string;
+  title: string;
+  content: string | null;
+  video_url: string | null;
+  pdf_url: string | null;
+  duration_min: number;
+  position: number;
+  is_free: boolean;
+}
+
+interface Module {
+  id: string;
+  title: string;
+  position: number;
+  lessons: Lesson[];
+}
+
+interface CourseData {
+  id: string;
+  title: string;
+  cover_url: string | null;
+  modules: Module[];
+}
+
+export function LessonViewer({ courseId, onBack }: Props) {
+  const [course, setCourse] = useState<CourseData | null>(null);
+  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-
-  const loadData = async () => {
-    if (!user) return;
-    const [courseData, progressData] = await Promise.all([
-      getCourseById(courseId),
-      getMyProgress(user.id, courseId)
-    ]);
-    
-    setCourse(courseData);
-    setProgress(progressData);
-    setLoading(false);
-
-    // Seleccionar la primera lección no completada si no hay activa
-    if (courseData?.modules?.length > 0 && !activeLesson) {
-      const allLessons = courseData.modules.flatMap((m: any) => m.lessons || []).sort((a: any, b: any) => a.position - b.position);
-      const firstUncompleted = allLessons.find((l: any) => !progressData.find((p: any) => p.lesson_id === l.id && p.completed));
-      setActiveLesson(firstUncompleted || allLessons[0]);
-    }
-  };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    loadData();
-  }, [courseId, user]);
+    async function load() {
+      try {
+        const { data } = await supabase
+          .from('courses')
+          .select('id, title, cover_url, modules(id, title, position, lessons(id, title, content, video_url, pdf_url, duration_min, position, is_free))')
+          .eq('id', courseId)
+          .single();
 
-  const toggleComplete = async (lessonId: string, isCompleted: boolean) => {
-    if (!user) return;
-    if (isCompleted) {
-      await markLessonIncomplete(user.id, lessonId);
-    } else {
-      await markLessonComplete(user.id, lessonId);
+        if (data) {
+          // Sort modules and lessons by position
+          data.modules = (data.modules as Module[])
+            .sort((a, b) => a.position - b.position)
+            .map(m => ({ ...m, lessons: m.lessons.sort((a, b) => a.position - b.position) }));
+          
+          setCourse(data as unknown as CourseData);
+
+          // Open first module, select first lesson
+          const firstModule = data.modules[0];
+          if (firstModule) {
+            setOpenModules(new Set([firstModule.id]));
+            if (firstModule.lessons?.[0]) {
+              setActiveLesson(firstModule.lessons[0]);
+            }
+          }
+        }
+
+        const completedIds = await getCompletedLessonIds(courseId);
+        setCompleted(completedIds);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
-    await loadData();
+    load();
+  }, [courseId]);
+
+  const toggleModule = (id: string) => {
+    setOpenModules(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   };
 
-  if (loading) return <div className="p-8 text-slate-500">Cargando lección...</div>;
-  if (!course) return <div className="p-8 text-red-500">Curso no encontrado</div>;
+  const toggleComplete = async (lessonId: string) => {
+    try {
+      if (completed.has(lessonId)) {
+        await markLessonIncomplete(lessonId);
+        setCompleted(prev => { const n = new Set(prev); n.delete(lessonId); return n; });
+      } else {
+        await markLessonComplete(lessonId);
+        setCompleted(prev => new Set([...prev, lessonId]));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-  const isPDF = activeLesson?.video_url?.toLowerCase().endsWith('.pdf');
-  const isVideo = activeLesson?.video_url && !isPDF;
-  const isCompleted = progress.find(p => p.lesson_id === activeLesson?.id)?.completed;
+  // Calculate total progress
+  const totalLessons = course?.modules.reduce((acc, m) => acc + m.lessons.length, 0) ?? 0;
+  const progressPct = totalLessons > 0 ? Math.round((completed.size / totalLessons) * 100) : 0;
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-lms-bg">
+        <div className="w-10 h-10 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="flex h-full items-center justify-center bg-lms-bg text-lms-text-muted">
+        Curso no encontrado.
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full flex-col lg:flex-row bg-white">
-      {/* Contenido Principal */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto">
-        <div className="p-4 border-b border-slate-100 flex items-center gap-4 sticky top-0 bg-white z-10">
-          <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <ArrowLeft size={20} className="text-slate-600" />
+    <div className="flex h-full bg-lms-bg overflow-hidden">
+
+      {/* ── Sidebar: Course Index ── */}
+      <aside className={`
+        flex flex-col w-72 shrink-0 h-full bg-lms-surface border-r border-lms-border overflow-hidden
+        fixed lg:relative z-30 transition-transform duration-300
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Course header */}
+        <div className="p-4 border-b border-lms-border">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-xs text-lms-text-muted hover:text-cyan-400 font-semibold transition-colors mb-4"
+          >
+            <ArrowLeft size={14} /> Volver a mis cursos
           </button>
-          <h2 className="font-bold text-slate-900 truncate">{course.title}</h2>
+          <h2 className="text-sm font-black text-lms-text-primary line-clamp-2">{course.title}</h2>
+          {/* Progress */}
+          <div className="mt-3 space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="text-lms-text-muted">Tu progreso</span>
+              <span className="text-cyan-400 font-bold">{progressPct}%</span>
+            </div>
+            <div className="h-1.5 bg-lms-hover rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-500 to-sky-500 rounded-full transition-all duration-500"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-lms-text-muted">{completed.size} de {totalLessons} lecciones completadas</p>
+          </div>
         </div>
 
-        <div className="flex-1 p-4 lg:p-8">
-          {activeLesson ? (
-            <div className="max-w-4xl mx-auto space-y-6">
-              {/* Reproductor / Visor */}
-              <div className="aspect-video bg-slate-900 rounded-2xl overflow-hidden relative shadow-lg flex items-center justify-center">
-                {isPDF ? (
-                  <iframe 
-                    src={`${activeLesson.video_url}#toolbar=0`} 
-                    className="w-full h-full border-0 bg-white"
-                    title="PDF Viewer"
-                  />
-                ) : isVideo ? (
-                  <video 
-                    src={activeLesson.video_url} 
-                    controls 
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-slate-500 flex flex-col items-center">
-                    <FileText size={48} className="mb-4 opacity-50" />
-                    <p>No hay contenido multimedia adjunto.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Título y Acciones */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl lg:text-3xl font-black text-slate-900 mb-2">{activeLesson.title}</h1>
-                  {activeLesson.content && (
-                    <p className="text-slate-600 leading-relaxed">{activeLesson.content}</p>
-                  )}
+        {/* Module / Lesson list */}
+        <div className="flex-1 overflow-y-auto py-2">
+          {course.modules.map((mod, mIdx) => (
+            <div key={mod.id}>
+              <button
+                onClick={() => toggleModule(mod.id)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-lms-hover transition-colors group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[10px] font-black text-lms-text-muted shrink-0">M{mIdx + 1}</span>
+                  <span className="text-xs font-bold text-lms-text-primary text-left line-clamp-1">{mod.title}</span>
                 </div>
+                {openModules.has(mod.id)
+                  ? <ChevronDown size={14} className="text-lms-text-muted shrink-0" />
+                  : <ChevronRight size={14} className="text-lms-text-muted shrink-0" />
+                }
+              </button>
 
-                <button 
-                  onClick={() => toggleComplete(activeLesson.id, isCompleted)}
-                  className={`shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm transition-colors ${
-                    isCompleted 
-                      ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                      : 'bg-slate-900 text-white hover:bg-sky-600'
-                  }`}
-                >
-                  <CheckCircle size={18} />
-                  {isCompleted ? 'Completado' : 'Marcar Completado'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              Selecciona una lección del menú.
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Sidebar de Módulos (Derecha) */}
-      <div className="w-full lg:w-80 border-l border-slate-100 bg-slate-50 h-full overflow-y-auto shrink-0">
-        <div className="p-4 border-b border-slate-200 bg-white sticky top-0 z-10">
-          <h3 className="font-bold text-slate-900">Contenido del Curso</h3>
-        </div>
-        
-        <div className="p-4 space-y-4">
-          {course.modules?.sort((a: any, b: any) => a.position - b.position).map((mod: any) => (
-            <div key={mod.id} className="space-y-1">
-              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-2 mb-2">{mod.title}</h4>
-              {mod.lessons?.sort((a: any, b: any) => a.position - b.position).map((lesson: any) => {
-                const isActive = activeLesson?.id === lesson.id;
-                const isLessonCompleted = progress.find(p => p.lesson_id === lesson.id)?.completed;
-                const lessonIsPDF = lesson.video_url?.toLowerCase().endsWith('.pdf');
-
-                return (
-                  <button 
-                    key={lesson.id}
-                    onClick={() => setActiveLesson(lesson)}
-                    className={`w-full text-left flex items-start gap-3 p-3 rounded-xl transition-all ${
-                      isActive 
-                        ? 'bg-white shadow-sm border border-sky-200' 
-                        : 'hover:bg-slate-200/50 border border-transparent'
-                    }`}
-                  >
-                    <div className="mt-0.5 shrink-0">
-                      {isLessonCompleted ? (
-                        <CheckCircle size={16} className="text-emerald-500" />
-                      ) : lessonIsPDF ? (
-                        <FileText size={16} className={isActive ? 'text-sky-500' : 'text-slate-400'} />
-                      ) : (
-                        <PlayCircle size={16} className={isActive ? 'text-sky-500' : 'text-slate-400'} />
-                      )}
-                    </div>
-                    <div>
-                      <p className={`text-sm font-medium leading-tight ${isActive ? 'text-sky-700' : 'text-slate-700'}`}>
-                        {lesson.title}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1">{lesson.duration_min} min</p>
-                    </div>
-                  </button>
-                );
-              })}
+              {openModules.has(mod.id) && (
+                <div className="pb-2">
+                  {mod.lessons.map((lesson, lIdx) => {
+                    const isActive = activeLesson?.id === lesson.id;
+                    const isDone = completed.has(lesson.id);
+                    return (
+                      <button
+                        key={lesson.id}
+                        onClick={() => { setActiveLesson(lesson); setSidebarOpen(false); }}
+                        className={`w-full flex items-center gap-3 pl-8 pr-4 py-2.5 transition-all text-left group ${
+                          isActive
+                            ? 'bg-cyan-500/10 border-r-2 border-cyan-500'
+                            : 'hover:bg-lms-hover'
+                        }`}
+                      >
+                        <div className="shrink-0">
+                          {isDone
+                            ? <CheckCircle size={15} className="text-emerald-400" />
+                            : isActive
+                              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-400 flex items-center justify-center">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                                </div>
+                              : <Circle size={15} className="text-lms-text-muted/40" />
+                          }
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-semibold line-clamp-1 ${isActive ? 'text-cyan-400' : isDone ? 'text-lms-text-muted' : 'text-lms-text-primary'}`}>
+                            {lIdx + 1}. {lesson.title}
+                          </p>
+                          {lesson.duration_min > 0 && (
+                            <p className="text-[10px] text-lms-text-muted mt-0.5">{lesson.duration_min} min</p>
+                          )}
+                        </div>
+                        {lesson.pdf_url && <FileText size={11} className="text-lms-text-muted shrink-0" />}
+                        {lesson.video_url && <Play size={11} className="text-lms-text-muted shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
+        </div>
+      </aside>
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* ── Main Content ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Lesson topbar */}
+        <div className="flex items-center justify-between px-4 lg:px-6 h-14 bg-lms-surface border-b border-lms-border shrink-0">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden flex items-center gap-2 text-xs text-lms-text-muted hover:text-lms-text-primary font-semibold"
+          >
+            <BookOpen size={15} /> Índice
+          </button>
+          <h3 className="text-sm font-bold text-lms-text-primary truncate px-4">
+            {activeLesson?.title ?? 'Selecciona una lección'}
+          </h3>
+          {activeLesson && (
+            <button
+              onClick={() => toggleComplete(activeLesson.id)}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                completed.has(activeLesson.id)
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                  : 'bg-lms-hover text-lms-text-muted hover:text-lms-text-primary border border-lms-border'
+              }`}
+            >
+              {completed.has(activeLesson.id)
+                ? <><CheckCircle size={13} /> Completada</>
+                : <><Circle size={13} /> Marcar lista</>
+              }
+            </button>
+          )}
+        </div>
+
+        {/* Lesson body */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+          {!activeLesson ? (
+            <div className="flex flex-col items-center justify-center h-full text-center text-lms-text-muted gap-4">
+              <BookOpen size={40} className="opacity-20" />
+              <p className="text-sm">Selecciona una lección del panel izquierdo para comenzar</p>
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <h2 className="text-xl font-black text-lms-text-primary">{activeLesson.title}</h2>
+
+              {/* Video Player */}
+              {activeLesson.video_url && (
+                <div className="rounded-2xl overflow-hidden bg-black aspect-video">
+                  <iframe
+                    src={activeLesson.video_url}
+                    title={activeLesson.title}
+                    className="w-full h-full"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
+              )}
+
+              {/* PDF Viewer */}
+              {activeLesson.pdf_url && (
+                <div className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-lms-border">
+                    <FileText size={15} className="text-cyan-400" />
+                    <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">Material PDF</span>
+                    <a
+                      href={activeLesson.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
+                    >
+                      Abrir en nueva pestaña →
+                    </a>
+                  </div>
+                  <iframe
+                    src={activeLesson.pdf_url}
+                    title={`PDF - ${activeLesson.title}`}
+                    className="w-full h-[70vh]"
+                  />
+                </div>
+              )}
+
+              {/* Text Content */}
+              {activeLesson.content && (
+                <div className="prose prose-invert prose-sm max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6">
+                  <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                </div>
+              )}
+
+              {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
+                <div className="flex flex-col items-center justify-center py-16 bg-lms-surface border border-lms-border rounded-2xl text-lms-text-muted gap-3">
+                  <Lock size={32} className="opacity-20" />
+                  <p className="text-sm">Esta lección aún no tiene contenido.</p>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex justify-between pt-4 border-t border-lms-border">
+                {/* Previous lesson */}
+                {(() => {
+                  const allLessons = course?.modules.flatMap(m => m.lessons) ?? [];
+                  const idx = allLessons.findIndex(l => l.id === activeLesson.id);
+                  const prev = idx > 0 ? allLessons[idx - 1] : null;
+                  const next = idx < allLessons.length - 1 ? allLessons[idx + 1] : null;
+                  return (
+                    <>
+                      <button
+                        onClick={() => prev && setActiveLesson(prev)}
+                        disabled={!prev}
+                        className="flex items-center gap-2 text-sm font-semibold text-lms-text-muted hover:text-lms-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ArrowLeft size={16} /> Anterior
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!completed.has(activeLesson.id)) toggleComplete(activeLesson.id);
+                          if (next) setActiveLesson(next);
+                        }}
+                        disabled={!next}
+                        className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg shadow-cyan-500/20"
+                      >
+                        {next ? 'Siguiente lección' : '¡Curso completado!'} <ChevronRight size={16} />
+                      </button>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
