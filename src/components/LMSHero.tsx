@@ -29,7 +29,7 @@ export function LMSHero() {
           className="inline-flex items-center gap-2 bg-sky-50 border border-sky-200 text-sky-700 text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-8 shadow-sm"
         >
           <Sparkles className="w-3.5 h-3.5 text-sky-500" />
-          Open View Academy · 2025
+          Open View Academy · 2026
         </motion.div>
 
         {/* Headline */}
