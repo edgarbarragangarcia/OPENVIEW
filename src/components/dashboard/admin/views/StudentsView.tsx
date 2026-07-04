@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 interface Student {
   id: string;
   full_name: string;
-  email: string;
+  email?: string;
   role: string;
   created_at: string;
   enrollmentCount?: number;
@@ -37,7 +37,7 @@ export function StudentsView() {
       // Load students with their enrollment count
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role, created_at')
+        .select('id, full_name, role, created_at')
         .eq('role', 'student')
         .order('created_at', { ascending: false });
 
@@ -118,7 +118,7 @@ export function StudentsView() {
 
   const filtered = students.filter(s => {
     const q = search.toLowerCase();
-    return s.full_name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q);
+    return s.full_name?.toLowerCase().includes(q) || (s.email ?? '').toLowerCase().includes(q);
   });
 
   return (

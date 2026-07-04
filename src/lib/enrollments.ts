@@ -55,7 +55,7 @@ export async function getAllEnrollments() {
     .from('enrollments')
     .select(`
       *,
-      profiles(full_name, email, avatar_url),
+      profiles(full_name, avatar_url),
       courses(title, cover_url)
     `)
     .order('enrolled_at', { ascending: false });

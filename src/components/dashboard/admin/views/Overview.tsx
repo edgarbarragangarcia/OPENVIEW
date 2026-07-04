@@ -12,7 +12,7 @@ interface Stats {
 interface RecentEnrollment {
   id: string;
   enrolled_at: string;
-  profiles: { full_name: string; email: string } | null;
+  profiles: { full_name: string } | null;
   courses: { title: string } | null;
 }
 
@@ -37,7 +37,7 @@ export function Overview({ onNavigate }: OverviewProps) {
           supabase.from('enrollments').select('id', { count: 'exact' }),
           supabase.from('courses').select('id', { count: 'exact' }).eq('published', true),
           supabase.from('enrollments')
-            .select('id, enrolled_at, profiles(full_name, email), courses(title)')
+            .select('id, enrolled_at, profiles(full_name), courses(title)')
             .order('enrolled_at', { ascending: false })
             .limit(5),
           supabase.from('courses')
@@ -173,7 +173,7 @@ export function Overview({ onNavigate }: OverviewProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-lms-text-primary truncate">
-                      {e.profiles?.full_name ?? e.profiles?.email ?? 'Desconocido'}
+                      {e.profiles?.full_name ?? 'Desconocido'}
                     </p>
                     <p className="text-xs text-lms-text-muted truncate">{e.courses?.title ?? '-'}</p>
                   </div>

@@ -13,7 +13,7 @@ interface Lesson {
   title: string;
   content: string | null;
   video_url: string | null;
-  pdf_url: string | null;
+  pdf_url?: string | null;
   duration_min: number;
   position: number;
   is_free: boolean;
@@ -46,7 +46,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
       try {
         const { data } = await supabase
           .from('courses')
-          .select('id, title, cover_url, modules(id, title, position, lessons(id, title, content, video_url, pdf_url, duration_min, position, is_free))')
+          .select('id, title, cover_url, modules(id, title, position, lessons(id, title, content, video_url, duration_min, position, is_free))')
           .eq('id', courseId)
           .single();
 

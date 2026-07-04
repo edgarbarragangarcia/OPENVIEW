@@ -4,7 +4,7 @@ import { supabase } from '../../../../lib/supabase';
 import { getAllEnrollments, adminEnrollStudent, adminRemoveEnrollment } from '../../../../lib/enrollments';
 
 interface Course { id: string; title: string }
-interface Student { id: string; full_name: string; email: string }
+interface Student { id: string; full_name: string; email?: string }
 
 export function EnrollmentsView() {
   const [enrollments, setEnrollments] = useState<any[]>([]);
@@ -39,7 +39,7 @@ export function EnrollmentsView() {
 
   const openModal = async () => {
     const [st, co] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email').eq('role', 'student').order('full_name'),
+      supabase.from('profiles').select('id, full_name').eq('role', 'student').order('full_name'),
       supabase.from('courses').select('id, title').order('title'),
     ]);
     setStudents(st.data ?? []);
@@ -209,7 +209,7 @@ export function EnrollmentsView() {
                 >
                   <option value="">-- Selecciona un estudiante --</option>
                   {students.map(s => (
-                    <option key={s.id} value={s.id}>{s.full_name || s.email}</option>
+                    <option key={s.id} value={s.id}>{s.full_name || 'Sin nombre'}</option>
                   ))}
                 </select>
               </div>
