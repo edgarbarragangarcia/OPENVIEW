@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { User as UserIcon, Save } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
+import toast from 'react-hot-toast';
 
 export function Profile() {
   const { user } = useAuth();
@@ -13,8 +14,8 @@ export function Profile() {
     const { error } = await supabase.auth.updateUser({
       data: { full_name: fullName }
     });
-    if (error) alert('Error actualizando perfil');
-    else alert('Perfil actualizado');
+    if (error) toast.error('Error actualizando perfil');
+    else toast.success('Perfil actualizado');
     setLoading(false);
   };
 

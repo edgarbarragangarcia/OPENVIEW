@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { File, Video, Save, Trash2, UploadCloud } from 'lucide-react';
 import { Lesson, createLesson, updateLesson, deleteLesson, uploadFile, getFileUrl } from '../../../../lib/courses';
+import toast from 'react-hot-toast';
 
 interface LessonBuilderProps {
   moduleId: string;
@@ -44,27 +45,30 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel }: LessonBui
       const url = getFileUrl('lms_assets', path);
       
       setFormData(prev => ({ ...prev, video_url: url }));
+      toast.success('Archivo subido');
     } catch (err) {
       console.error(err);
-      alert('Error al subir el archivo. Revisa los permisos del bucket.');
+      toast.error('Error al subir el archivo. Revisa los permisos del bucket.');
     } finally {
       setUploadingFile(false);
     }
   };
 
   const handleSave = async () => {
-    if (!formData.title) return alert('El título es requerido');
+    if (!formData.title) return toast.error('El título es requerido');
     setLoading(true);
     try {
       if (lesson?.id) {
         await updateLesson(lesson.id, formData);
+        toast.success('Lección actualizada');
       } else {
         await createLesson({ ...formData, module_id: moduleId });
+        toast.success('Lección creada');
       }
       onSaved();
     } catch (err) {
       console.error(err);
-      alert('Error guardando la lección');
+      toast.error('Error guardando la lección');
     } finally {
       setLoading(false);
     }
@@ -76,10 +80,11 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel }: LessonBui
     setLoading(true);
     try {
       await deleteLesson(lesson.id);
+      toast.success('Lección eliminada');
       onSaved();
     } catch (err) {
       console.error(err);
-      alert('Error al eliminar');
+      toast.error('Error al eliminar');
       setLoading(false);
     }
   };

@@ -3,6 +3,7 @@ import { ArrowLeft, Save, Plus } from 'lucide-react';
 import { Course, getCourseById, createCourse, updateCourse, getCategories, Category, createModule } from '../../../../lib/courses';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { ModuleBuilder } from './ModuleBuilder';
+import toast from 'react-hot-toast';
 
 interface CourseFormProps {
   courseId?: string;
@@ -67,16 +68,15 @@ export function CourseForm({ courseId, onBack }: CourseFormProps) {
     try {
       if (courseId) {
         await updateCourse(courseId, formData);
-        alert('Curso actualizado');
+        toast.success('Curso actualizado');
       } else {
         const newCourse = await createCourse({ ...formData, created_by: user.id });
-        // After creating, we should ideally go to edit mode to add content
-        alert('Curso creado, ahora puedes añadir contenido.');
+        toast.success('Curso creado, ahora puedes añadir contenido.');
         onBack(); // Simplest is to go back to list
       }
     } catch (e) {
       console.error(e);
-      alert('Error guardando curso');
+      toast.error('Error guardando curso');
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export function CourseForm({ courseId, onBack }: CourseFormProps) {
       await createModule({ course_id: courseId, title, position: (courseData?.modules?.length || 0) });
       await loadCourse();
     } catch (err) {
-      alert('Error creando módulo');
+      toast.error('Error creando módulo');
     } finally {
       setLoading(false);
     }

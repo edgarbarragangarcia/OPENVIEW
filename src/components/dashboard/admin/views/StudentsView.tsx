@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../../lib/supabase';
 import { User as UserIcon, UserPlus, X } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import toast from 'react-hot-toast';
 
 interface Student {
   id: string;
@@ -42,7 +43,7 @@ export function StudentsView() {
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudent.email || !newStudent.password || !newStudent.full_name) {
-      return alert('Todos los campos son obligatorios');
+      return toast.error('Todos los campos son obligatorios');
     }
     setCreating(true);
 
@@ -66,12 +67,12 @@ export function StudentsView() {
 
       if (error) throw error;
       
-      alert('Estudiante creado exitosamente');
+      toast.success('Estudiante creado exitosamente');
       setShowModal(false);
       setNewStudent({ email: '', password: '', full_name: '' });
       loadStudents();
     } catch (err: any) {
-      alert(err.message || 'Error al crear estudiante');
+      toast.error(err.message || 'Error al crear estudiante');
     } finally {
       setCreating(false);
     }
