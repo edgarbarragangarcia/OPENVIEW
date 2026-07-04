@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users } from 'lucide-react';
 import { Course, getCourses, updateCourse, deleteCourse } from '../../../../lib/courses';
+import { ConfirmModal } from '../../shared/Modals';
 
 interface CoursesManagerProps {
   onEdit: (courseId?: string) => void;
@@ -23,6 +24,7 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Course | null>(null);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -53,14 +55,16 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
     }
   };
 
-  const handleDelete = async (course: Course) => {
-    if (!confirm(`¿Eliminar "${course.title}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
     try {
-      await deleteCourse(course.id);
+      await deleteCourse(deleteConfirm.id);
       showToast('Curso eliminado');
       load();
     } catch (e: any) {
       showToast(e.message, false);
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -68,6 +72,17 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
+      
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        title="Eliminar Curso"
+        message={`¿Estás seguro de que deseas eliminar el curso "${deleteConfirm?.title}"? Esta acción no se puede deshacer.`}
+        confirmText="Sí, Eliminar Curso"
+        isDestructive={true}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteConfirm(null)}
+      />
       {/* Toast */}
       {toast && (
         <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl font-semibold text-sm
@@ -147,7 +162,7 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
                     <Edit3 size={13} /> Editar
                   </button>
                   <button
-                    onClick={() => handleDelete(course)}
+                    onClick={() => setDeleteConfirm(course)}
                     className="flex items-center gap-1.5 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-md text-red-300 rounded-xl text-xs font-bold border border-red-500/30 transition-colors"
                   >
                     <Trash2 size={13} /> Eliminar

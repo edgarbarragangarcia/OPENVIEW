@@ -1,164 +1,153 @@
 import { useState } from 'react';
-import { File, Video, Save, Trash2, UploadCloud } from 'lucide-react';
-import { Lesson, createLesson, updateLesson, deleteLesson, uploadFile, getFileUrl } from '../../../../lib/courses';
-import toast from 'react-hot-toast';
+import { Save, X, Trash2 } from 'lucide-react';
+import { Lesson, createLesson, updateLesson, deleteLesson } from '../../../../lib/courses';
+import { ConfirmModal } from '../../shared/Modals';
 
 interface LessonBuilderProps {
   moduleId: string;
   lesson?: Lesson;
   onSaved: () => void;
   onCancel: () => void;
+  onRefresh: () => void;
 }
 
-export function LessonBuilder({ moduleId, lesson, onSaved, onCancel }: LessonBuilderProps) {
+export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }: LessonBuilderProps) {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<Partial<Lesson>>(
-    lesson || {
-      title: '',
-      content: '',
-      video_url: '', // Here we will save either the YouTube URL or the Supabase Storage URL (PDF/Video)
-      duration_min: 5,
-      is_free: false,
-    }
-  );
-  const [uploadingFile, setUploadingFile] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [formData, setFormData] = useState<Partial<Lesson>>(lesson || {
+    title: '',
+    content: '',
+    video_url: '',
+    pdf_url: '',
+    duration_min: 5,
+    is_free: false,
+  });
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
-    }));
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingFile(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-      const path = `lessons/${fileName}`;
-      
-      await uploadFile('lms_assets', path, file);
-      const url = getFileUrl('lms_assets', path);
-      
-      setFormData(prev => ({ ...prev, video_url: url }));
-      toast.success('Archivo subido');
-    } catch (err) {
-      console.error(err);
-      toast.error('Error al subir el archivo. Revisa los permisos del bucket.');
-    } finally {
-      setUploadingFile(false);
-    }
+    setFormData(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSave = async () => {
-    if (!formData.title) return toast.error('El título es requerido');
+    if (!formData.title) return;
     setLoading(true);
     try {
-      if (lesson?.id) {
+      if (lesson) {
         await updateLesson(lesson.id, formData);
-        toast.success('Lección actualizada');
       } else {
-        await createLesson({ ...formData, module_id: moduleId });
-        toast.success('Lección creada');
+        await createLesson({ ...formData, module_id: moduleId } as Omit<Lesson, 'id'>);
       }
       onSaved();
-    } catch (err) {
-      console.error(err);
-      toast.error('Error guardando la lección');
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!lesson?.id) return;
-    if (!confirm('¿Eliminar esta lección?')) return;
+    if (!lesson) return;
     setLoading(true);
     try {
       await deleteLesson(lesson.id);
-      toast.success('Lección eliminada');
-      onSaved();
-    } catch (err) {
-      console.error(err);
-      toast.error('Error al eliminar');
+      onRefresh();
+      onCancel();
+    } catch (e) {
+      console.error(e);
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
-      <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Título de la Lección</label>
-        <input 
-          name="title" value={formData.title} onChange={handleChange}
-          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500/20"
-          placeholder="Ej. Introducción a IA"
+    <div className="bg-lms-surface border border-cyan-500/30 rounded-xl p-5 shadow-lg shadow-cyan-500/5 relative animate-in fade-in zoom-in-95 duration-200">
+      {lesson && (
+        <ConfirmModal
+          isOpen={showDeleteConfirm}
+          title="Eliminar Lección"
+          message={`¿Estás seguro de que deseas eliminar la lección "${lesson.title}"? Esta acción no se puede deshacer.`}
+          confirmText="Sí, Eliminar Lección"
+          isDestructive={true}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
         />
+      )}
+
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="font-black text-lms-text-primary">{lesson ? 'Editar Lección' : 'Nueva Lección'}</h4>
+        <div className="flex gap-2">
+          {lesson && (
+            <button 
+              onClick={() => setShowDeleteConfirm(true)} 
+              className="p-1.5 text-lms-text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+          <button onClick={onCancel} className="p-1.5 text-lms-text-muted hover:text-lms-text-primary hover:bg-lms-hover rounded-lg transition-colors">
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Archivo adjunto o URL (Video/PDF)</label>
-        <div className="flex gap-2">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Título</label>
           <input 
-            name="video_url" value={formData.video_url} onChange={handleChange}
-            className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500/20"
-            placeholder="URL externa o sube un archivo 👉"
+            name="title" value={formData.title} onChange={handleChange} autoFocus
+            className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
+            placeholder="Ej. Introducción al tema"
           />
-          <div className="relative">
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">URL Video (Youtube/Vimeo)</label>
             <input 
-              type="file" 
-              onChange={handleFileUpload} 
-              className="absolute inset-0 opacity-0 cursor-pointer w-full"
-              accept="video/mp4,application/pdf"
-              title="Subir PDF o Video"
+              name="video_url" value={formData.video_url || ''} onChange={handleChange}
+              className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
             />
-            <button type="button" className="h-full px-3 bg-sky-50 text-sky-600 rounded-lg border border-sky-100 flex items-center gap-2 hover:bg-sky-100 transition-colors">
-              <UploadCloud size={16} />
-              {uploadingFile ? 'Subiendo...' : 'Subir'}
-            </button>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">URL Archivo PDF</label>
+            <input 
+              name="pdf_url" value={formData.pdf_url || ''} onChange={handleChange}
+              className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
+            />
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Duración (minutos)</label>
-          <input 
-            name="duration_min" type="number" value={formData.duration_min} onChange={handleChange}
-            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500/20"
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Contenido (HTML / Texto)</label>
+          <textarea 
+            name="content" value={formData.content || ''} onChange={handleChange} rows={4}
+            className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors resize-none placeholder-lms-text-muted"
           />
         </div>
-        <div className="flex items-center pt-5">
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-            <input 
-              type="checkbox" name="is_free" checked={formData.is_free} onChange={handleChange}
-              className="rounded text-sky-500 focus:ring-sky-500"
-            />
-            Lección de muestra (Gratis)
-          </label>
-        </div>
-      </div>
 
-      <div className="flex items-center justify-between pt-2">
-        <button 
-          onClick={handleDelete}
-          disabled={!lesson?.id || loading}
-          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-0"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-lms-text-muted">Duración (min)</label>
+              <input 
+                name="duration_min" type="number" min="0" value={formData.duration_min} onChange={handleChange}
+                className="w-16 px-2 py-1 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary text-center focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input 
+                name="is_free" type="checkbox" checked={formData.is_free} onChange={handleChange}
+                className="rounded border-lms-border text-cyan-500 focus:ring-cyan-500 bg-lms-bg"
+              />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-lms-text-muted group-hover:text-lms-text-primary transition-colors">Vista Previa Gratis</span>
+            </label>
+          </div>
 
-        <div className="flex gap-2">
-          <button onClick={onCancel} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">
-            Cancelar
-          </button>
-          <button onClick={handleSave} disabled={loading || uploadingFile} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50">
-            <Save size={16} />
-            Guardar
+          <button 
+            onClick={handleSave} disabled={loading || !formData.title}
+            className="inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-50 shadow-lg shadow-cyan-500/20"
+          >
+            <Save size={16} /> Guardar Lección
           </button>
         </div>
       </div>

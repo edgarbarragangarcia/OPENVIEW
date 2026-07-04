@@ -36,11 +36,13 @@ export interface Lesson {
   id: string;
   module_id: string;
   title: string;
-  content: string;
-  video_url: string;
+  content: string | null;
+  video_url: string | null;
+  pdf_url?: string | null;
   duration_min: number;
   position: number;
   is_free: boolean;
+  created_at?: string;
 }
 
 // ── Courses ──────────────────────────────────────────────────

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, UserCheck, Search, BookOpen, X } from 'lucide-react';
+import { Search, Plus, X, BookOpen, UserCheck, Trash2 } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { getAllEnrollments, adminEnrollStudent, adminRemoveEnrollment } from '../../../../lib/enrollments';
+import { ConfirmModal } from '../../shared/Modals';
 
 interface Course { id: string; title: string }
 interface Student { id: string; full_name: string; email?: string }
@@ -17,6 +18,7 @@ export function EnrollmentsView() {
   const [selCourse, setSelCourse] = useState('');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -64,14 +66,20 @@ export function EnrollmentsView() {
     }
   };
 
-  const handleRemove = async (id: string) => {
-    if (!confirm('¿Eliminar esta matrícula?')) return;
+  const confirmDelete = (id: string, name: string) => {
+    setDeleteConfirm({ id, name });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
     try {
-      await adminRemoveEnrollment(id);
-      showToast('Matrícula eliminada');
+      await adminRemoveEnrollment(deleteConfirm.id);
+      showToast('Matrícula eliminada exitosamente');
       load();
     } catch (e: any) {
       showToast(e.message, false);
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -86,6 +94,17 @@ export function EnrollmentsView() {
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
+      
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        title="Eliminar Matrícula"
+        message={`¿Seguro que deseas desmatricular a "${deleteConfirm?.name}"? Se perderá su progreso.`}
+        confirmText="Eliminar Matrícula"
+        isDestructive={true}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteConfirm(null)}
+      />
       {/* Toast */}
       {toast && (
         <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl font-semibold text-sm transition-all
@@ -174,8 +193,8 @@ export function EnrollmentsView() {
                     </td>
                     <td className="px-5 py-3 text-right">
                       <button
-                        onClick={() => handleRemove(e.id)}
-                        className="opacity-0 group-hover:opacity-100 p-2 rounded-lg text-lms-text-muted hover:text-red-400 hover:bg-red-400/10 transition-all"
+                        onClick={() => confirmDelete(e.id, e.profiles?.full_name || 'Estudiante')}
+                        className="p-1.5 text-lms-text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                         title="Eliminar matrícula"
                       >
                         <Trash2 size={15} />

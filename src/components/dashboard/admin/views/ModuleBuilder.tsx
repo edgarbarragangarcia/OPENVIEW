@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Edit3, Trash2, Plus, GripVertical } from 'lucide-react';
-import { Module, Lesson, createModule, updateModule, deleteModule } from '../../../../lib/courses';
+import { Module, Lesson, updateModule, deleteModule } from '../../../../lib/courses';
 import { LessonBuilder } from './LessonBuilder';
+import { ConfirmModal } from '../../shared/Modals';
 
 interface ModuleBuilderProps {
   courseId: string;
@@ -15,6 +16,7 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
   const [title, setTitle] = useState(module.title);
   const [addingLesson, setAddingLesson] = useState(false);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSaveTitle = async () => {
     if (!title.trim()) return;
@@ -24,15 +26,24 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
   };
 
   const handleDelete = async () => {
-    if (!confirm('¿Eliminar este módulo y todas sus lecciones?')) return;
     await deleteModule(module.id);
     onRefresh();
   };
 
   return (
-    <div className="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
-      <div className="flex items-center gap-3 p-4 bg-slate-50 border-b border-slate-100">
-        <button onClick={() => setIsOpen(!isOpen)} className="text-slate-400 hover:text-slate-700">
+    <div className="border border-lms-border rounded-2xl bg-lms-surface overflow-hidden shadow-sm">
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Eliminar Módulo"
+        message={`¿Estás seguro de que deseas eliminar el módulo "${module.title}" y TODAS sus lecciones? Esta acción no se puede deshacer.`}
+        confirmText="Sí, Eliminar Módulo"
+        isDestructive={true}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+
+      <div className="flex items-center gap-3 p-4 bg-lms-surface border-b border-lms-border group">
+        <button onClick={() => setIsOpen(!isOpen)} className="text-lms-text-muted hover:text-cyan-400 transition-colors p-1">
           {isOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
         </button>
         
@@ -42,25 +53,25 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
               value={title} onChange={e => setTitle(e.target.value)}
               onBlur={handleSaveTitle} autoFocus
               onKeyDown={e => e.key === 'Enter' && handleSaveTitle()}
-              className="flex-1 px-2 py-1 text-sm font-bold bg-white border border-slate-300 rounded focus:outline-none focus:border-sky-500"
+              className="flex-1 px-3 py-1.5 text-sm font-bold bg-lms-bg border border-cyan-500 rounded-lg focus:outline-none text-lms-text-primary shadow-inner"
             />
           ) : (
-            <span className="font-bold text-slate-800">{module.title}</span>
+            <span className="font-bold text-lms-text-primary group-hover:text-cyan-400 transition-colors">{module.title}</span>
           )}
         </div>
 
-        <div className="flex items-center gap-1">
-          <button onClick={() => setIsEditing(!isEditing)} className="p-1.5 text-slate-400 hover:text-sky-500 rounded-md transition-colors">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={() => setIsEditing(!isEditing)} className="p-2 text-lms-text-muted hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors">
             <Edit3 size={16} />
           </button>
-          <button onClick={handleDelete} className="p-1.5 text-slate-400 hover:text-red-500 rounded-md transition-colors">
+          <button onClick={() => setShowDeleteConfirm(true)} className="p-2 text-lms-text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
             <Trash2 size={16} />
           </button>
         </div>
       </div>
 
       {isOpen && (
-        <div className="p-4 space-y-3">
+        <div className="p-4 bg-lms-bg space-y-3">
           {module.lessons?.sort((a,b) => a.position - b.position).map((lesson: Lesson) => (
             <div key={lesson.id}>
               {editingLessonId === lesson.id ? (
@@ -69,17 +80,20 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
                   lesson={lesson} 
                   onSaved={() => { setEditingLessonId(null); onRefresh(); }} 
                   onCancel={() => setEditingLessonId(null)} 
+                  onRefresh={onRefresh}
                 />
               ) : (
-                <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-lg shadow-sm group hover:border-sky-200 transition-colors">
+                <div className="flex items-center justify-between p-3.5 bg-lms-surface border border-lms-border rounded-xl shadow-sm group hover:border-cyan-500/30 hover:shadow-cyan-500/5 transition-all">
                   <div className="flex items-center gap-3">
-                    <GripVertical size={16} className="text-slate-300 cursor-grab" />
-                    <span className="text-sm font-medium text-slate-700">{lesson.title}</span>
-                    {lesson.is_free && <span className="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Gratis</span>}
-                    {lesson.video_url && lesson.video_url.includes('.pdf') && <span className="text-[10px] uppercase font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">PDF</span>}
+                    <GripVertical size={16} className="text-lms-text-muted/30 cursor-grab" />
+                    <span className="text-sm font-semibold text-lms-text-primary">{lesson.title}</span>
+                    {lesson.is_free && <span className="text-[10px] uppercase font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">Gratis</span>}
+                    {lesson.video_url?.includes('.pdf') && <span className="text-[10px] uppercase font-black text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-md border border-violet-500/20">PDF</span>}
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setEditingLessonId(lesson.id)} className="text-xs font-bold text-sky-500 hover:text-sky-600">Editar</button>
+                    <button onClick={() => setEditingLessonId(lesson.id)} className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 px-3 py-1.5 rounded-lg transition-colors">
+                      Editar
+                    </button>
                   </div>
                 </div>
               )}
@@ -91,13 +105,14 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
               moduleId={module.id} 
               onSaved={() => { setAddingLesson(false); onRefresh(); }} 
               onCancel={() => setAddingLesson(false)} 
+              onRefresh={onRefresh}
             />
           ) : (
             <button 
               onClick={() => setAddingLesson(true)}
-              className="w-full flex items-center justify-center gap-2 p-3 border border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-sky-600 hover:border-sky-300 transition-colors"
+              className="w-full flex items-center justify-center gap-2 p-4 border border-dashed border-lms-border rounded-xl text-sm font-bold text-lms-text-muted hover:bg-lms-hover hover:text-cyan-400 hover:border-cyan-500/30 transition-colors mt-2"
             >
-              <Plus size={16} /> Añadir Lección / Archivo
+              <Plus size={18} /> Añadir Lección / Archivo
             </button>
           )}
         </div>
