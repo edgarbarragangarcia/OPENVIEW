@@ -1,4 +1,4 @@
-import { ChevronDown, Search, Menu, ArrowRight, User, LogOut } from 'lucide-react';
+import { BookOpen, Menu, X, ArrowRight, User, ChevronDown, Search, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthModal } from './AuthModal';
@@ -29,11 +29,9 @@ export function Header() {
           
           {/* Left: Logo */}
           <div className="flex items-center gap-3 cursor-pointer group">
-            <img
-              src="/logo.png"
-              alt="Open View Logo"
-              className="relative h-9 sm:h-11 object-contain transition-transform duration-500 group-hover:scale-105 filter brightness-0"
-            />
+            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg">
+              <BookOpen size={24} />
+            </div>
             <div className="hidden sm:flex flex-col justify-center border-l-2 border-slate-200 pl-3">
               <span className="font-display text-sm font-extrabold tracking-tight text-slate-900 leading-none">
                 Open View

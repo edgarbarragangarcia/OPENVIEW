@@ -20,7 +20,7 @@ export function Sidebar({ items, activeId, onNavigate, isOpen, onClose }: Sideba
 
   return (
     <>
-      {/* Mobile backdrop */}
+      {/* Mobile Backdrop */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
@@ -28,20 +28,22 @@ export function Sidebar({ items, activeId, onNavigate, isOpen, onClose }: Sideba
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 bottom-0 w-64 bg-slate-900 text-slate-300 z-50 flex flex-col
-        transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static
+        fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 ease-in-out
+        lg:static lg:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        {/* Logo */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
+        {/* Header */}
+        <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Open View" className="h-8 brightness-0 invert" />
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-white leading-none">Open View</span>
-              <span className="text-[10px] uppercase tracking-widest text-sky-400 mt-1">{role} Panel</span>
+            <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center text-white">
+              <span className="font-bold">OV</span>
+            </div>
+            <div>
+              <h2 className="text-white font-black leading-none">Open View</h2>
+              <span className="text-[10px] uppercase tracking-widest text-sky-500 font-bold">
+                {role === 'admin' ? 'Admin Panel' : 'Student Panel'}
+              </span>
             </div>
           </div>
           <button className="lg:hidden p-1 hover:bg-white/10 rounded-md" onClick={onClose}>
