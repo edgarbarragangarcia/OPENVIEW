@@ -37,13 +37,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [role, setRole] = useState<UserRole>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const handleSetRole = async (currentUser: User) => {
+    // FORZAR ROL ADMIN para admin@openview.com temporalmente
+    if (currentUser.email === 'admin@openview.com') {
+      setRole('admin');
+      return;
+    }
+    const r = await fetchRole(currentUser.id);
+    setRole(r);
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        const r = await fetchRole(session.user.id);
-        setRole(r);
+        await handleSetRole(session.user);
       }
       setIsLoading(false);
     });
@@ -52,8 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        const r = await fetchRole(session.user.id);
-        setRole(r);
+        await handleSetRole(session.user);
       } else {
         setRole(null);
       }

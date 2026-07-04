@@ -5,6 +5,7 @@ import { DashboardHeader } from '../shared/DashboardHeader';
 import { MyCourses } from './views/MyCourses';
 import { Explore } from './views/Explore';
 import { Profile } from './views/Profile';
+import { LessonViewer } from './views/LessonViewer';
 
 const NAV_ITEMS: SidebarItem[] = [
   { id: 'my-courses', label: 'Mis Cursos', icon: <BookOpen size={20} /> },
@@ -15,30 +16,44 @@ const NAV_ITEMS: SidebarItem[] = [
 export function StudentDashboard() {
   const [activeView, setActiveView] = useState('my-courses');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [viewingCourseId, setViewingCourseId] = useState<string | null>(null);
+
+  const handleNavigate = (id: string) => {
+    setActiveView(id);
+    setViewingCourseId(null);
+  };
 
   const renderView = () => {
+    if (viewingCourseId) {
+      return <LessonViewer courseId={viewingCourseId} onBack={() => setViewingCourseId(null)} />;
+    }
+
     switch (activeView) {
-      case 'my-courses': return <MyCourses />;
+      case 'my-courses': return <MyCourses onCourseSelect={setViewingCourseId} />;
       case 'explore': return <Explore />;
       case 'profile': return <Profile />;
-      default: return <MyCourses />;
+      default: return <MyCourses onCourseSelect={setViewingCourseId} />;
     }
   };
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar 
-        items={NAV_ITEMS}
-        activeId={activeView}
-        onNavigate={setActiveView}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      {!viewingCourseId && (
+        <Sidebar 
+          items={NAV_ITEMS}
+          activeId={activeView}
+          onNavigate={handleNavigate}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+      )}
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <DashboardHeader 
-          onMenuClick={() => setIsSidebarOpen(true)} 
-        />
+        {!viewingCourseId && (
+          <DashboardHeader 
+            onMenuClick={() => setIsSidebarOpen(true)} 
+          />
+        )}
         <main className="flex-1 overflow-y-auto">
           {renderView()}
         </main>

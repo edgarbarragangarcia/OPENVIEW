@@ -4,7 +4,7 @@ import { CourseCard } from '../../shared/CourseCard';
 import { getMyEnrollments, getMyProgress, calcProgress } from '../../../../lib/enrollments';
 import { useAuth } from '../../../../contexts/AuthContext';
 
-export function MyCourses() {
+export function MyCourses({ onCourseSelect }: { onCourseSelect?: (id: string) => void }) {
   const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
@@ -57,7 +57,7 @@ export function MyCourses() {
                 key={enrollment.id}
                 course={enrollment.courses} 
                 progress={progressMap[enrollment.course_id] || 0}
-                onClick={(c) => console.log('Go to course', c.id)}
+                onClick={(c) => onCourseSelect?.(c.id)}
               />
             );
           })}
