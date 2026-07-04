@@ -27,7 +27,7 @@ export function StudentDashboard() {
     }
     switch (view) {
       case 'my-courses': return <MyCourses onCourseSelect={setViewingCourseId} />;
-      case 'explore':    return <Explore onEnroll={() => setView('my-courses')} />;
+      case 'explore':    return <Explore onEnroll={() => setView('my-courses')} onCourseSelect={setViewingCourseId} />;
       case 'profile':    return <ProfileView />;
     }
   };

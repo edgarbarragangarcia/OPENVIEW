@@ -5,6 +5,7 @@ import { enrollInCourse, isEnrolled } from '../../../../lib/enrollments';
 
 interface Props {
   onEnroll: () => void;
+  onCourseSelect: (courseId: string) => void;
 }
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -18,7 +19,7 @@ const LEVEL_COLORS: Record<string, string> = {
   advanced: 'bg-red-500/10 text-red-400',
 };
 
-export function Explore({ onEnroll }: Props) {
+export function Explore({ onEnroll, onCourseSelect }: Props) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -141,14 +142,17 @@ export function Explore({ onEnroll }: Props) {
                       {course.duration_hrs}h
                     </div>
                     {already ? (
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg">
-                        ✓ Inscrito
-                      </span>
+                      <button
+                        onClick={() => onCourseSelect(course.id)}
+                        className="text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 rounded-xl transition-colors shadow-lg shadow-emerald-500/5 flex items-center gap-2"
+                      >
+                        ✓ Inscrito <span className="font-normal opacity-70">· Entrar</span>
+                      </button>
                     ) : (
                       <button
                         onClick={() => handleEnroll(course.id, course.title)}
                         disabled={enrolling === course.id}
-                        className="text-xs font-bold px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors disabled:opacity-50 shadow-lg shadow-cyan-500/20"
+                        className="text-xs font-bold px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors disabled:opacity-50 shadow-lg shadow-cyan-500/20"
                       >
                         {enrolling === course.id ? 'Inscribiendo...' : 'Inscribirme'}
                       </button>
