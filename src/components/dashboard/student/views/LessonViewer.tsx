@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 
@@ -49,6 +49,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -135,12 +136,14 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
       {/* ── Sidebar: Course Index ── */}
       <aside className={`
-        flex flex-col w-72 shrink-0 h-full bg-lms-surface border-r border-lms-border overflow-hidden
-        fixed lg:relative z-30 transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        flex flex-col shrink-0 h-full bg-lms-surface border-r border-lms-border overflow-hidden
+        fixed lg:relative z-30 transition-all duration-300
+        ${sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 lg:translate-x-0'}
+        ${desktopSidebarOpen ? 'lg:w-72' : 'lg:w-0 lg:border-transparent'}
       `}>
-        {/* Course header */}
-        <div className="p-4 border-b border-lms-border">
+        <div className="w-72 h-full flex flex-col">
+          {/* Course header */}
+          <div className="p-4 border-b border-lms-border">
           <button
             onClick={onBack}
             className="flex items-center gap-2 text-xs text-lms-text-muted hover:text-cyan-400 font-semibold transition-colors mb-4"
@@ -232,6 +235,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
             </div>
           ))}
         </div>
+        </div>
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -240,16 +244,25 @@ export function LessonViewer({ courseId, onBack }: Props) {
       )}
 
       {/* ── Main Content ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Lesson topbar */}
-        <div className="flex items-center justify-between px-4 lg:px-6 h-14 bg-lms-surface border-b border-lms-border shrink-0">
+        <div className="flex items-center gap-4 px-4 lg:px-6 h-14 bg-lms-surface border-b border-lms-border shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden flex items-center gap-2 text-xs text-lms-text-muted hover:text-lms-text-primary font-semibold"
+            className="lg:hidden flex items-center gap-2 text-xs text-lms-text-muted hover:text-lms-text-primary font-semibold shrink-0"
           >
             <BookOpen size={15} /> Índice
           </button>
-          <h3 className="text-sm font-bold text-lms-text-primary truncate px-4">
+          
+          <button
+            onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)}
+            className="hidden lg:flex items-center text-lms-text-muted hover:text-lms-text-primary transition-colors shrink-0"
+            title={desktopSidebarOpen ? "Ocultar Índice" : "Mostrar Índice"}
+          >
+            <PanelLeft size={20} />
+          </button>
+          
+          <h3 className="text-sm font-bold text-lms-text-primary truncate flex-1">
             {activeLesson?.title ?? 'Selecciona una lección'}
           </h3>
           {activeLesson && (
@@ -329,21 +342,25 @@ export function LessonViewer({ courseId, onBack }: Props) {
                       }
 
                       return (
-                        <div key={idx} className="rounded-2xl border border-lms-border bg-lms-surface p-6 flex flex-col items-center justify-center text-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                            <meta.icon size={32} className="text-cyan-400" />
+                        <div key={idx} className="rounded-xl border border-lms-border bg-lms-surface p-4 flex items-center gap-4 hover:border-cyan-500/30 transition-colors">
+                          <div className="w-12 h-12 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                            <meta.icon size={24} className="text-cyan-400" />
                           </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-lms-text-primary mb-1">Archivo {urls.length > 1 ? idx + 1 : ''} disponible</h4>
-                            <p className="text-xs text-lms-text-muted">Este es un archivo {meta.label.toLowerCase()} que puedes descargar.</p>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-bold text-lms-text-primary truncate">
+                              Archivo {urls.length > 1 ? idx + 1 : ''} ({meta.label})
+                            </h4>
+                            <p className="text-xs text-lms-text-muted truncate">
+                              Haz clic en descargar para guardar el archivo.
+                            </p>
                           </div>
                           <a
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-2 inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-cyan-500/20"
+                            className="shrink-0 inline-flex items-center gap-2 bg-cyan-600/10 hover:bg-cyan-600 text-cyan-500 hover:text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors"
                           >
-                            <DownloadCloud size={16} /> Descargar Archivo
+                            <DownloadCloud size={16} /> Descargar
                           </a>
                         </div>
                       );
