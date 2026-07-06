@@ -44,8 +44,8 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
     setUploadingPdf(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
-        const ext = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${Date.now()}-${sanitizedName}`;
         const path = `lessons/${moduleId}/${fileName}`;
         
         await uploadFile('pdfs', path, file);
@@ -153,10 +153,13 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
               {getUrlsList().length > 0 && (
                 <div className="flex flex-col gap-1.5">
                   {getUrlsList().map((url, i) => {
-                    const fileName = url.split('/').pop() || `Archivo ${i + 1}`;
+                    const rawName = url.split('/').pop() || `Archivo ${i + 1}`;
+                    const decodedName = decodeURIComponent(rawName);
+                    // Strip the timestamp prefix (e.g., "1783301307471-") for a cleaner display
+                    const displayName = decodedName.replace(/^\d+-/, '');
                     return (
                       <div key={i} className="flex items-center justify-between bg-lms-bg border border-lms-border rounded-lg px-3 py-2">
-                        <span className="text-xs text-lms-text-primary truncate mr-2" title={url}>{decodeURIComponent(fileName)}</span>
+                        <span className="text-xs text-lms-text-primary truncate mr-2" title={decodedName}>{displayName}</span>
                         <button type="button" onClick={() => handleRemoveUrl(url)} className="text-red-400 hover:text-red-300 transition-colors p-1">
                           <X size={14} />
                         </button>

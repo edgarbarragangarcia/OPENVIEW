@@ -316,12 +316,16 @@ export function LessonViewer({ courseId, onBack }: Props) {
                       const meta = getFileMeta(url);
                       if (!meta) return null;
 
+                      const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
+                      const decodedName = decodeURIComponent(rawName);
+                      const displayName = decodedName.replace(/^\d+-/, '');
+
                       if (meta.type === 'pdf') {
                         return (
                           <div key={idx} className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface">
                             <div className="flex items-center gap-2 px-4 py-3 border-b border-lms-border">
                               <meta.icon size={15} className="text-cyan-400" />
-                              <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">{meta.label}</span>
+                              <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">{displayName}</span>
                               <a
                                 href={url}
                                 target="_blank"
@@ -333,7 +337,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             </div>
                             <iframe
                               src={url}
-                              title={`Material - ${activeLesson.title} - ${idx + 1}`}
+                              title={`Material - ${activeLesson.title} - ${displayName}`}
                               className="w-full h-[70vh]"
                             />
                           </div>
@@ -346,8 +350,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             <meta.icon size={24} className="text-cyan-400" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-lms-text-primary truncate">
-                              Archivo {urls.length > 1 ? idx + 1 : ''} ({meta.label})
+                            <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
+                              {displayName}
                             </h4>
                             <p className="text-xs text-lms-text-muted truncate">
                               Haz clic en descargar para guardar el archivo.
