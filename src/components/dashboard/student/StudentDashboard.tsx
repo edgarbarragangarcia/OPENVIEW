@@ -4,6 +4,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { MyCourses } from './views/MyCourses';
 import { LessonViewer } from './views/LessonViewer';
 import { Explore } from './views/Explore';
+import { Profile } from './views/Profile';
 
 type StudentView = 'my-courses' | 'explore' | 'profile';
 
@@ -28,7 +29,7 @@ export function StudentDashboard() {
     switch (view) {
       case 'my-courses': return <MyCourses onCourseSelect={setViewingCourseId} />;
       case 'explore':    return <Explore onEnroll={() => setView('my-courses')} onCourseSelect={setViewingCourseId} />;
-      case 'profile':    return <ProfileView />;
+      case 'profile':    return <Profile />;
     }
   };
 
@@ -134,29 +135,6 @@ export function StudentDashboard() {
         <main className="flex-1 overflow-y-auto">
           {renderContent()}
         </main>
-      </div>
-    </div>
-  );
-}
-
-function ProfileView() {
-  const { user } = useAuth();
-  return (
-    <div className="p-8 max-w-lg mx-auto">
-      <h1 className="text-2xl font-black text-lms-text-primary mb-6">Mi Perfil</h1>
-      <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white font-black text-xl shadow-lg">
-            {user?.email?.slice(0,2).toUpperCase()}
-          </div>
-          <div>
-            <p className="font-bold text-lms-text-primary">{user?.email}</p>
-            <p className="text-xs text-cyan-400 font-semibold mt-0.5">Estudiante</p>
-          </div>
-        </div>
-        <div className="pt-4 border-t border-lms-border">
-          <p className="text-xs text-lms-text-muted">Miembro desde {user?.created_at ? new Date(user.created_at).toLocaleDateString('es') : '—'}</p>
-        </div>
       </div>
     </div>
   );
