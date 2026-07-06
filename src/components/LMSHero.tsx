@@ -75,29 +75,7 @@ export function LMSHero() {
           y lidera la revolución digital con expertos de la industria.
         </motion.p>
 
-        {/* CTAs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.65 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <button
-            className="group relative overflow-hidden flex items-center gap-2 text-white px-8 py-4 rounded-full font-bold uppercase tracking-widest text-sm shadow-[0_4px_24px_rgba(14,165,233,0.35)] hover:shadow-[0_8px_36px_rgba(14,165,233,0.5)] transition-all duration-300 hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #0ea5e9, #6366f1)' }}
-          >
-            <span className="relative z-10">Explorar Rutas</span>
-            <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
-            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
-          </button>
 
-          <button className="group flex items-center gap-3 text-slate-600 font-semibold hover:text-sky-500 transition-colors px-6 py-4">
-            <div className="bg-slate-100 p-3 rounded-full shadow-sm group-hover:shadow-md group-hover:bg-sky-50 transition-all">
-              <PlayCircle className="h-5 w-5 group-hover:text-sky-500 transition-colors" strokeWidth={1.5} />
-            </div>
-            <span className="uppercase tracking-widest text-xs">Conoce el Método</span>
-          </button>
-        </motion.div>
 
         {/* Stats row */}
         <motion.div

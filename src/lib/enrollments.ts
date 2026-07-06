@@ -41,9 +41,13 @@ export async function isEnrolled(courseId: string): Promise<boolean> {
 
 /** Obtener todos los cursos del usuario actual (estudiante) */
 export async function getMyEnrollments() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from('enrollments')
     .select('*, courses(id, title, cover_url, description, duration_hrs, level, category_id, categories(name))')
+    .eq('user_id', user.id)
     .order('enrolled_at', { ascending: false });
   if (error) throw error;
   return data;
