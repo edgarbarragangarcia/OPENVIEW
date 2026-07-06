@@ -216,8 +216,12 @@ export function LessonViewer({ courseId, onBack }: Props) {
                           )}
                         </div>
                         {(() => {
-                          const meta = getFileMeta(lesson.pdf_url);
-                          return meta && <meta.icon size={11} className="text-lms-text-muted shrink-0" />;
+                          if (!lesson.pdf_url) return null;
+                          const urls = lesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+                          return urls.map((url, i) => {
+                            const meta = getFileMeta(url);
+                            return meta && <meta.icon key={i} size={11} className="text-lms-text-muted shrink-0" />;
+                          });
                         })()}
                         {lesson.video_url && <Play size={11} className="text-lms-text-muted shrink-0" />}
                       </button>
@@ -291,50 +295,59 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
               {/* Attachment Viewer / Download */}
               {(() => {
-                const meta = getFileMeta(activeLesson.pdf_url);
-                if (!meta || !activeLesson.pdf_url) return null;
-
-                if (meta.type === 'pdf') {
-                  return (
-                    <div className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface">
-                      <div className="flex items-center gap-2 px-4 py-3 border-b border-lms-border">
-                        <meta.icon size={15} className="text-cyan-400" />
-                        <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">{meta.label}</span>
-                        <a
-                          href={activeLesson.pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
-                        >
-                          Abrir en nueva pestaña <DownloadCloud size={12} />
-                        </a>
-                      </div>
-                      <iframe
-                        src={activeLesson.pdf_url}
-                        title={`Material - ${activeLesson.title}`}
-                        className="w-full h-[70vh]"
-                      />
-                    </div>
-                  );
-                }
+                if (!activeLesson.pdf_url) return null;
+                const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
 
                 return (
-                  <div className="rounded-2xl border border-lms-border bg-lms-surface p-6 flex flex-col items-center justify-center text-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                      <meta.icon size={32} className="text-cyan-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-lms-text-primary mb-1">Archivo de la lección disponible</h4>
-                      <p className="text-xs text-lms-text-muted">Este es un archivo {meta.label.toLowerCase()} que puedes descargar.</p>
-                    </div>
-                    <a
-                      href={activeLesson.pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-cyan-500/20"
-                    >
-                      <DownloadCloud size={16} /> Descargar Archivo
-                    </a>
+                  <div className="space-y-4">
+                    {urls.map((url, idx) => {
+                      const meta = getFileMeta(url);
+                      if (!meta) return null;
+
+                      if (meta.type === 'pdf') {
+                        return (
+                          <div key={idx} className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface">
+                            <div className="flex items-center gap-2 px-4 py-3 border-b border-lms-border">
+                              <meta.icon size={15} className="text-cyan-400" />
+                              <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">{meta.label}</span>
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
+                              >
+                                Abrir en nueva pestaña <DownloadCloud size={12} />
+                              </a>
+                            </div>
+                            <iframe
+                              src={url}
+                              title={`Material - ${activeLesson.title} - ${idx + 1}`}
+                              className="w-full h-[70vh]"
+                            />
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={idx} className="rounded-2xl border border-lms-border bg-lms-surface p-6 flex flex-col items-center justify-center text-center gap-4">
+                          <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                            <meta.icon size={32} className="text-cyan-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-lms-text-primary mb-1">Archivo {urls.length > 1 ? idx + 1 : ''} disponible</h4>
+                            <p className="text-xs text-lms-text-muted">Este es un archivo {meta.label.toLowerCase()} que puedes descargar.</p>
+                          </div>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-cyan-500/20"
+                          >
+                            <DownloadCloud size={16} /> Descargar Archivo
+                          </a>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })()}

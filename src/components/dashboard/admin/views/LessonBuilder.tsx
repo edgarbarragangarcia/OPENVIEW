@@ -30,22 +30,30 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
   };
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setUploadingPdf(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-      const path = `lessons/${moduleId}/${fileName}`;
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const ext = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+        const path = `lessons/${moduleId}/${fileName}`;
+        
+        await uploadFile('pdfs', path, file);
+        return getFileUrl('pdfs', path);
+      });
       
-      await uploadFile('pdfs', path, file);
-      const url = getFileUrl('pdfs', path);
+      const urls = await Promise.all(uploadPromises);
       
-      setFormData(prev => ({ ...prev, pdf_url: url }));
+      setFormData(prev => {
+        const currentUrls = prev.pdf_url ? prev.pdf_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+        const newUrls = [...currentUrls, ...urls].join(', ');
+        return { ...prev, pdf_url: newUrls };
+      });
     } catch (err) {
-      console.error('Error uploading PDF:', err);
-      alert('Error al subir el PDF. Asegúrate de haber configurado el bucket "pdfs" en Supabase.');
+      console.error('Error uploading files:', err);
+      alert('Error al subir los archivos. Asegúrate de haber configurado el bucket "pdfs" en Supabase.');
     } finally {
       setUploadingPdf(false);
     }
@@ -138,9 +146,9 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
                 name="pdf_url" value={formData.pdf_url || ''} onChange={handleChange} placeholder="URL o sube un archivo ➔"
                 className="flex-1 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
               />
-              <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir Archivo">
+              <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir Archivos">
                 {uploadingPdf ? <Loader2 size={16} className="animate-spin text-cyan-500" /> : <Upload size={16} className="text-lms-text-muted" />}
-                <input type="file" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+                <input type="file" multiple className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
               </label>
             </div>
           </div>
