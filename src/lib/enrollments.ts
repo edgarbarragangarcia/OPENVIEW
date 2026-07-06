@@ -87,28 +87,28 @@ export async function adminRemoveEnrollment(enrollmentId: string) {
   if (error) throw error;
 }
 
-/** Calcular el progreso de un estudiante en un curso (0-100) */
 export async function getCourseProgress(userId: string, courseId: string): Promise<number> {
-  // Contar lecciones totales del curso
+  const { data: modules } = await supabase.from('modules').select('id').eq('course_id', courseId);
+  const moduleIds = modules?.map(m => m.id) || [];
+  if (moduleIds.length === 0) return 0;
+
   const { count: totalLessons } = await supabase
     .from('lessons')
     .select('id', { count: 'exact' })
-    .in('module_id', supabase.from('modules').select('id').eq('course_id', courseId) as any);
+    .in('module_id', moduleIds);
 
   if (!totalLessons || totalLessons === 0) return 0;
 
-  // Contar lecciones completadas por el usuario
+  const { data: lessons } = await supabase.from('lessons').select('id').in('module_id', moduleIds);
+  const lessonIds = lessons?.map(l => l.id) || [];
+  if (lessonIds.length === 0) return 0;
+
   const { count: completedLessons } = await supabase
     .from('progress')
     .select('id', { count: 'exact' })
     .eq('user_id', userId)
     .eq('completed', true)
-    .in('lesson_id', 
-      supabase
-        .from('lessons')
-        .select('id')
-        .in('module_id', supabase.from('modules').select('id').eq('course_id', courseId) as any) as any
-    );
+    .in('lesson_id', lessonIds);
 
   return Math.round(((completedLessons ?? 0) / totalLessons) * 100);
 }
@@ -137,22 +137,24 @@ export async function markLessonIncomplete(lessonId: string) {
   if (error) throw error;
 }
 
-/** Obtener IDs de lecciones completadas por el usuario en un curso */
 export async function getCompletedLessonIds(courseId: string): Promise<Set<string>> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return new Set();
+
+  const { data: modules } = await supabase.from('modules').select('id').eq('course_id', courseId);
+  const moduleIds = modules?.map(m => m.id) || [];
+  if (moduleIds.length === 0) return new Set();
+
+  const { data: lessons } = await supabase.from('lessons').select('id').in('module_id', moduleIds);
+  const lessonIds = lessons?.map(l => l.id) || [];
+  if (lessonIds.length === 0) return new Set();
 
   const { data } = await supabase
     .from('progress')
     .select('lesson_id')
     .eq('user_id', user.id)
     .eq('completed', true)
-    .in('lesson_id',
-      supabase
-        .from('lessons')
-        .select('id')
-        .in('module_id', supabase.from('modules').select('id').eq('course_id', courseId) as any) as any
-    );
+    .in('lesson_id', lessonIds);
 
   return new Set((data ?? []).map(r => r.lesson_id));
 }

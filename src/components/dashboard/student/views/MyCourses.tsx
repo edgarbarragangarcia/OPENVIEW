@@ -46,25 +46,41 @@ export function MyCourses({ onCourseSelect }: Props) {
           const courseId = e.courses?.id;
           if (!courseId) return { ...e, progress: 0 };
 
+          // 1. Get module IDs for this course
+          const { data: modulesData } = await supabase
+            .from('modules')
+            .select('id')
+            .eq('course_id', courseId);
+          
+          const moduleIds = modulesData?.map(m => m.id) || [];
+          if (moduleIds.length === 0) return { ...e, progress: 0 };
+
+          // 2. Get total lessons for these modules
           const { count: total } = await supabase
             .from('lessons')
             .select('id', { count: 'exact' })
-            .in('module_id',
-              supabase.from('modules').select('id').eq('course_id', courseId) as any
-            );
+            .in('module_id', moduleIds);
 
-          const { count: done } = await supabase
-            .from('progress')
-            .select('id', { count: 'exact' })
-            .eq('user_id', user.id)
-            .eq('completed', true)
-            .in('lesson_id',
-              supabase.from('lessons').select('id').in('module_id',
-                supabase.from('modules').select('id').eq('course_id', courseId) as any
-              ) as any
-            );
+          // 3. Get lesson IDs for these modules to check progress
+          const { data: lessonsData } = await supabase
+            .from('lessons')
+            .select('id')
+            .in('module_id', moduleIds);
+            
+          const lessonIds = lessonsData?.map(l => l.id) || [];
+          let done = 0;
+          
+          if (lessonIds.length > 0) {
+            const { count } = await supabase
+              .from('progress')
+              .select('id', { count: 'exact' })
+              .eq('user_id', user.id)
+              .eq('completed', true)
+              .in('lesson_id', lessonIds);
+            done = count ?? 0;
+          }
 
-          const pct = total ? Math.round(((done ?? 0) / total) * 100) : 0;
+          const pct = total ? Math.round((done / total) * 100) : 0;
           return { ...e, progress: pct };
         }));
 
