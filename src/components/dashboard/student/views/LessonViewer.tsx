@@ -385,18 +385,25 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
                 if (isStructured) {
                   return (
-                    <div className="prose prose-invert prose-sm max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6">
-                      {parsed.description && <div className="mb-6 whitespace-pre-wrap">{parsed.description}</div>}
+                    <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
+                      {parsed.description && (
+                        <div className="text-sm md:text-base text-lms-text-primary leading-relaxed mb-8">
+                          {parsed.description}
+                        </div>
+                      )}
                       
                       {(parsed.temas?.length > 0 || parsed.alcances?.length > 0) && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                           {parsed.temas?.length > 0 && (
-                            <div>
-                              <h3 className="text-cyan-400 font-bold mb-3 mt-0 text-sm uppercase tracking-wider">Temas a cubrir</h3>
-                              <ul className="space-y-2 m-0 p-0 list-none">
+                            <div className="bg-cyan-50/50 rounded-xl p-5 border border-cyan-100">
+                              <h3 className="text-cyan-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                                Temas a cubrir
+                              </h3>
+                              <ul className="space-y-3 m-0 p-0 list-none">
                                 {parsed.temas.map((tema: string, i: number) => (
-                                  <li key={i} className="flex items-start gap-2 text-lms-text-primary m-0">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5 shrink-0" />
+                                  <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
+                                    <span className="text-cyan-400 mt-0.5 font-bold">•</span>
                                     <span>{tema}</span>
                                   </li>
                                 ))}
@@ -405,12 +412,15 @@ export function LessonViewer({ courseId, onBack }: Props) {
                           )}
                           
                           {parsed.alcances?.length > 0 && (
-                            <div>
-                              <h3 className="text-emerald-400 font-bold mb-3 mt-0 text-sm uppercase tracking-wider">Alcances</h3>
-                              <ul className="space-y-2 m-0 p-0 list-none">
+                            <div className="bg-emerald-50/50 rounded-xl p-5 border border-emerald-100">
+                              <h3 className="text-emerald-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                Alcances
+                              </h3>
+                              <ul className="space-y-3 m-0 p-0 list-none">
                                 {parsed.alcances.map((alcance: string, i: number) => (
-                                  <li key={i} className="flex items-start gap-2 text-lms-text-primary m-0">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                  <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
+                                    <span className="text-emerald-400 mt-0.5 font-bold">•</span>
                                     <span>{alcance}</span>
                                   </li>
                                 ))}
@@ -425,7 +435,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
                 // Fallback to HTML
                 return (
-                  <div className="prose prose-invert prose-sm max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6">
+                  <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
                     <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                   </div>
                 );
