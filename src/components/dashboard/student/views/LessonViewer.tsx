@@ -291,7 +291,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
             </div>
           ) : (
             <div className="max-w-4xl mx-auto space-y-6">
-              <h2 className="text-xl font-black text-lms-text-primary">{activeLesson.title}</h2>
 
               {/* Video Player */}
               {activeLesson.video_url && (
