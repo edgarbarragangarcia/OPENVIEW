@@ -6,9 +6,21 @@ export function LMSHero() {
     <section className="relative min-h-screen flex items-center justify-center pt-20 z-10 overflow-hidden bg-white text-slate-900">
 
       {/* Background orbs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-b from-sky-100/80 via-indigo-100/40 to-transparent rounded-full blur-[120px] pointer-events-none -z-10" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[400px] bg-sky-200/30 rounded-full blur-[100px] pointer-events-none -z-10" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-indigo-200/20 rounded-full blur-[100px] pointer-events-none -z-10" />
+      <motion.div 
+        animate={{ x: [0, 50, -50, 0], y: [0, -30, 30, 0], scale: [1, 1.1, 0.9, 1] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[-10%] left-1/4 w-[800px] h-[800px] bg-sky-400/20 rounded-full blur-[120px] pointer-events-none -z-10" 
+      />
+      <motion.div 
+        animate={{ x: [0, -60, 40, 0], y: [0, 50, -40, 0], scale: [1, 0.8, 1.2, 1] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-[-10%] right-1/4 w-[600px] h-[600px] bg-indigo-400/20 rounded-full blur-[120px] pointer-events-none -z-10" 
+      />
+      <motion.div 
+        animate={{ x: [0, 70, -30, 0], y: [0, 40, -60, 0], scale: [1, 1.2, 0.9, 1] }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/3 left-[-10%] w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-[120px] pointer-events-none -z-10" 
+      />
 
       {/* Grid pattern */}
       <div
