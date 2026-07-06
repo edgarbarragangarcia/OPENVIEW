@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
@@ -169,71 +170,119 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
         {/* Module / Lesson list */}
         <div className="flex-1 overflow-y-auto py-2">
-          {course.modules.map((mod, mIdx) => (
-            <div key={mod.id}>
-              <button
-                onClick={() => toggleModule(mod.id)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-lms-hover transition-colors group"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[10px] font-black text-lms-text-muted shrink-0">M{mIdx + 1}</span>
-                  <span className="text-xs font-bold text-lms-text-primary text-left line-clamp-1">{mod.title}</span>
-                </div>
-                {openModules.has(mod.id)
-                  ? <ChevronDown size={14} className="text-lms-text-muted shrink-0" />
-                  : <ChevronRight size={14} className="text-lms-text-muted shrink-0" />
-                }
-              </button>
+          {course.modules.map((mod, mIdx) => {
+            const isModOpen = openModules.has(mod.id);
+            return (
+              <div key={mod.id} className="mb-1">
+                <motion.button
+                  onClick={() => toggleModule(mod.id)}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mx-2 transition-colors group ${
+                    isModOpen ? 'bg-lms-hover/80' : 'hover:bg-lms-hover/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <motion.span
+                      animate={{ color: isModOpen ? '#22d3ee' : '#64748b' }}
+                      transition={{ duration: 0.2 }}
+                      className="text-[10px] font-black shrink-0"
+                    >
+                      M{mIdx + 1}
+                    </motion.span>
+                    <span className={`text-xs font-bold text-left line-clamp-1 transition-colors ${
+                      isModOpen ? 'text-lms-text-primary' : 'text-lms-text-muted'
+                    }`}>
+                      {mod.title}
+                    </span>
+                  </div>
+                  <motion.div
+                    animate={{ rotate: isModOpen ? 90 : 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    className="shrink-0 text-lms-text-muted"
+                  >
+                    <ChevronRight size={14} />
+                  </motion.div>
+                </motion.button>
 
-              {openModules.has(mod.id) && (
-                <div className="pb-2">
-                  {mod.lessons.map((lesson, lIdx) => {
-                    const isActive = activeLesson?.id === lesson.id;
-                    const isDone = completed.has(lesson.id);
-                    return (
-                      <button
-                        key={lesson.id}
-                        onClick={() => { setActiveLesson(lesson); setSidebarOpen(false); }}
-                        className={`w-full flex items-center gap-3 pl-8 pr-4 py-2.5 transition-all text-left group ${
-                          isActive
-                            ? 'bg-cyan-500/10 border-r-2 border-cyan-500'
-                            : 'hover:bg-lms-hover'
-                        }`}
-                      >
-                        <div className="shrink-0">
-                          {isDone
-                            ? <CheckCircle size={15} className="text-emerald-400" />
-                            : isActive
-                              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-400 flex items-center justify-center">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                                </div>
-                              : <Circle size={15} className="text-lms-text-muted/40" />
-                          }
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-semibold line-clamp-1 ${isActive ? 'text-cyan-400' : isDone ? 'text-lms-text-muted' : 'text-lms-text-primary'}`}>
-                            {lIdx + 1}. {lesson.title}
-                          </p>
-                          {lesson.duration_min > 0 && (
-                            <p className="text-[10px] text-lms-text-muted mt-0.5">{lesson.duration_min} min</p>
-                          )}
-                        </div>
-                        {(() => {
-                          if (!lesson.pdf_url) return null;
-                          const urls = lesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
-                          return urls.map((url, i) => {
-                            const meta = getFileMeta(url);
-                            return meta && <meta.icon key={i} size={11} className="text-lms-text-muted shrink-0" />;
-                          });
-                        })()}
-                        {lesson.video_url && <Play size={11} className="text-lms-text-muted shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
+                <AnimatePresence initial={false}>
+                  {isModOpen && (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pb-2 pt-1">
+                        {mod.lessons.map((lesson, lIdx) => {
+                          const isActive = activeLesson?.id === lesson.id;
+                          const isDone = completed.has(lesson.id);
+                          return (
+                            <motion.button
+                              key={lesson.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: lIdx * 0.04, type: 'spring', stiffness: 400, damping: 30 }}
+                              onClick={() => { setActiveLesson(lesson); setSidebarOpen(false); }}
+                              whileHover={{ x: 4 }}
+                              whileTap={{ scale: 0.97 }}
+                              className={`w-full flex items-center gap-3 pl-8 pr-4 py-2.5 transition-all text-left rounded-xl mx-2 mb-0.5 ${
+                                isActive
+                                  ? 'bg-gradient-to-r from-cyan-500/20 to-sky-500/10 border border-cyan-500/30 shadow-lg shadow-cyan-500/10'
+                                  : 'hover:bg-lms-hover/60'
+                              }`}
+                            >
+                              <div className="shrink-0">
+                                <AnimatePresence mode="wait" initial={false}>
+                                  {isDone ? (
+                                    <motion.div key="done" initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 25 }}>
+                                      <CheckCircle size={15} className="text-emerald-400" />
+                                    </motion.div>
+                                  ) : isActive ? (
+                                    <motion.div key="active" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500 }}>
+                                      <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-400 flex items-center justify-center">
+                                        <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                                      </div>
+                                    </motion.div>
+                                  ) : (
+                                    <motion.div key="idle" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                                      <Circle size={15} className="text-lms-text-muted/40" />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-xs font-semibold line-clamp-1 transition-colors ${
+                                  isActive ? 'text-cyan-400' : isDone ? 'text-lms-text-muted' : 'text-lms-text-primary'
+                                }`}>
+                                  {lIdx + 1}. {lesson.title}
+                                </p>
+                                {lesson.duration_min > 0 && (
+                                  <p className="text-[10px] text-lms-text-muted mt-0.5">{lesson.duration_min} min</p>
+                                )}
+                              </div>
+                              {(() => {
+                                if (!lesson.pdf_url) return null;
+                                const urls = lesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+                                return urls.map((url, i) => {
+                                  const meta = getFileMeta(url);
+                                  return meta && <meta.icon key={i} size={11} className="text-lms-text-muted shrink-0" />;
+                                });
+                              })()}
+                              {lesson.video_url && <Play size={11} className="text-lms-text-muted shrink-0" />}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
         </div>
       </aside>
