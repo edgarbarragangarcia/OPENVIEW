@@ -290,7 +290,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
               <p className="text-sm">Selecciona una lección del panel izquierdo para comenzar</p>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-6xl mx-auto space-y-6">
 
               {/* Video Player */}
               {activeLesson.video_url && (
@@ -305,141 +305,148 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 </div>
               )}
 
-              {/* Attachment Viewer / Download */}
-              {(() => {
-                if (!activeLesson.pdf_url) return null;
-                const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
-
-                return (
-                  <div className="space-y-4">
-                    {urls.map((url, idx) => {
-                      const meta = getFileMeta(url);
-                      if (!meta) return null;
-
-                      const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
-                      const decodedName = decodeURIComponent(rawName);
-                      const displayName = decodedName.replace(/^\d+-/, '');
-
-                      if (meta.type === 'pdf') {
-                        return (
-                          <div key={idx} className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface">
-                            <div className="flex items-center gap-2 px-4 py-3 border-b border-lms-border">
-                              <meta.icon size={15} className="text-cyan-400" />
-                              <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">{displayName}</span>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
-                              >
-                                Abrir en nueva pestaña <DownloadCloud size={12} />
-                              </a>
-                            </div>
-                            <iframe
-                              src={url}
-                              title={`Material - ${activeLesson.title} - ${displayName}`}
-                              className="w-full h-[70vh]"
-                            />
-                          </div>
-                        );
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Text Content (Left Column) */}
+                <div className={`space-y-6 ${activeLesson.pdf_url ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
+                  {activeLesson.content && (() => {
+                    let isStructured = false;
+                    let parsed: any = null;
+                    try {
+                      if (activeLesson.content.trim().startsWith('{')) {
+                        parsed = JSON.parse(activeLesson.content);
+                        if (parsed.type === 'structured') isStructured = true;
                       }
+                    } catch (e) {}
 
+                    if (isStructured) {
                       return (
-                        <div key={idx} className="rounded-xl border border-lms-border bg-lms-surface p-4 flex items-center gap-4 hover:border-cyan-500/30 transition-colors">
-                          <div className="w-12 h-12 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                            <meta.icon size={24} className="text-cyan-400" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
-                              {displayName}
-                            </h4>
-                            <p className="text-xs text-lms-text-muted truncate">
-                              Haz clic en descargar para guardar el archivo.
-                            </p>
-                          </div>
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 inline-flex items-center gap-2 bg-cyan-600/10 hover:bg-cyan-600 text-cyan-500 hover:text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors"
-                          >
-                            <DownloadCloud size={16} /> Descargar
-                          </a>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-
-              {/* Text Content */}
-              {activeLesson.content && (() => {
-                let isStructured = false;
-                let parsed: any = null;
-                try {
-                  if (activeLesson.content.trim().startsWith('{')) {
-                    parsed = JSON.parse(activeLesson.content);
-                    if (parsed.type === 'structured') isStructured = true;
-                  }
-                } catch (e) {}
-
-                if (isStructured) {
-                  return (
-                    <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
-                      {parsed.description && (
-                        <div className="text-sm md:text-base text-lms-text-primary leading-relaxed mb-8">
-                          {parsed.description}
-                        </div>
-                      )}
-                      
-                      {(parsed.temas?.length > 0 || parsed.alcances?.length > 0) && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                          {parsed.temas?.length > 0 && (
-                            <div className="bg-cyan-50/50 rounded-xl p-5 border border-cyan-100">
-                              <h3 className="text-cyan-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-cyan-500" />
-                                Temas a cubrir
-                              </h3>
-                              <ul className="space-y-3 m-0 p-0 list-none">
-                                {parsed.temas.map((tema: string, i: number) => (
-                                  <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-                                    <span className="text-cyan-400 mt-0.5 font-bold">•</span>
-                                    <span>{tema}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                        <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
+                          {parsed.description && (
+                            <div className="text-sm md:text-base text-lms-text-primary leading-relaxed mb-6">
+                              {parsed.description}
                             </div>
                           )}
                           
-                          {parsed.alcances?.length > 0 && (
-                            <div className="bg-emerald-50/50 rounded-xl p-5 border border-emerald-100">
-                              <h3 className="text-emerald-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                Alcances
-                              </h3>
-                              <ul className="space-y-3 m-0 p-0 list-none">
-                                {parsed.alcances.map((alcance: string, i: number) => (
-                                  <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-                                    <span className="text-emerald-400 mt-0.5 font-bold">•</span>
-                                    <span>{alcance}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                          {(parsed.temas?.length > 0 || parsed.alcances?.length > 0) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                              {parsed.temas?.length > 0 && (
+                                <div className="bg-cyan-50/50 rounded-xl p-5 border border-cyan-100">
+                                  <h3 className="text-cyan-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                                    Temas a cubrir
+                                  </h3>
+                                  <ul className="space-y-3 m-0 p-0 list-none">
+                                    {parsed.temas.map((tema: string, i: number) => (
+                                      <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
+                                        <span className="text-cyan-400 mt-0.5 font-bold">•</span>
+                                        <span>{tema}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              
+                              {parsed.alcances?.length > 0 && (
+                                <div className="bg-emerald-50/50 rounded-xl p-5 border border-emerald-100">
+                                  <h3 className="text-emerald-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                    Alcances
+                                  </h3>
+                                  <ul className="space-y-3 m-0 p-0 list-none">
+                                    {parsed.alcances.map((alcance: string, i: number) => (
+                                      <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
+                                        <span className="text-emerald-400 mt-0.5 font-bold">•</span>
+                                        <span>{alcance}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  );
-                }
+                      );
+                    }
 
-                // Fallback to HTML
-                return (
-                  <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
-                    <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                    // Fallback to HTML
+                    return (
+                      <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
+                        <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Attachments (Right Column) */}
+                {activeLesson.pdf_url && (
+                  <div className="lg:col-span-4 space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-lms-text-muted mb-2 px-1">Material Descargable</h3>
+                    {(() => {
+                      const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+
+                      return urls.map((url, idx) => {
+                        const meta = getFileMeta(url);
+                        if (!meta) return null;
+
+                        const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
+                        const decodedName = decodeURIComponent(rawName);
+                        const displayName = decodedName.replace(/^\d+-/, '');
+
+                        if (meta.type === 'pdf') {
+                          return (
+                            <div key={idx} className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface shadow-sm">
+                              <div className="flex flex-col p-4 border-b border-lms-border gap-3">
+                                <div className="flex items-center gap-2">
+                                  <meta.icon size={16} className="text-cyan-500" />
+                                  <span className="text-sm font-bold text-slate-700 truncate" title={displayName}>{displayName}</span>
+                                </div>
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center gap-2 bg-cyan-50 text-cyan-600 hover:bg-cyan-100 px-4 py-2 rounded-lg font-bold text-xs transition-colors w-full"
+                                >
+                                  Abrir en nueva pestaña <DownloadCloud size={14} />
+                                </a>
+                              </div>
+                              <div className="bg-slate-50 h-[300px] flex items-center justify-center">
+                                <span className="text-slate-400 text-sm font-medium">Previsualización de PDF no disponible en vista compacta.</span>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-surface p-4 flex flex-col gap-3 hover:border-cyan-500/30 transition-colors shadow-sm">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-50 flex items-center justify-center border border-cyan-100">
+                                <meta.icon size={20} className="text-cyan-500" />
+                              </div>
+                              <div className="flex-1 min-w-0 pt-1">
+                                <h4 className="text-sm font-bold text-slate-700 truncate" title={decodedName}>
+                                  {displayName}
+                                </h4>
+                                <p className="text-xs text-slate-500 truncate mt-0.5">
+                                  Archivo descargable
+                                </p>
+                              </div>
+                            </div>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 hover:border-cyan-200 hover:bg-cyan-50 text-slate-600 hover:text-cyan-600 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                            >
+                              <DownloadCloud size={16} /> Descargar Archivo
+                            </a>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
-                );
-              })()}
+                )}
+              </div>
 
               {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
                 <div className="flex flex-col items-center justify-center py-16 bg-lms-surface border border-lms-border rounded-2xl text-lms-text-muted gap-3">
