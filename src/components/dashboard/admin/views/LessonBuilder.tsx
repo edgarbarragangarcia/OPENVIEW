@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, X, Trash2, Upload, Loader2 } from 'lucide-react';
 import { Lesson, createLesson, updateLesson, deleteLesson, uploadFile, getFileUrl } from '../../../../lib/courses';
 import { ConfirmModal } from '../../shared/Modals';
@@ -11,18 +11,73 @@ interface LessonBuilderProps {
   onRefresh: () => void;
 }
 
+interface StructuredContent {
+  type: 'structured';
+  description: string;
+  temas: string[];
+  alcances: string[];
+}
+
 export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }: LessonBuilderProps) {
+  const [formData, setFormData] = useState<Partial<Lesson>>(lesson || {
+    title: '', content: '', video_url: '', pdf_url: '', duration_min: 5, is_free: false, position: 0
+  });
+
   const [loading, setLoading] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [formData, setFormData] = useState<Partial<Lesson>>(lesson || {
-    title: '',
-    content: '',
-    video_url: '',
-    pdf_url: '',
-    duration_min: 5,
-    is_free: false,
-  });
+
+  // Structured Content state
+  const initialParsed = (() => {
+    try {
+      if (formData.content?.trim().startsWith('{')) {
+        const p = JSON.parse(formData.content);
+        if (p.type === 'structured') return p;
+      }
+    } catch (e) {}
+    return null;
+  })();
+
+  const [useStructured, setUseStructured] = useState(!!initialParsed || !formData.content);
+  const [structuredData, setStructuredData] = useState<StructuredContent>(
+    initialParsed || { type: 'structured', description: formData.content || '', temas: [], alcances: [] }
+  );
+
+  useEffect(() => {
+    if (useStructured) {
+      setFormData(prev => ({ ...prev, content: JSON.stringify(structuredData) }));
+    }
+  }, [structuredData, useStructured]);
+
+  const addTema = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = e.currentTarget.value.trim();
+      if (val) {
+        setStructuredData(prev => ({ ...prev, temas: [...prev.temas, val] }));
+        e.currentTarget.value = '';
+      }
+    }
+  };
+
+  const removeTema = (idx: number) => {
+    setStructuredData(prev => ({ ...prev, temas: prev.temas.filter((_, i) => i !== idx) }));
+  };
+
+  const addAlcance = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = e.currentTarget.value.trim();
+      if (val) {
+        setStructuredData(prev => ({ ...prev, alcances: [...prev.alcances, val] }));
+        e.currentTarget.value = '';
+      }
+    }
+  };
+
+  const removeAlcance = (idx: number) => {
+    setStructuredData(prev => ({ ...prev, alcances: prev.alcances.filter((_, i) => i !== idx) }));
+  };
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
@@ -61,7 +116,7 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
       });
     } catch (err) {
       console.error('Error uploading files:', err);
-      alert('Error al subir los archivos. Asegúrate de haber configurado el bucket "pdfs" en Supabase.');
+      alert('Error al subir los archivos.');
     } finally {
       setUploadingPdf(false);
     }
@@ -104,7 +159,7 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
         <ConfirmModal
           isOpen={showDeleteConfirm}
           title="Eliminar Lección"
-          message={`¿Estás seguro de que deseas eliminar la lección "${lesson.title}"? Esta acción no se puede deshacer.`}
+          message={`¿Estás seguro de que deseas eliminar la lección "${lesson.title}"?`}
           confirmText="Sí, Eliminar Lección"
           isDestructive={true}
           onConfirm={handleDelete}
@@ -141,7 +196,7 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">URL Video (Youtube/Vimeo)</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">URL Video</label>
             <input 
               name="video_url" value={formData.video_url || ''} onChange={handleChange}
               className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
@@ -152,54 +207,107 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
             <div className="space-y-2">
               {getUrlsList().length > 0 && (
                 <div className="flex flex-col gap-1.5">
-                  {getUrlsList().map((url, i) => {
-                    const rawName = url.split('/').pop() || `Archivo ${i + 1}`;
-                    const decodedName = decodeURIComponent(rawName);
-                    // Strip the timestamp prefix (e.g., "1783301307471-") for a cleaner display
-                    const displayName = decodedName.replace(/^\d+-/, '');
-                    return (
-                      <div key={i} className="flex items-center justify-between bg-lms-bg border border-lms-border rounded-lg px-3 py-2">
-                        <span className="text-xs text-lms-text-primary truncate mr-2" title={decodedName}>{displayName}</span>
-                        <button type="button" onClick={() => handleRemoveUrl(url)} className="text-red-400 hover:text-red-300 transition-colors p-1">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    );
-                  })}
+                  {getUrlsList().map((url, i) => (
+                    <div key={i} className="flex items-center justify-between bg-lms-bg border border-lms-border rounded-lg px-3 py-2">
+                      <span className="text-xs truncate">{decodeURIComponent(url.split('/').pop() || '')}</span>
+                      <button type="button" onClick={() => handleRemoveUrl(url)} className="text-red-400"><X size={14} /></button>
+                    </div>
+                  ))}
                 </div>
               )}
               <div className="flex gap-2">
                 <input 
                   type="text"
-                  placeholder="Pega un enlace y presiona Enter o sube ➔"
-                  className="flex-1 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
+                  placeholder="Pegar enlace y Enter"
+                  className="flex-1 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       const val = e.currentTarget.value.trim();
                       if (val) {
-                        const current = getUrlsList();
-                        setFormData(prev => ({ ...prev, pdf_url: [...current, val].join(', ') }));
+                        setFormData(prev => ({ ...prev, pdf_url: [...getUrlsList(), val].join(', ') }));
                         e.currentTarget.value = '';
                       }
                     }
                   }}
                 />
-                <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir Archivos">
-                  {uploadingPdf ? <Loader2 size={16} className="animate-spin text-cyan-500" /> : <Upload size={16} className="text-lms-text-muted" />}
-                  <input type="file" multiple className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+                <label className="cursor-pointer bg-lms-bg border border-lms-border rounded-lg px-3 flex items-center">
+                  {uploadingPdf ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                  <input type="file" multiple className="hidden" onChange={handlePdfUpload} />
                 </label>
               </div>
             </div>
           </div>
         </div>
 
-        <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Contenido (HTML / Texto)</label>
-          <textarea 
-            name="content" value={formData.content || ''} onChange={handleChange} rows={4}
-            className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors resize-none placeholder-lms-text-muted"
-          />
+        <div className="bg-lms-surface border border-lms-border rounded-xl p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted">Contenido de la Lección</label>
+            <button
+              type="button"
+              onClick={() => setUseStructured(!useStructured)}
+              className="text-[10px] uppercase font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              {useStructured ? 'Cambiar a HTML/Texto Plano' : 'Usar Constructor Estructurado'}
+            </button>
+          </div>
+
+          {useStructured ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-lms-text-primary mb-1">Descripción / Objetivos</label>
+                <textarea 
+                  value={structuredData.description} 
+                  onChange={e => setStructuredData(p => ({ ...p, description: e.target.value }))} 
+                  rows={3}
+                  className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500"
+                  placeholder="Ej: En esta sesión aprenderemos..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-lms-text-primary mb-1">Temas (Presiona Enter para añadir)</label>
+                  <div className="space-y-2">
+                    {structuredData.temas.length > 0 && (
+                      <ul className="space-y-1">
+                        {structuredData.temas.map((tema, i) => (
+                          <li key={i} className="flex items-center justify-between text-xs bg-lms-bg border border-lms-border rounded-md px-2 py-1">
+                            <span className="truncate mr-2">{tema}</span>
+                            <button type="button" onClick={() => removeTema(i)} className="text-red-400"><X size={12} /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <input type="text" placeholder="Añadir tema ➔" onKeyDown={addTema} className="w-full px-3 py-1.5 bg-lms-bg border border-lms-border rounded-lg text-xs" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-lms-text-primary mb-1">Alcances (Presiona Enter para añadir)</label>
+                  <div className="space-y-2">
+                    {structuredData.alcances.length > 0 && (
+                      <ul className="space-y-1">
+                        {structuredData.alcances.map((alcance, i) => (
+                          <li key={i} className="flex items-center justify-between text-xs bg-lms-bg border border-lms-border rounded-md px-2 py-1">
+                            <span className="truncate mr-2">{alcance}</span>
+                            <button type="button" onClick={() => removeAlcance(i)} className="text-red-400"><X size={12} /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <input type="text" placeholder="Añadir alcance ➔" onKeyDown={addAlcance} className="w-full px-3 py-1.5 bg-lms-bg border border-lms-border rounded-lg text-xs" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <textarea 
+              name="content" value={formData.content || ''} onChange={handleChange} rows={5}
+              className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500"
+              placeholder="Contenido en HTML o texto plano..."
+            />
+          )}
         </div>
 
         <div className="flex items-center justify-between pt-2">

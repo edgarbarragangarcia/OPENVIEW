@@ -373,11 +373,63 @@ export function LessonViewer({ courseId, onBack }: Props) {
               })()}
 
               {/* Text Content */}
-              {activeLesson.content && (
-                <div className="prose prose-invert prose-sm max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6">
-                  <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
-                </div>
-              )}
+              {activeLesson.content && (() => {
+                let isStructured = false;
+                let parsed: any = null;
+                try {
+                  if (activeLesson.content.trim().startsWith('{')) {
+                    parsed = JSON.parse(activeLesson.content);
+                    if (parsed.type === 'structured') isStructured = true;
+                  }
+                } catch (e) {}
+
+                if (isStructured) {
+                  return (
+                    <div className="prose prose-invert prose-sm max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6">
+                      {parsed.description && <div className="mb-6 whitespace-pre-wrap">{parsed.description}</div>}
+                      
+                      {(parsed.temas?.length > 0 || parsed.alcances?.length > 0) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          {parsed.temas?.length > 0 && (
+                            <div>
+                              <h3 className="text-cyan-400 font-bold mb-3 mt-0 text-sm uppercase tracking-wider">Temas a cubrir</h3>
+                              <ul className="space-y-2 m-0 p-0 list-none">
+                                {parsed.temas.map((tema: string, i: number) => (
+                                  <li key={i} className="flex items-start gap-2 text-lms-text-primary m-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5 shrink-0" />
+                                    <span>{tema}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {parsed.alcances?.length > 0 && (
+                            <div>
+                              <h3 className="text-emerald-400 font-bold mb-3 mt-0 text-sm uppercase tracking-wider">Alcances</h3>
+                              <ul className="space-y-2 m-0 p-0 list-none">
+                                {parsed.alcances.map((alcance: string, i: number) => (
+                                  <li key={i} className="flex items-start gap-2 text-lms-text-primary m-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                    <span>{alcance}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Fallback to HTML
+                return (
+                  <div className="prose prose-invert prose-sm max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6">
+                    <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                  </div>
+                );
+              })()}
 
               {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
                 <div className="flex flex-col items-center justify-center py-16 bg-lms-surface border border-lms-border rounded-2xl text-lms-text-muted gap-3">
