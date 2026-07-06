@@ -29,6 +29,14 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
     setFormData(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
   };
 
+  const getUrlsList = () => formData.pdf_url ? formData.pdf_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+
+  const handleRemoveUrl = (urlToRemove: string) => {
+    const urls = getUrlsList();
+    const newUrls = urls.filter(u => u !== urlToRemove).join(', ');
+    setFormData(prev => ({ ...prev, pdf_url: newUrls }));
+  };
+
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -140,16 +148,45 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Archivo Adjunto</label>
-            <div className="flex gap-2">
-              <input 
-                name="pdf_url" value={formData.pdf_url || ''} onChange={handleChange} placeholder="URL o sube un archivo ➔"
-                className="flex-1 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
-              />
-              <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir Archivos">
-                {uploadingPdf ? <Loader2 size={16} className="animate-spin text-cyan-500" /> : <Upload size={16} className="text-lms-text-muted" />}
-                <input type="file" multiple className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
-              </label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Archivos Adjuntos</label>
+            <div className="space-y-2">
+              {getUrlsList().length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  {getUrlsList().map((url, i) => {
+                    const fileName = url.split('/').pop() || `Archivo ${i + 1}`;
+                    return (
+                      <div key={i} className="flex items-center justify-between bg-lms-bg border border-lms-border rounded-lg px-3 py-2">
+                        <span className="text-xs text-lms-text-primary truncate mr-2" title={url}>{decodeURIComponent(fileName)}</span>
+                        <button type="button" onClick={() => handleRemoveUrl(url)} className="text-red-400 hover:text-red-300 transition-colors p-1">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  placeholder="Pega un enlace y presiona Enter o sube ➔"
+                  className="flex-1 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const val = e.currentTarget.value.trim();
+                      if (val) {
+                        const current = getUrlsList();
+                        setFormData(prev => ({ ...prev, pdf_url: [...current, val].join(', ') }));
+                        e.currentTarget.value = '';
+                      }
+                    }
+                  }}
+                />
+                <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir Archivos">
+                  {uploadingPdf ? <Loader2 size={16} className="animate-spin text-cyan-500" /> : <Upload size={16} className="text-lms-text-muted" />}
+                  <input type="file" multiple className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+                </label>
+              </div>
             </div>
           </div>
         </div>
