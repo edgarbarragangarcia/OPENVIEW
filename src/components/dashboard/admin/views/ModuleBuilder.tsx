@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Edit3, Trash2, Plus, GripVertical } from 'lucide-react';
-import { Module, Lesson, updateModule, deleteModule } from '../../../../lib/courses';
+import { ChevronDown, ChevronRight, Edit3, Trash2, Plus, ChevronUp } from 'lucide-react';
+import { Module, Lesson, updateModule, deleteModule, updateLesson } from '../../../../lib/courses';
 import { LessonBuilder } from './LessonBuilder';
 import { ConfirmModal } from '../../shared/Modals';
 
@@ -29,6 +29,29 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
     await deleteModule(module.id);
     onRefresh();
   };
+
+  const handleMoveLesson = async (index: number, direction: 'up' | 'down') => {
+    if (!module.lessons) return;
+    const sorted = [...module.lessons].sort((a,b) => a.position - b.position);
+    
+    if (direction === 'up' && index > 0) {
+      const current = sorted[index];
+      const previous = sorted[index - 1];
+      const tempPos = current.position;
+      await updateLesson(current.id, { position: previous.position });
+      await updateLesson(previous.id, { position: tempPos });
+      onRefresh();
+    } else if (direction === 'down' && index < sorted.length - 1) {
+      const current = sorted[index];
+      const next = sorted[index + 1];
+      const tempPos = current.position;
+      await updateLesson(current.id, { position: next.position });
+      await updateLesson(next.id, { position: tempPos });
+      onRefresh();
+    }
+  };
+
+  const sortedLessons = module.lessons ? [...module.lessons].sort((a,b) => a.position - b.position) : [];
 
   return (
     <div className="border border-lms-border rounded-2xl bg-lms-surface overflow-hidden shadow-sm">
@@ -72,7 +95,7 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
 
       {isOpen && (
         <div className="p-4 bg-lms-bg space-y-3">
-          {module.lessons?.sort((a,b) => a.position - b.position).map((lesson: Lesson) => (
+          {sortedLessons.map((lesson: Lesson, idx: number) => (
             <div key={lesson.id}>
               {editingLessonId === lesson.id ? (
                 <LessonBuilder 
@@ -85,7 +108,22 @@ export function ModuleBuilder({ courseId, module, onRefresh }: ModuleBuilderProp
               ) : (
                 <div className="flex items-center justify-between p-3.5 bg-lms-surface border border-lms-border rounded-xl shadow-sm group hover:border-cyan-500/30 hover:shadow-cyan-500/5 transition-all">
                   <div className="flex items-center gap-3">
-                    <GripVertical size={16} className="text-lms-text-muted/30 cursor-grab" />
+                    <div className="flex flex-col items-center mr-1">
+                      <button 
+                        onClick={() => handleMoveLesson(idx, 'up')}
+                        disabled={idx === 0}
+                        className="text-lms-text-muted hover:text-cyan-400 disabled:opacity-20 transition-colors"
+                      >
+                        <ChevronUp size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleMoveLesson(idx, 'down')}
+                        disabled={idx === sortedLessons.length - 1}
+                        className="text-lms-text-muted hover:text-cyan-400 disabled:opacity-20 transition-colors"
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                    </div>
                     <span className="text-sm font-semibold text-lms-text-primary">{lesson.title}</span>
                     {lesson.is_free && <span className="text-[10px] uppercase font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">Gratis</span>}
                     {lesson.video_url?.includes('.pdf') && <span className="text-[10px] uppercase font-black text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-md border border-violet-500/20">PDF</span>}
