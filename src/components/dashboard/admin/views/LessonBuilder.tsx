@@ -140,7 +140,7 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
               />
               <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir Archivo">
                 {uploadingPdf ? <Loader2 size={16} className="animate-spin text-cyan-500" /> : <Upload size={16} className="text-lms-text-muted" />}
-                <input type="file" accept=".pdf,.pptx,.ppt,.ipynb,.doc,.docx,.zip" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+                <input type="file" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
               </label>
             </div>
           </div>
