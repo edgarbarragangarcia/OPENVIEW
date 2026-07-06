@@ -62,14 +62,14 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
         if (data) {
           // Sort modules and lessons by position
-          data.modules = (data.modules as Module[])
+          const sortedModules = (data.modules as Module[])
             .sort((a, b) => a.position - b.position)
             .map(m => ({ ...m, lessons: m.lessons.sort((a, b) => a.position - b.position) }));
           
-          setCourse(data as unknown as CourseData);
+          setCourse({ ...data, modules: sortedModules } as unknown as CourseData);
 
           // Open first module, select first lesson
-          const firstModule = data.modules[0];
+          const firstModule = sortedModules[0];
           if (firstModule) {
             setOpenModules(new Set([firstModule.id]));
             if (firstModule.lessons?.[0]) {
