@@ -132,15 +132,15 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Archivo PDF</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Archivo Adjunto</label>
             <div className="flex gap-2">
               <input 
                 name="pdf_url" value={formData.pdf_url || ''} onChange={handleChange} placeholder="URL o sube un archivo ➔"
                 className="flex-1 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
               />
-              <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir PDF">
+              <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir Archivo">
                 {uploadingPdf ? <Loader2 size={16} className="animate-spin text-cyan-500" /> : <Upload size={16} className="text-lms-text-muted" />}
-                <input type="file" accept="application/pdf" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+                <input type="file" accept=".pdf,.pptx,.ppt,.ipynb,.doc,.docx,.zip" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
               </label>
             </div>
           </div>

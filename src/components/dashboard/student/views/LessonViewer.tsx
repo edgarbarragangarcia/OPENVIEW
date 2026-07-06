@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 
@@ -32,6 +32,15 @@ interface CourseData {
   cover_url: string | null;
   modules: Module[];
 }
+
+const getFileMeta = (url?: string | null) => {
+  if (!url) return null;
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?')) return { type: 'pdf', icon: FileText, label: 'Documento PDF' };
+  if (lowerUrl.endsWith('.pptx') || lowerUrl.endsWith('.ppt') || lowerUrl.includes('.ppt')) return { type: 'ppt', icon: Presentation, label: 'Presentación PPTX' };
+  if (lowerUrl.endsWith('.ipynb') || lowerUrl.includes('.ipynb')) return { type: 'code', icon: FileCode, label: 'Notebook Colab / IPYNB' };
+  return { type: 'other', icon: FileDown, label: 'Archivo Adjunto' };
+};
 
 export function LessonViewer({ courseId, onBack }: Props) {
   const [course, setCourse] = useState<CourseData | null>(null);
@@ -206,7 +215,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             <p className="text-[10px] text-lms-text-muted mt-0.5">{lesson.duration_min} min</p>
                           )}
                         </div>
-                        {lesson.pdf_url && <FileText size={11} className="text-lms-text-muted shrink-0" />}
+                        {(() => {
+                          const meta = getFileMeta(lesson.pdf_url);
+                          return meta && <meta.icon size={11} className="text-lms-text-muted shrink-0" />;
+                        })()}
                         {lesson.video_url && <Play size={11} className="text-lms-text-muted shrink-0" />}
                       </button>
                     );
@@ -277,28 +289,55 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 </div>
               )}
 
-              {/* PDF Viewer */}
-              {activeLesson.pdf_url && (
-                <div className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface">
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-lms-border">
-                    <FileText size={15} className="text-cyan-400" />
-                    <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">Material PDF</span>
+              {/* Attachment Viewer / Download */}
+              {(() => {
+                const meta = getFileMeta(activeLesson.pdf_url);
+                if (!meta || !activeLesson.pdf_url) return null;
+
+                if (meta.type === 'pdf') {
+                  return (
+                    <div className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface">
+                      <div className="flex items-center gap-2 px-4 py-3 border-b border-lms-border">
+                        <meta.icon size={15} className="text-cyan-400" />
+                        <span className="text-xs font-bold text-lms-text-muted uppercase tracking-wider">{meta.label}</span>
+                        <a
+                          href={activeLesson.pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
+                        >
+                          Abrir en nueva pestaña <DownloadCloud size={12} />
+                        </a>
+                      </div>
+                      <iframe
+                        src={activeLesson.pdf_url}
+                        title={`Material - ${activeLesson.title}`}
+                        className="w-full h-[70vh]"
+                      />
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="rounded-2xl border border-lms-border bg-lms-surface p-6 flex flex-col items-center justify-center text-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                      <meta.icon size={32} className="text-cyan-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-lms-text-primary mb-1">Archivo de la lección disponible</h4>
+                      <p className="text-xs text-lms-text-muted">Este es un archivo {meta.label.toLowerCase()} que puedes descargar.</p>
+                    </div>
                     <a
                       href={activeLesson.pdf_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
+                      className="mt-2 inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-cyan-500/20"
                     >
-                      Abrir en nueva pestaña →
+                      <DownloadCloud size={16} /> Descargar Archivo
                     </a>
                   </div>
-                  <iframe
-                    src={activeLesson.pdf_url}
-                    title={`PDF - ${activeLesson.title}`}
-                    className="w-full h-[70vh]"
-                  />
-                </div>
-              )}
+                );
+              })()}
 
               {/* Text Content */}
               {activeLesson.content && (
