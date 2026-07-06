@@ -328,43 +328,49 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             </div>
                           )}
                           
-                          {(parsed.temas?.length > 0 || parsed.alcances?.length > 0) && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                              {parsed.temas?.length > 0 && (
-                                <div className="bg-cyan-50/50 rounded-xl p-5 border border-cyan-100">
-                                  <h3 className="text-cyan-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-cyan-500" />
-                                    Temas a cubrir
-                                  </h3>
-                                  <ul className="space-y-3 m-0 p-0 list-none">
-                                    {parsed.temas.map((tema: string, i: number) => (
-                                      <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-                                        <span className="text-cyan-400 mt-0.5 font-bold">•</span>
-                                        <span>{tema}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                              
-                              {parsed.alcances?.length > 0 && (
-                                <div className="bg-emerald-50/50 rounded-xl p-5 border border-emerald-100">
-                                  <h3 className="text-emerald-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                    Alcances
-                                  </h3>
-                                  <ul className="space-y-3 m-0 p-0 list-none">
-                                    {parsed.alcances.map((alcance: string, i: number) => (
-                                      <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-                                        <span className="text-emerald-400 mt-0.5 font-bold">•</span>
-                                        <span>{alcance}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          {(parsed.temas?.length > 0 || parsed.alcances?.length > 0) && (() => {
+                            const hasTemas = parsed.temas?.length > 0;
+                            const hasAlcances = parsed.alcances?.length > 0;
+                            const gridColsClass = hasTemas && hasAlcances ? 'md:grid-cols-2' : 'grid-cols-1';
+
+                            return (
+                              <div className={`grid grid-cols-1 ${gridColsClass} gap-6 md:gap-8`}>
+                                {hasTemas && (
+                                  <div className="bg-cyan-50/50 rounded-xl p-5 border border-cyan-100">
+                                    <h3 className="text-cyan-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                                      Temas a cubrir
+                                    </h3>
+                                    <ul className="space-y-3 m-0 p-0 list-none">
+                                      {parsed.temas.map((tema: string, i: number) => (
+                                        <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
+                                          <span className="text-cyan-400 mt-0.5 font-bold">•</span>
+                                          <span>{tema}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                
+                                {hasAlcances && (
+                                  <div className="bg-emerald-50/50 rounded-xl p-5 border border-emerald-100">
+                                    <h3 className="text-emerald-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                      Alcances
+                                    </h3>
+                                    <ul className="space-y-3 m-0 p-0 list-none">
+                                      {parsed.alcances.map((alcance: string, i: number) => (
+                                        <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
+                                          <span className="text-emerald-400 mt-0.5 font-bold">•</span>
+                                          <span>{alcance}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     }
