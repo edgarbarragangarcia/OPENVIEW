@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Save, X, Trash2 } from 'lucide-react';
-import { Lesson, createLesson, updateLesson, deleteLesson } from '../../../../lib/courses';
+import { Save, X, Trash2, Upload, Loader2 } from 'lucide-react';
+import { Lesson, createLesson, updateLesson, deleteLesson, uploadFile, getFileUrl } from '../../../../lib/courses';
 import { ConfirmModal } from '../../shared/Modals';
 
 interface LessonBuilderProps {
@@ -13,6 +13,7 @@ interface LessonBuilderProps {
 
 export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }: LessonBuilderProps) {
   const [loading, setLoading] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState<Partial<Lesson>>(lesson || {
     title: '',
@@ -26,6 +27,28 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     setFormData(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPdf(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+      const path = `lessons/${moduleId}/${fileName}`;
+      
+      await uploadFile('pdfs', path, file);
+      const url = getFileUrl('pdfs', path);
+      
+      setFormData(prev => ({ ...prev, pdf_url: url }));
+    } catch (err) {
+      console.error('Error uploading PDF:', err);
+      alert('Error al subir el PDF. Asegúrate de haber configurado el bucket "pdfs" en Supabase.');
+    } finally {
+      setUploadingPdf(false);
+    }
   };
 
   const handleSave = async () => {
@@ -109,11 +132,17 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">URL Archivo PDF</label>
-            <input 
-              name="pdf_url" value={formData.pdf_url || ''} onChange={handleChange}
-              className="w-full px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
-            />
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-1.5">Archivo PDF</label>
+            <div className="flex gap-2">
+              <input 
+                name="pdf_url" value={formData.pdf_url || ''} onChange={handleChange} placeholder="URL o sube un archivo ➔"
+                className="flex-1 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-sm text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors placeholder-lms-text-muted"
+              />
+              <label className="flex-shrink-0 cursor-pointer flex items-center justify-center bg-lms-bg border border-lms-border hover:border-cyan-500 rounded-lg px-3 transition-colors" title="Subir PDF">
+                {uploadingPdf ? <Loader2 size={16} className="animate-spin text-cyan-500" /> : <Upload size={16} className="text-lms-text-muted" />}
+                <input type="file" accept="application/pdf" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+              </label>
+            </div>
           </div>
         </div>
 
