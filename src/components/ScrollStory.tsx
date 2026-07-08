@@ -210,93 +210,47 @@ const pillars = [
 ];
 
 function ChapterPillars() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
-
-  const total = pillars.length;
-  // each pillar occupies exactly 1/total of the scroll range — no dead tail
-  const segSize = 1 / total;
-  const m = 0.05; // shared fade margin: keeps opacity/position/scale settling together for a long, stable hold
-
   return (
-    <div ref={ref} style={{ height: `${(total + 0.5) * 70}vh` }} className="relative">
-      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
+    <section className="relative py-32 px-6">
+      <p className="text-center text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-16">
+        Pilares
+      </p>
 
-        {/* Label */}
-        <motion.p
-          className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.03, 0.97, 1], [0, 1, 1, 0]) }}
-        >
-          Pilares
-        </motion.p>
-
+      <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
         {pillars.map((svc, i) => {
-          const wStart = i * segSize;
-          const wEnd = wStart + segSize;
-          const mid = (wStart + wEnd) / 2;
-
-          const opacity = useTransform(
-            scrollYProgress,
-            [wStart, wStart + m, wEnd - m, wEnd],
-            [0, 1, 1, 0]
-          );
-          const y = useTransform(
-            scrollYProgress,
-            [wStart, wStart + m, wEnd - m, wEnd],
-            [80, 0, 0, -80]
-          );
-          const scale = useTransform(
-            scrollYProgress,
-            [wStart, wStart + m, wEnd - m, wEnd],
-            [0.88, 1, 1, 0.88]
-          );
-          const glowOpacity = useTransform(
-            scrollYProgress,
-            [wStart, mid, wEnd],
-            [0, 0.55, 0]
-          );
-
           const Icon = svc.icon;
-
           return (
             <motion.div
               key={svc.title}
-              className="absolute inset-0 flex flex-col items-center justify-center px-6"
-              style={{ opacity, y, scale }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.6, delay: i * 0.1, ease: [0.23, 1, 0.32, 1] }}
+              className="relative flex flex-col items-center text-center p-8 sm:p-10 rounded-3xl border border-white/10 bg-white/[0.03] overflow-hidden"
             >
               {/* Background glow */}
-              <motion.div
-                className="absolute w-[600px] h-[600px] rounded-full pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle, ${svc.glow} 0%, transparent 70%)`,
-                  filter: 'blur(80px)',
-                  opacity: glowOpacity,
-                }}
+              <div
+                className="absolute w-[400px] h-[400px] rounded-full pointer-events-none opacity-40"
+                style={{ background: `radial-gradient(circle, ${svc.glow} 0%, transparent 70%)`, filter: 'blur(70px)' }}
               />
 
-              <div className="relative z-10 flex flex-col items-center text-center max-w-3xl">
-                {/* Icon */}
+              <div className="relative z-10 flex flex-col items-center">
                 <div
-                  className="mb-10 flex h-28 w-28 items-center justify-center rounded-4xl"
+                  className="mb-8 flex h-20 w-20 items-center justify-center rounded-3xl"
                   style={{
                     background: `radial-gradient(135deg, ${svc.color}33, ${svc.color}11)`,
                     border: `1px solid ${svc.color}44`,
-                    boxShadow: `0 0 60px ${svc.glow}`,
+                    boxShadow: `0 0 40px ${svc.glow}`,
                   }}
                 >
-                  <Icon size={52} style={{ color: svc.color }} />
+                  <Icon size={36} style={{ color: svc.color }} />
                 </div>
 
-                {/* Title */}
-                <h2
-                  className="font-black tracking-tighter leading-[0.92] mb-8"
-                  style={{ fontSize: 'clamp(44px, 7vw, 90px)' }}
-                >
+                <h2 className="font-black tracking-tight text-white text-2xl sm:text-3xl mb-4">
                   {svc.title}
                 </h2>
 
-                {/* Description */}
-                <p className="text-xl text-slate-300 font-light max-w-lg leading-relaxed">
+                <p className="text-slate-300 font-light leading-relaxed">
                   {svc.desc}
                 </p>
               </div>
@@ -304,7 +258,7 @@ function ChapterPillars() {
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -372,83 +326,43 @@ const learningPaths = [
 ];
 
 function ChapterLearningPaths() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
-
-  const total = learningPaths.length;
-  const segSize = 1 / total;
-  const m = 0.05; // shared fade margin: opacity and position settle together
-
   return (
-    <div ref={ref} style={{ height: `${(total + 0.6) * 70}vh` }} className="relative">
-      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
+    <section className="relative py-32 px-6">
+      <p className="text-center text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-16">
+        Rutas de Aprendizaje
+      </p>
 
-        <motion.p
-          className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.03, 0.97, 1], [0, 1, 1, 0]) }}
-        >
-          Rutas de Aprendizaje
-        </motion.p>
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        {learningPaths.map((p, i) => (
+          <motion.div
+            key={p.name}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: i * 0.08, ease: [0.23, 1, 0.32, 1] }}
+            className={`relative overflow-hidden rounded-3xl border border-white/10 p-8 sm:p-10 ${i === 0 ? 'md:col-span-2' : ''}`}
+          >
+            {/* Glow */}
+            <div
+              className="absolute -top-1/2 -left-1/4 w-[500px] h-[500px] rounded-full pointer-events-none opacity-30"
+              style={{ background: `radial-gradient(ellipse, ${p.glow} 0%, transparent 70%)`, filter: 'blur(90px)' }}
+            />
 
-        {learningPaths.map((p, i) => {
-          const wStart = i * segSize;
-          const wEnd = wStart + segSize;
-
-          const opacity = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [0, 1, 1, 0]);
-          const y = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [100, 0, 0, -100]);
-          const glowOp = useTransform(scrollYProgress, [wStart, (wStart + wEnd) / 2, wEnd], [0, 0.5, 0]);
-
-          return (
-            <motion.div
-              key={p.name}
-              className="absolute inset-0 flex flex-col items-center justify-center px-8"
-              style={{ opacity, y }}
-            >
-              {/* Glow orb */}
-              <motion.div
-                className="absolute w-[700px] h-[400px] rounded-full pointer-events-none"
-                style={{
-                  background: `radial-gradient(ellipse, ${p.glow} 0%, transparent 70%)`,
-                  filter: 'blur(100px)',
-                  opacity: glowOp,
-                }}
-              />
-
-              <div className="relative z-10 max-w-4xl text-center">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] mb-6" style={{ color: p.color }}>
-                  {p.tags}
-                </p>
-
-                <h2
-                  className="font-black tracking-tighter leading-[0.92] text-white mb-8"
-                  style={{ fontSize: 'clamp(48px, 8vw, 100px)' }}
-                >
-                  {p.name}
-                </h2>
-
-                <p className="text-xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed">
-                  {p.desc}
-                </p>
-
-                {/* Progress dots */}
-                <div className="mt-12 flex items-center justify-center gap-2">
-                  {learningPaths.map((_, j) => (
-                    <div
-                      key={j}
-                      className="h-1 rounded-full transition-all duration-500"
-                      style={{
-                        width: j === i ? '32px' : '6px',
-                        background: j === i ? p.color : 'rgba(255,255,255,0.2)',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+            <div className="relative z-10">
+              <p className="text-xs font-bold uppercase tracking-[0.3em] mb-4" style={{ color: p.color }}>
+                {p.tags}
+              </p>
+              <h2 className="font-black tracking-tight text-white text-3xl sm:text-4xl mb-4">
+                {p.name}
+              </h2>
+              <p className="text-slate-300 font-light leading-relaxed max-w-xl">
+                {p.desc}
+              </p>
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -542,64 +456,38 @@ const testimonials = [
 ];
 
 function ChapterTestimonials() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
-
-  const segSize = 1 / testimonials.length;
-  const m = 0.05; // shared fade margin: opacity and position settle together
-
   return (
-    <div ref={ref} style={{ height: `${(testimonials.length + 0.5) * 70}vh` }} className="relative">
-      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-6">
+    <section className="relative py-32 px-6">
+      <p className="text-center text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-16">
+        Lo que dicen
+      </p>
 
-        <motion.p
-          className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.03, 0.97, 1], [0, 1, 1, 0]) }}
-        >
-          Lo que dicen
-        </motion.p>
-
-        {testimonials.map((t, i) => {
-          const wStart = i * segSize;
-          const wEnd = wStart + segSize;
-
-          const opacity = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [0, 1, 1, 0]);
-          const y = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [80, 0, 0, -80]);
-          const glowOp = useTransform(scrollYProgress, [wStart, (wStart + wEnd) / 2, wEnd], [0, 0.4, 0]);
-
-          return (
-            <motion.div
-              key={t.name}
-              className="absolute inset-0 flex flex-col items-center justify-center"
-              style={{ opacity, y }}
-            >
-              {/* Glow */}
-              <motion.div
-                className="absolute w-[500px] h-[500px] rounded-full pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle, ${t.color}44 0%, transparent 70%)`,
-                  filter: 'blur(80px)',
-                  opacity: glowOp,
-                }}
-              />
-
-              <div className="relative z-10 max-w-3xl text-center px-6">
-                <p
-                  className="font-black text-5xl md:text-7xl lg:text-8xl leading-[1.1] tracking-tight text-white mb-10"
-                  style={{ fontStyle: 'italic' }}
-                >
-                  "{t.quote}"
-                </p>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg font-bold text-white">{t.name}</span>
-                  <span className="text-sm font-medium" style={{ color: t.color }}>{t.role}</span>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        {testimonials.map((t, i) => (
+          <motion.div
+            key={t.name}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6, delay: i * 0.1, ease: [0.23, 1, 0.32, 1] }}
+            className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 flex flex-col"
+          >
+            {/* Glow */}
+            <div
+              className="absolute -top-1/3 -right-1/4 w-[350px] h-[350px] rounded-full pointer-events-none opacity-30"
+              style={{ background: `radial-gradient(circle, ${t.color}44 0%, transparent 70%)`, filter: 'blur(70px)' }}
+            />
+            <p className="relative z-10 text-slate-200 font-light italic leading-relaxed mb-8 flex-1">
+              "{t.quote}"
+            </p>
+            <div className="relative z-10">
+              <p className="text-white font-bold text-sm">{t.name}</p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: t.color }}>{t.role}</p>
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </div>
+    </section>
   );
 }
 
