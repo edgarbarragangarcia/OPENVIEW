@@ -35,3 +35,24 @@ export async function setTopicStatus(lessonId: string, topicIndex: number, topic
     );
   if (error) throw error;
 }
+
+export interface AdminTopicFeedback {
+  id: string;
+  topic_text: string;
+  status: TopicStatus;
+  updated_at: string;
+  lesson_id: string;
+  profiles: { full_name: string | null; email: string | null } | null;
+  lessons: { title: string; modules: { title: string; courses: { title: string } | null } | null } | null;
+}
+
+/** [ADMIN] Temas marcados como "no entendido" por los estudiantes, más recientes primero */
+export async function getNotUnderstoodFeedback(): Promise<AdminTopicFeedback[]> {
+  const { data, error } = await supabase
+    .from('topic_feedback')
+    .select('id, topic_text, status, updated_at, lesson_id, profiles(full_name, email), lessons(title, modules(title, courses(title)))')
+    .eq('status', 'not_understood')
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data as unknown as AdminTopicFeedback[]) ?? [];
+}

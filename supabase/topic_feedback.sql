@@ -1,11 +1,20 @@
 -- ============================================================
 -- OPENVIEW LMS — Feedback de temas por lección (Kanban)
 -- Ejecutar en Supabase SQL Editor
+--
+-- NOTA: esta versión corrige el FK de user_id para que apunte a
+-- public.profiles(id) (igual que enrollments/progress en tu esquema
+-- real), en vez de auth.users(id) — así PostgREST puede hacer el
+-- join `profiles(...)` que usa la vista de admin. Si ya habías
+-- ejecutado una versión anterior de este archivo, el DROP la
+-- reemplaza (no debería haber feedback real todavía).
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS public.topic_feedback (
+DROP TABLE IF EXISTS public.topic_feedback CASCADE;
+
+CREATE TABLE public.topic_feedback (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id       UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   lesson_id     UUID NOT NULL REFERENCES public.lessons(id) ON DELETE CASCADE,
   topic_index   INT NOT NULL,
   topic_text    TEXT NOT NULL,

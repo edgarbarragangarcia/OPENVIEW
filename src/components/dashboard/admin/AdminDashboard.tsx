@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import {
-  LayoutDashboard, BookOpen, Users, ListChecks,
+  LayoutDashboard, BookOpen, Users, ListChecks, AlertTriangle,
   Settings, LogOut, Menu, X, ChevronRight, Bell
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -9,15 +9,19 @@ import { Overview } from './views/Overview';
 import { CoursesManager } from './views/CoursesManager';
 import { StudentsView } from './views/StudentsView';
 import { EnrollmentsView } from './views/EnrollmentsView';
+import { StudentFeedbackView } from './views/StudentFeedbackView';
 import { CourseForm } from './views/CourseForm';
 
-type AdminView = 'overview' | 'courses' | 'students' | 'enrollments' | 'settings';
+type AdminView = 'overview' | 'courses' | 'students' | 'enrollments' | 'feedback' | 'settings';
+
+const PRINCIPAL_COUNT = 5;
 
 const NAV = [
   { id: 'overview',     label: 'Dashboard',   icon: LayoutDashboard },
   { id: 'courses',      label: 'Cursos',       icon: BookOpen },
   { id: 'students',     label: 'Estudiantes',  icon: Users },
   { id: 'enrollments',  label: 'Matrículas',   icon: ListChecks },
+  { id: 'feedback',     label: 'Dudas',        icon: AlertTriangle },
   { id: 'settings',     label: 'Configuración',icon: Settings },
 ];
 
@@ -39,6 +43,7 @@ export function AdminDashboard() {
       case 'courses':     return <CoursesManager onEdit={handleEditCourse} />;
       case 'students':    return <StudentsView />;
       case 'enrollments': return <EnrollmentsView />;
+      case 'feedback':    return <StudentFeedbackView />;
       case 'settings':    return <div className="p-8 text-lms-text-muted">Configuración próximamente.</div>;
     }
   };
@@ -80,7 +85,7 @@ export function AdminDashboard() {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Principal</p>
-          {NAV.slice(0, 4).map(({ id, label, icon: Icon }, idx) => {
+          {NAV.slice(0, PRINCIPAL_COUNT).map(({ id, label, icon: Icon }, idx) => {
             const isActive = view === id && editingCourseId === undefined;
             return (
               <motion.button
@@ -107,14 +112,14 @@ export function AdminDashboard() {
 
           <div className="pt-4 mt-2 border-t border-lms-border">
             <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Sistema</p>
-            {NAV.slice(4).map(({ id, label, icon: Icon }, idx) => {
+            {NAV.slice(PRINCIPAL_COUNT).map(({ id, label, icon: Icon }, idx) => {
               const isActive = view === id;
               return (
                 <motion.button
                   key={id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (idx + 4) * 0.05, type: 'spring', stiffness: 400, damping: 30 }}
+                  transition={{ delay: (idx + PRINCIPAL_COUNT) * 0.05, type: 'spring', stiffness: 400, damping: 30 }}
                   whileHover={{ x: 4 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => { setView(id as AdminView); setEditingCourseId(undefined); setSidebarOpen(false); }}
