@@ -191,7 +191,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     >
                       M{mIdx + 1}
                     </motion.span>
-                    <span className={`text-xs font-bold text-left line-clamp-1 transition-colors ${
+                    <span className={`text-xs font-bold text-left transition-colors ${
                       isModOpen ? 'text-lms-text-primary' : 'text-lms-text-muted'
                     }`}>
                       {mod.title}
@@ -255,7 +255,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                                 </AnimatePresence>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className={`text-xs font-semibold line-clamp-1 transition-colors ${
+                                <p className={`text-xs font-semibold transition-colors ${
                                   isActive ? 'text-cyan-400' : isDone ? 'text-lms-text-muted' : 'text-lms-text-primary'
                                 }`}>
                                   {lIdx + 1}. {lesson.title}
