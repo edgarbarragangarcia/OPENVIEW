@@ -69,10 +69,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
           
           setCourse({ ...data, modules: sortedModules } as unknown as CourseData);
 
-          // Open first module, select first lesson
+          // Initial load without opening the first module
           const firstModule = sortedModules[0];
           if (firstModule) {
-            setOpenModules(new Set([firstModule.id]));
             if (firstModule.lessons?.[0]) {
               setActiveLesson(firstModule.lessons[0]);
             }
@@ -264,15 +263,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
                                   <p className="text-[10px] text-lms-text-muted mt-0.5">{lesson.duration_min} min</p>
                                 )}
                               </div>
-                              {(() => {
-                                if (!lesson.pdf_url) return null;
-                                const urls = lesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
-                                return urls.map((url, i) => {
-                                  const meta = getFileMeta(url);
-                                  return meta && <meta.icon key={i} size={11} className="text-lms-text-muted shrink-0" />;
-                                });
-                              })()}
-                              {lesson.video_url && <Play size={11} className="text-lms-text-muted shrink-0" />}
                             </motion.button>
                           );
                         })}
