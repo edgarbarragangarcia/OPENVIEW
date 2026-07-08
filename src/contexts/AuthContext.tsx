@@ -48,27 +48,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Safety timeout: never hang more than 5s on load
+    const timeout = setTimeout(() => setIsLoading(false), 5000);
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        await handleSetRole(session.user);
-      }
+      // Resolve loading immediately — don't wait for role fetch
       setIsLoading(false);
+      clearTimeout(timeout);
+      // Fetch role in the background after spinner is gone
+      if (session?.user) {
+        handleSetRole(session.user);
+      }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsLoading(false);
       if (session?.user) {
-        await handleSetRole(session.user);
+        handleSetRole(session.user);
       } else {
         setRole(null);
       }
-      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
