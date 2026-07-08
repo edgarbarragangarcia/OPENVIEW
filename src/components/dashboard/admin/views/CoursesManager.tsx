@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users } from 'lucide-react';
 import { Course, getCourses, updateCourse, deleteCourse } from '../../../../lib/courses';
 import { ConfirmModal } from '../../shared/Modals';
@@ -133,8 +134,14 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(course => (
-            <div key={course.id} className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-200 group flex flex-col">
+          {filtered.map((course, idx) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
+              className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden card-glow card-glow-violet transition-colors duration-200 group flex flex-col"
+            >
               {/* Cover */}
               <div className="relative h-44 bg-lms-hover overflow-hidden">
                 {course.cover_url ? (
@@ -200,7 +207,7 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

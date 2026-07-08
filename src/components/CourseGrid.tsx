@@ -20,7 +20,7 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: idx * 0.12 }}
-      className="group flex flex-col bg-slate-50 rounded-[2rem] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(14,165,233,0.12)] transition-shadow duration-500"
+      className="group flex flex-col bg-slate-50 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] card-glow card-glow-brand transition-all duration-500"
     >
       {/* Image */}
       <div className="relative h-64 overflow-hidden bg-slate-200 cursor-pointer" onClick={() => setExpanded(!expanded)}>
@@ -181,7 +181,7 @@ export function CourseGrid() {
   }, []);
 
   return (
-    <section className="py-32 px-6 sm:px-10 bg-white">
+    <section id="cursos" className="py-32 px-6 sm:px-10 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-end mb-20 gap-8">
           <div>

@@ -450,7 +450,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                         }
 
                         return (
-                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 hover:border-cyan-500/30 hover:shadow-md transition-all">
+                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
                             <div className="flex items-start gap-3">
                               <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-50 flex items-center justify-center border border-cyan-100">
                                 <meta.icon size={20} className="text-cyan-500" />
@@ -553,7 +553,7 @@ function CollapsibleSection({ icon: Icon, iconClass, title, count, defaultOpen =
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-lms-surface border border-lms-border rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-lms-surface border border-lms-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300 hover:border-cyan-500/30">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 p-5 md:p-6 hover:bg-lms-hover/30 transition-colors text-left"

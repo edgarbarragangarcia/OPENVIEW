@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import { Twitter, Github, Linkedin, Mail } from 'lucide-react';
 
 export function Footer() {
@@ -8,7 +9,13 @@ export function Footer() {
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-4 lg:gap-8">
-          <div className="col-span-1 lg:col-span-2">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="col-span-1 lg:col-span-2"
+          >
             <a href="/" className="text-3xl font-black tracking-tighter text-slate-900 group">
               OPEN<span className="text-primary group-hover:text-blue-600 transition-colors">VIEW</span>
             </a>
@@ -27,9 +34,14 @@ export function Footer() {
                 </a>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Aprender</h3>
             <ul className="mt-8 space-y-5">
               {[
@@ -46,9 +58,14 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Plataforma</h3>
             <ul className="mt-8 space-y-5">
               {[
@@ -65,7 +82,7 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
         </div>
 
         <div className="mt-32 border-t border-slate-200 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">

@@ -102,7 +102,7 @@ export function Profile() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.15 + i * 0.07, type: 'spring', stiffness: 350, damping: 25 }}
-              className={`flex flex-col items-center gap-2 p-5 rounded-2xl border ${stat.bg} ${stat.border} shadow-sm text-center`}
+              className={`flex flex-col items-center gap-2 p-5 rounded-2xl border ${stat.bg} ${stat.border} shadow-sm text-center card-glow card-glow-cyan`}
             >
               <div className={`w-10 h-10 rounded-xl ${stat.bg} border ${stat.border} flex items-center justify-center`}>
                 <stat.icon size={18} className={stat.color} />

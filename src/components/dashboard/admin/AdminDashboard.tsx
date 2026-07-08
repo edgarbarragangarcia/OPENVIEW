@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import {
   LayoutDashboard, BookOpen, Users, ListChecks,
   Settings, LogOut, Menu, X, ChevronRight, Bell
@@ -79,14 +80,19 @@ export function AdminDashboard() {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Principal</p>
-          {NAV.slice(0, 4).map(({ id, label, icon: Icon }) => {
+          {NAV.slice(0, 4).map(({ id, label, icon: Icon }, idx) => {
             const isActive = view === id && editingCourseId === undefined;
             return (
-              <button
+              <motion.button
                 key={id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05, type: 'spring', stiffness: 400, damping: 30 }}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => { setView(id as AdminView); setEditingCourseId(undefined); setSidebarOpen(false); }}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 group
                   ${isActive
                     ? 'bg-violet-500/15 text-violet-400 shadow-inner'
                     : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'}
@@ -95,20 +101,25 @@ export function AdminDashboard() {
                 <Icon size={18} className={isActive ? 'text-violet-400' : 'text-lms-text-muted group-hover:text-lms-text-primary transition-colors'} />
                 {label}
                 {isActive && <ChevronRight size={14} className="ml-auto text-violet-400" />}
-              </button>
+              </motion.button>
             );
           })}
 
           <div className="pt-4 mt-2 border-t border-lms-border">
             <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Sistema</p>
-            {NAV.slice(4).map(({ id, label, icon: Icon }) => {
+            {NAV.slice(4).map(({ id, label, icon: Icon }, idx) => {
               const isActive = view === id;
               return (
-                <button
+                <motion.button
                   key={id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (idx + 4) * 0.05, type: 'spring', stiffness: 400, damping: 30 }}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => { setView(id as AdminView); setEditingCourseId(undefined); setSidebarOpen(false); }}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 group
                     ${isActive
                       ? 'bg-violet-500/15 text-violet-400'
                       : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'}
@@ -116,7 +127,7 @@ export function AdminDashboard() {
                 >
                   <Icon size={18} className={isActive ? 'text-violet-400' : 'text-lms-text-muted group-hover:text-lms-text-primary transition-colors'} />
                   {label}
-                </button>
+                </motion.button>
               );
             })}
           </div>

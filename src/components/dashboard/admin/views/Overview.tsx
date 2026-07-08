@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { BookOpen, Users, ListChecks, TrendingUp, ArrowUpRight, Clock, Star } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 
@@ -128,11 +129,14 @@ export function Overview({ onNavigate }: OverviewProps) {
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {statCards.map(({ label, value, sub, icon: Icon, iconBg, shadow, onClick }) => (
-          <button
+        {statCards.map(({ label, value, sub, icon: Icon, iconBg, shadow, onClick }, idx) => (
+          <motion.button
             key={label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
             onClick={onClick}
-            className={`text-left bg-lms-surface border border-lms-border rounded-2xl p-5 hover:border-violet-500/30 hover:bg-lms-hover transition-all duration-200 group shadow-lg ${shadow}`}
+            className={`text-left bg-lms-surface border border-lms-border rounded-2xl p-5 hover:border-violet-500/30 hover:bg-lms-hover card-glow transition-colors duration-200 group shadow-lg ${shadow}`}
           >
             <div className="flex items-start justify-between mb-4">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
@@ -143,7 +147,7 @@ export function Overview({ onNavigate }: OverviewProps) {
             <p className="text-3xl font-black text-lms-text-primary">{value}</p>
             <p className="text-xs font-bold text-lms-text-muted mt-1 uppercase tracking-wider">{label}</p>
             <p className="text-xs text-lms-text-muted/70 mt-0.5">{sub}</p>
-          </button>
+          </motion.button>
         ))}
       </div>
 

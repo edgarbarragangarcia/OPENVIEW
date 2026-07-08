@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { BookOpen, Clock, Search, Filter } from 'lucide-react';
 import { getCourses, Course } from '../../../../lib/courses';
 import { enrollInCourse, isEnrolled } from '../../../../lib/enrollments';
@@ -103,10 +104,16 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filtered.map(course => {
+          {filtered.map((course, idx) => {
             const already = enrolledIds.has(course.id);
             return (
-              <div key={course.id} className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden hover:border-cyan-500/20 transition-all duration-200 flex flex-col group">
+              <motion.div
+                key={course.id}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 28, delay: idx * 0.05 }}
+                className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden card-glow card-glow-cyan transition-all duration-200 flex flex-col group"
+              >
                 <div className="relative h-44 bg-lms-hover overflow-hidden">
                   {course.cover_url ? (
                     <img src={course.cover_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -159,7 +166,7 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

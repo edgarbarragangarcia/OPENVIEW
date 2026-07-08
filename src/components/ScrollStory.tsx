@@ -11,8 +11,8 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, MotionValue } from 'motion/react';
 import {
-  Globe, BrainCircuit, Zap, Lightbulb,
-  Search, Layout, Palette, Code2, Rocket,
+  GraduationCap, BrainCircuit, Users, Award,
+  Compass, ClipboardCheck, PlayCircle,
   ArrowRight,
 } from 'lucide-react';
 
@@ -50,6 +50,10 @@ function WordReveal({ text, progress, start, end, className = '' }: {
   );
 }
 
+const scrollToId = (id: string) => {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+};
+
 // ─── Chapter 0: HERO ────────────────────────────────────────────────────────
 
 function ChapterHero() {
@@ -70,7 +74,7 @@ function ChapterHero() {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.1, 0.45, 0.65], [0, 0.07, 0.07, 0]);
 
   return (
-    <div ref={ref} className="relative h-[280vh]">
+    <div ref={ref} className="relative h-[200vh]">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
 
         {/* Giant background brand text */}
@@ -98,12 +102,12 @@ function ChapterHero() {
             Open View<br />
             <span
               style={{
-                background: 'linear-gradient(135deg,#0d59f2 0%,#6366f1 50%,#06b6d4 100%)',
+                background: 'var(--gradient-brand)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Consultants.
+              Academia.
             </span>
           </motion.h1>
         </motion.div>
@@ -113,7 +117,7 @@ function ChapterHero() {
           className="relative z-10 mt-8 text-xl md:text-2xl text-slate-300 font-light text-center max-w-xl px-6 leading-relaxed"
           style={{ opacity: subtitleOpacity, y: subtitleY }}
         >
-          Soluciones de software a la medida para impulsar tu negocio al siguiente nivel.
+          Domina las habilidades que transforman carreras: IA, tecnología, liderazgo y negocios — con instructores que viven la industria.
         </motion.p>
 
         {/* CTAs */}
@@ -121,11 +125,14 @@ function ChapterHero() {
           className="relative z-10 mt-10 flex flex-col sm:flex-row gap-4 px-6"
           style={{ opacity: btnsOpacity }}
         >
-          <button className="flex h-14 items-center gap-2 rounded-full bg-primary px-8 text-base font-bold text-white shadow-[0_0_40px_rgba(13,89,242,0.4)] hover:shadow-[0_0_60px_rgba(13,89,242,0.6)] hover:scale-105 transition-all duration-300">
-            Descubre más <ArrowRight size={18} />
+          <button
+            onClick={() => scrollToId('cursos')}
+            className="flex h-14 items-center gap-2 rounded-full bg-primary px-8 text-base font-bold text-white shadow-[0_0_40px_rgba(13,89,242,0.4)] hover:shadow-[0_0_60px_rgba(13,89,242,0.6)] hover:scale-105 transition-all duration-300"
+          >
+            Explorar cursos <ArrowRight size={18} />
           </button>
           <button className="flex h-14 items-center gap-2 rounded-full border border-white/20 px-8 text-base font-semibold text-white backdrop-blur-sm hover:border-white/40 hover:scale-105 transition-all duration-300">
-            Nuestro portafolio
+            Rutas de aprendizaje
           </button>
         </motion.div>
 
@@ -159,7 +166,7 @@ function ChapterStatement() {
   const circleOpacity = useTransform(scrollYProgress, [0.05, 0.2, 0.8, 1], [0, 0.6, 0.6, 0]);
 
   return (
-    <div ref={ref} className="relative h-[350vh]">
+    <div ref={ref} className="relative h-[240vh]">
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
 
         {/* Ambient orb behind text */}
@@ -178,10 +185,10 @@ function ChapterStatement() {
           style={{ opacity: containerOpacity }}
         >
           <p className="text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-8">
-            Nuestra visión
+            Nuestra misión
           </p>
           <WordReveal
-            text="Soluciones inauditas. Precisión absoluta. La ingeniería que Latinoamérica merece."
+            text="Educación sin fronteras. Habilidades reales. El futuro profesional que Latinoamérica merece."
             progress={scrollYProgress}
             start={0.12}
             end={0.75}
@@ -193,25 +200,25 @@ function ChapterStatement() {
   );
 }
 
-// ─── Chapter 2: SERVICES — one at a time ────────────────────────────────────
+// ─── Chapter 2: PILARES — one at a time ─────────────────────────────────────
 
-const services = [
-  { title: 'Plataformas Web', desc: 'Aplicaciones robustas y elegantes que escalan con tu negocio.', icon: Globe, color: '#0d59f2', glow: 'rgba(13,89,242,0.35)' },
-  { title: 'Inteligencia Artificial', desc: 'Modelos de IA integrados que automatizan flujos y potencian tus productos.', icon: BrainCircuit, color: '#10b981', glow: 'rgba(16,185,129,0.35)' },
-  { title: 'Automatización', desc: 'Flujos de trabajo optimizados con herramientas de última generación.', icon: Zap, color: '#f59e0b', glow: 'rgba(245,158,11,0.35)' },
-  { title: 'Consultoría IT', desc: 'Arquitectura y estrategia tecnológica para que tu visión escale sin límites.', icon: Lightbulb, color: '#ec4899', glow: 'rgba(236,72,153,0.35)' },
+const pillars = [
+  { title: 'Instructores Expertos', desc: 'Aprende de profesionales activos en la industria, con experiencia real aplicable desde el primer día.', icon: GraduationCap, color: '#0d59f2', glow: 'rgba(13,89,242,0.35)' },
+  { title: 'Aprendizaje con IA', desc: 'Rutas personalizadas y asistencia inteligente que se adaptan a tu ritmo y tus objetivos.', icon: BrainCircuit, color: '#10b981', glow: 'rgba(16,185,129,0.35)' },
+  { title: 'Comunidad Activa', desc: 'Conecta con otros estudiantes, comparte proyectos y crece acompañado en cada curso.', icon: Users, color: '#f59e0b', glow: 'rgba(245,158,11,0.35)' },
+  { title: 'Certificaciones', desc: 'Valida tus habilidades con certificados que abren puertas en el mercado laboral.', icon: Award, color: '#ec4899', glow: 'rgba(236,72,153,0.35)' },
 ];
 
-function ChapterServices() {
+function ChapterPillars() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
-  const total = services.length;
-  // each service occupies 1/total of the scroll range, with overlap
+  const total = pillars.length;
+  // each pillar occupies 1/total of the scroll range, with overlap
   const segSize = 0.9 / total;
 
   return (
-    <div ref={ref} style={{ height: `${(total + 1) * 100}vh` }} className="relative">
+    <div ref={ref} style={{ height: `${(total + 1) * 70}vh` }} className="relative">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
 
         {/* Label */}
@@ -219,10 +226,10 @@ function ChapterServices() {
           className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
           style={{ opacity: useTransform(scrollYProgress, [0, 0.06, 0.94, 1], [0, 1, 1, 0]) }}
         >
-          Servicios
+          Pilares
         </motion.p>
 
-        {services.map((svc, i) => {
+        {pillars.map((svc, i) => {
           const wStart = i * segSize;
           const wEnd = wStart + segSize;
           const mid = (wStart + wEnd) / 2;
@@ -282,7 +289,7 @@ function ChapterServices() {
                 {/* Title */}
                 <h2
                   className="font-black tracking-tighter leading-[0.92] mb-8"
-                  style={{ fontSize: 'clamp(52px, 8vw, 110px)' }}
+                  style={{ fontSize: 'clamp(44px, 7vw, 90px)' }}
                 >
                   {svc.title}
                 </h2>
@@ -303,10 +310,10 @@ function ChapterServices() {
 // ─── Chapter 3: BIG NUMBERS / STATS ─────────────────────────────────────────
 
 const stats = [
-  { value: '50+', label: 'Proyectos\nentregados', color: '#0d59f2' },
-  { value: '20+', label: 'Clientes\nactivos', color: '#10b981' },
-  { value: '5', label: 'Países\nalcanzados', color: '#f59e0b' },
-  { value: '99%', label: 'Clientes\nsatisfechos', color: '#ec4899' },
+  { value: '+2,000', label: 'Estudiantes\nactivos', color: '#0d59f2' },
+  { value: '+120', label: 'Cursos\ndisponibles', color: '#10b981' },
+  { value: '98%', label: 'Satisfacción', color: '#f59e0b' },
+  { value: '+50', label: 'Empresas\ncertificadas', color: '#ec4899' },
 ];
 
 function ChapterStats() {
@@ -317,7 +324,7 @@ function ChapterStats() {
   const containerY = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [60, 0, 0, -60]);
 
   return (
-    <div ref={ref} className="relative h-[220vh]">
+    <div ref={ref} className="relative h-[180vh]">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-6">
 
         <motion.div style={{ opacity: containerOpacity, y: containerY }} className="w-full max-w-5xl">
@@ -353,43 +360,35 @@ function ChapterStats() {
   );
 }
 
-// ─── Chapter 4: PORTFOLIO — large card sequence ──────────────────────────────
+// ─── Chapter 4: RUTAS DE APRENDIZAJE — large card sequence ──────────────────
 
-const projects = [
-  { name: 'APEG Golf', tags: 'Gestión · Deportes · Web', color: '#0d59f2', glow: 'rgba(13,89,242,0.4)', desc: 'Sistema de gestión integral para la Asociación de Profesionales de Golf de Colombia.' },
-  { name: 'Monitor Regina', tags: 'Educación · Análisis', color: '#10b981', glow: 'rgba(16,185,129,0.4)', desc: 'Plataforma de monitoreo automático con seguimiento de indicadores en tiempo real.' },
-  { name: 'KREO Dashboard', tags: 'Datos · Marketing', color: '#6366f1', glow: 'rgba(99,102,241,0.4)', desc: 'Herramienta de visualización de datos y optimización de pauta para agencias.' },
-  { name: 'Gymboree Pagos', tags: 'Fintech · Educación', color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', desc: 'Sistema de pagos automatizado para la red de centros Gymboree en Colombia.' },
-  { name: 'OpenView AI', tags: 'IA · SaaS', color: '#ec4899', glow: 'rgba(236,72,153,0.4)', desc: 'Plataforma propia de inteligencia artificial para generación de contenido y análisis.' },
+const learningPaths = [
+  { name: 'Inteligencia Artificial', tags: 'IA · Automatización · Datos', color: '#0d59f2', glow: 'rgba(13,89,242,0.4)', desc: 'Domina los modelos y herramientas de IA que están redefiniendo la industria.' },
+  { name: 'Liderazgo', tags: 'Gestión · Equipos · Estrategia', color: '#10b981', glow: 'rgba(16,185,129,0.4)', desc: 'Desarrolla las habilidades directivas para liderar equipos y proyectos de alto impacto.' },
+  { name: 'Tecnología', tags: 'Desarrollo · Cloud · Producto', color: '#6366f1', glow: 'rgba(99,102,241,0.4)', desc: 'Construye software robusto con las prácticas y herramientas que usan los mejores equipos.' },
+  { name: 'Negocios', tags: 'Finanzas · Operaciones · Ventas', color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', desc: 'Aprende a tomar decisiones de negocio con visión estratégica y datos reales.' },
+  { name: 'Marketing Digital', tags: 'Growth · Contenido · Analítica', color: '#ec4899', glow: 'rgba(236,72,153,0.4)', desc: 'Convierte audiencias en comunidades y comunidades en resultados medibles.' },
 ];
 
-function ChapterPortfolio() {
+function ChapterLearningPaths() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
-  const total = projects.length;
+  const total = learningPaths.length;
   const segSize = 0.88 / total;
 
   return (
-    <div ref={ref} style={{ height: `${(total + 1.5) * 100}vh` }} className="relative">
+    <div ref={ref} style={{ height: `${(total + 1.5) * 70}vh` }} className="relative">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
 
         <motion.p
           className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
           style={{ opacity: useTransform(scrollYProgress, [0, 0.05, 0.95, 1], [0, 1, 1, 0]) }}
         >
-          Portafolio
+          Rutas de Aprendizaje
         </motion.p>
 
-        {/* Progress counter */}
-        <motion.p
-          className="absolute top-36 text-xs text-slate-600 font-mono"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.05, 0.95, 1], [0, 1, 1, 0]) }}
-        >
-          {/* shown with CSS via transform */}
-        </motion.p>
-
-        {projects.map((p, i) => {
+        {learningPaths.map((p, i) => {
           const wStart = i * segSize;
           const wEnd = wStart + segSize;
 
@@ -420,7 +419,7 @@ function ChapterPortfolio() {
 
                 <h2
                   className="font-black tracking-tighter leading-[0.92] text-white mb-8"
-                  style={{ fontSize: 'clamp(52px, 9vw, 120px)' }}
+                  style={{ fontSize: 'clamp(48px, 8vw, 100px)' }}
                 >
                   {p.name}
                 </h2>
@@ -431,7 +430,7 @@ function ChapterPortfolio() {
 
                 {/* Progress dots */}
                 <div className="mt-12 flex items-center justify-center gap-2">
-                  {projects.map((_, j) => (
+                  {learningPaths.map((_, j) => (
                     <div
                       key={j}
                       className="h-1 rounded-full transition-all duration-500"
@@ -454,11 +453,11 @@ function ChapterPortfolio() {
 // ─── Chapter 5: PROCESS ─────────────────────────────────────────────────────
 
 const steps = [
-  { num: '01', title: 'Descubrimiento', desc: 'Entendemos tu negocio, retos y objetivos estratégicos en profundidad.', icon: Search, color: '#0d59f2' },
-  { num: '02', title: 'Arquitectura', desc: 'Diseñamos la solución técnica robusta, escalable y segura.', icon: Layout, color: '#6366f1' },
-  { num: '03', title: 'Diseño UX/UI', desc: 'Interfaces elegantes que priorizan la experiencia del usuario.', icon: Palette, color: '#ec4899' },
-  { num: '04', title: 'Desarrollo', desc: 'Construimos con sprints ágiles y demos semanales de avance.', icon: Code2, color: '#10b981' },
-  { num: '05', title: 'Lanzamiento', desc: 'Desplegamos y te acompañamos en el crecimiento continuo.', icon: Rocket, color: '#f59e0b' },
+  { num: '01', title: 'Explora', desc: 'Descubre cursos y rutas de aprendizaje alineadas a tus objetivos profesionales.', icon: Compass, color: '#0d59f2' },
+  { num: '02', title: 'Inscríbete', desc: 'Únete con un clic y accede de inmediato a todo el contenido del curso.', icon: ClipboardCheck, color: '#6366f1' },
+  { num: '03', title: 'Aprende', desc: 'Avanza a tu ritmo con lecciones, materiales descargables y feedback en cada tema.', icon: PlayCircle, color: '#ec4899' },
+  { num: '04', title: 'Practica', desc: 'Aplica lo aprendido con ejercicios reales y el apoyo de la comunidad.', icon: Users, color: '#10b981' },
+  { num: '05', title: 'Certifícate', desc: 'Obtén tu certificado y comienza el siguiente paso de tu carrera profesional.', icon: Award, color: '#f59e0b' },
 ];
 
 function ChapterProcess() {
@@ -472,7 +471,7 @@ function ChapterProcess() {
   const lineWidth = useTransform(scrollYProgress, [0.06, 0.92], ['0%', '100%']);
 
   return (
-    <div ref={ref} className="relative h-[300vh]">
+    <div ref={ref} className="relative h-[220vh]">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-6">
         <motion.div style={{ opacity: containerOpacity, y: containerY }} className="w-full max-w-6xl">
           <p className="text-center text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-4">
@@ -480,7 +479,7 @@ function ChapterProcess() {
           </p>
           <h2 className="text-center font-black tracking-tighter text-white mb-16"
             style={{ fontSize: 'clamp(36px, 5vw, 72px)' }}>
-            Cómo lo hacemos realidad
+            Tu camino como estudiante
           </h2>
 
           {/* Timeline line */}
@@ -535,9 +534,9 @@ function ChapterProcess() {
 // ─── Chapter 6: TESTIMONIALS ─────────────────────────────────────────────────
 
 const testimonials = [
-  { name: 'Camilo Sánchez', role: 'Presidente · APEG Golf', quote: 'Open View transformó por completo nuestra gestión administrativa. Su capacidad técnica y diseño elegante superaron todas las expectativas.', color: '#0d59f2' },
-  { name: 'Marta Rodríguez', role: 'Directora · Gymboree Colombia', quote: 'El sistema de pagos es impecable. La atención al detalle y la rapidez de respuesta son su mayor diferencial.', color: '#10b981' },
-  { name: 'Andrés Felipe', role: 'Fundador · KREO Dashboard', quote: 'La visualización de datos nos permitió tomar decisiones estratégicas en tiempo real. Un aliado indispensable.', color: '#6366f1' },
+  { name: 'Laura Gómez', role: 'Estudiante · Ruta de IA', quote: 'En pocas semanas pasé de no saber nada de IA a implementar mis propios modelos. La calidad de los instructores es otro nivel.', color: '#0d59f2' },
+  { name: 'Diego Martínez', role: 'Estudiante · Liderazgo', quote: 'Los cursos de liderazgo me dieron herramientas que apliqué de inmediato con mi equipo. Se nota la experiencia real detrás de cada clase.', color: '#10b981' },
+  { name: 'Valentina Ríos', role: 'Estudiante · Marketing Digital', quote: 'La comunidad y el feedback constante hicieron toda la diferencia. Nunca me sentí sola aprendiendo.', color: '#6366f1' },
 ];
 
 function ChapterTestimonials() {
@@ -547,7 +546,7 @@ function ChapterTestimonials() {
   const segSize = 0.9 / testimonials.length;
 
   return (
-    <div ref={ref} style={{ height: `${(testimonials.length + 1) * 100}vh` }} className="relative">
+    <div ref={ref} style={{ height: `${(testimonials.length + 1) * 70}vh` }} className="relative">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-6">
 
         <motion.p
@@ -603,7 +602,7 @@ function ChapterTestimonials() {
 
 // ─── Chapter 7: CLOSING CTA ──────────────────────────────────────────────────
 
-function ChapterCTA() {
+function ChapterCTA({ onCtaClick }: { onCtaClick?: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
@@ -611,7 +610,7 @@ function ChapterCTA() {
   const scale = useTransform(scrollYProgress, [0, 0.2], [0.9, 1]);
 
   return (
-    <div ref={ref} className="relative h-[200vh]">
+    <div ref={ref} className="relative h-[160vh]">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-6">
         {/* Radial glow */}
         <div
@@ -632,22 +631,25 @@ function ChapterCTA() {
             className="font-black tracking-tighter text-white leading-[0.92] mb-10"
             style={{ fontSize: 'clamp(52px, 9vw, 120px)' }}
           >
-            Construyamos<br />
+            Empieza a<br />
             <span
               style={{
-                background: 'linear-gradient(135deg,#0d59f2,#6366f1,#06b6d4)',
+                background: 'var(--gradient-brand)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              juntos.
+              aprender.
             </span>
           </h2>
           <p className="text-xl text-slate-300 font-light max-w-xl leading-relaxed mb-12">
-            Hablemos de tu proyecto. Sin compromisos, con toda nuestra atención.
+            Únete a miles de estudiantes que ya están construyendo su futuro profesional con nosotros.
           </p>
-          <button className="flex h-16 items-center gap-3 rounded-full bg-primary px-12 text-lg font-bold text-white shadow-[0_0_60px_rgba(13,89,242,0.5)] hover:shadow-[0_0_90px_rgba(13,89,242,0.7)] hover:scale-105 transition-all duration-300">
-            Contáctanos <ArrowRight size={22} />
+          <button
+            onClick={onCtaClick}
+            className="flex h-16 items-center gap-3 rounded-full bg-primary px-12 text-lg font-bold text-white shadow-[0_0_60px_rgba(13,89,242,0.5)] hover:shadow-[0_0_90px_rgba(13,89,242,0.7)] hover:scale-105 transition-all duration-300"
+          >
+            Crear cuenta gratis <ArrowRight size={22} />
           </button>
         </motion.div>
       </div>
@@ -657,17 +659,17 @@ function ChapterCTA() {
 
 // ─── Main export ─────────────────────────────────────────────────────────────
 
-export function ScrollStory() {
+export function ScrollStory({ onCtaClick }: { onCtaClick?: () => void }) {
   return (
-    <div id="portafolio" className="relative">
+    <div className="relative">
       <ChapterHero />
       <ChapterStatement />
-      <ChapterServices />
+      <ChapterPillars />
       <ChapterStats />
-      <ChapterPortfolio />
+      <ChapterLearningPaths />
       <ChapterProcess />
       <ChapterTestimonials />
-      <ChapterCTA />
+      <ChapterCTA onCtaClick={onCtaClick} />
     </div>
   );
 }

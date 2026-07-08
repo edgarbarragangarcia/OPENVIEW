@@ -32,6 +32,9 @@
   /* ── Shadows ── */
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   --shadow-glow: 0 0 15px rgba(13, 89, 242, 0.15);
+
+  /* ── Brand gradient (azul → índigo → cian) ── */
+  --gradient-brand: linear-gradient(135deg, #0d59f2 0%, #6366f1 50%, #06b6d4 100%);
 }
 
 @layer base {
@@ -67,11 +70,11 @@
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light));
+    background-image: var(--gradient-brand);
   }
 
   .bg-gradient-primary {
-    background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-light));
+    background-image: var(--gradient-brand);
   }
 
   .perspective-1000 { perspective: 1000px; }
@@ -82,4 +85,39 @@
   .lms-scroll::-webkit-scrollbar       { width: 4px; }
   .lms-scroll::-webkit-scrollbar-track { background: transparent; }
   .lms-scroll::-webkit-scrollbar-thumb { background: var(--color-lms-border); border-radius: 4px; }
+
+  /* ── Modern card hover: lift + colored glow ── */
+  .card-glow {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+  }
+  .card-glow:hover {
+    transform: translateY(-4px);
+  }
+  .card-glow-cyan:hover   { box-shadow: 0 20px 40px -12px rgba(6, 182, 212, 0.25); border-color: rgba(6, 182, 212, 0.35); }
+  .card-glow-violet:hover { box-shadow: 0 20px 40px -12px rgba(139, 92, 246, 0.25); border-color: rgba(139, 92, 246, 0.35); }
+  .card-glow-brand:hover  { box-shadow: 0 20px 40px -12px rgba(13, 89, 242, 0.25); border-color: rgba(99, 102, 241, 0.35); }
+
+  /* ── Gradient border sheen (1px gradient ring) ── */
+  .gradient-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gradient-brand);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .gradient-border:hover::before {
+    opacity: 1;
+  }
 }

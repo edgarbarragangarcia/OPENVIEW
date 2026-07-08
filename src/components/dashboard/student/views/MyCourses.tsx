@@ -47,7 +47,7 @@ function CourseCard({ enrollment, onCourseSelect }: { enrollment: EnrolledCourse
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-      className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden hover:border-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/5 transition-colors duration-200 flex flex-col"
+      className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden card-glow card-glow-cyan transition-all duration-200 flex flex-col"
     >
       {/* Thumbnail */}
       <div
