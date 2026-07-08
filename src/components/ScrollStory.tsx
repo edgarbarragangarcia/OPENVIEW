@@ -60,18 +60,18 @@ function ChapterHero() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
-  const titleScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.18]);
-  const titleOpacity = useTransform(scrollYProgress, [0, 0.35, 0.6], [1, 1, 0]);
-  const titleY = useTransform(scrollYProgress, [0, 0.6], [0, -60]);
+  const titleScale = useTransform(scrollYProgress, [0, 0.8], [1, 1.18]);
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.55, 0.85], [1, 1, 0]);
+  const titleY = useTransform(scrollYProgress, [0, 0.85], [0, -60]);
 
-  const subtitleOpacity = useTransform(scrollYProgress, [0, 0.08, 0.35, 0.55], [0, 1, 1, 0]);
-  const subtitleY = useTransform(scrollYProgress, [0.05, 0.35], [30, 0]);
+  const subtitleOpacity = useTransform(scrollYProgress, [0, 0.1, 0.55, 0.85], [0, 1, 1, 0]);
+  const subtitleY = useTransform(scrollYProgress, [0.05, 0.4], [30, 0]);
 
-  const btnsOpacity = useTransform(scrollYProgress, [0, 0.06, 0.3, 0.5], [0, 1, 1, 0]);
+  const btnsOpacity = useTransform(scrollYProgress, [0, 0.08, 0.55, 0.85], [0, 1, 1, 0]);
 
   // Big background text that scales dramatically
-  const bgScale = useTransform(scrollYProgress, [0, 0.6], [1, 3]);
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.1, 0.45, 0.65], [0, 0.07, 0.07, 0]);
+  const bgScale = useTransform(scrollYProgress, [0, 0.85], [1, 3]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.1, 0.55, 0.85], [0, 0.07, 0.07, 0]);
 
   return (
     <div ref={ref} className="relative h-[200vh]">
@@ -214,17 +214,18 @@ function ChapterPillars() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
   const total = pillars.length;
-  // each pillar occupies 1/total of the scroll range, with overlap
-  const segSize = 0.9 / total;
+  // each pillar occupies exactly 1/total of the scroll range — no dead tail
+  const segSize = 1 / total;
+  const m = 0.05; // shared fade margin: keeps opacity/position/scale settling together for a long, stable hold
 
   return (
-    <div ref={ref} style={{ height: `${(total + 1) * 70}vh` }} className="relative">
+    <div ref={ref} style={{ height: `${(total + 0.5) * 70}vh` }} className="relative">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
 
         {/* Label */}
         <motion.p
           className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.06, 0.94, 1], [0, 1, 1, 0]) }}
+          style={{ opacity: useTransform(scrollYProgress, [0, 0.03, 0.97, 1], [0, 1, 1, 0]) }}
         >
           Pilares
         </motion.p>
@@ -236,17 +237,17 @@ function ChapterPillars() {
 
           const opacity = useTransform(
             scrollYProgress,
-            [wStart, wStart + 0.06, mid, wEnd - 0.06, wEnd],
-            [0, 1, 1, 1, 0]
+            [wStart, wStart + m, wEnd - m, wEnd],
+            [0, 1, 1, 0]
           );
           const y = useTransform(
             scrollYProgress,
-            [wStart, wStart + 0.08, wEnd - 0.08, wEnd],
+            [wStart, wStart + m, wEnd - m, wEnd],
             [80, 0, 0, -80]
           );
           const scale = useTransform(
             scrollYProgress,
-            [wStart, wStart + 0.08, wEnd - 0.08, wEnd],
+            [wStart, wStart + m, wEnd - m, wEnd],
             [0.88, 1, 1, 0.88]
           );
           const glowOpacity = useTransform(
@@ -375,15 +376,16 @@ function ChapterLearningPaths() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
   const total = learningPaths.length;
-  const segSize = 0.88 / total;
+  const segSize = 1 / total;
+  const m = 0.05; // shared fade margin: opacity and position settle together
 
   return (
-    <div ref={ref} style={{ height: `${(total + 1.5) * 70}vh` }} className="relative">
+    <div ref={ref} style={{ height: `${(total + 0.6) * 70}vh` }} className="relative">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
 
         <motion.p
           className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.05, 0.95, 1], [0, 1, 1, 0]) }}
+          style={{ opacity: useTransform(scrollYProgress, [0, 0.03, 0.97, 1], [0, 1, 1, 0]) }}
         >
           Rutas de Aprendizaje
         </motion.p>
@@ -392,9 +394,9 @@ function ChapterLearningPaths() {
           const wStart = i * segSize;
           const wEnd = wStart + segSize;
 
-          const opacity = useTransform(scrollYProgress, [wStart, wStart + 0.06, wEnd - 0.06, wEnd], [0, 1, 1, 0]);
-          const y = useTransform(scrollYProgress, [wStart, wStart + 0.09, wEnd - 0.09, wEnd], [100, 0, 0, -100]);
-          const glowOp = useTransform(scrollYProgress, [(wStart + wEnd) / 2 - 0.15, (wStart + wEnd) / 2, (wStart + wEnd) / 2 + 0.15], [0, 0.5, 0]);
+          const opacity = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [0, 1, 1, 0]);
+          const y = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [100, 0, 0, -100]);
+          const glowOp = useTransform(scrollYProgress, [wStart, (wStart + wEnd) / 2, wEnd], [0, 0.5, 0]);
 
           return (
             <motion.div
@@ -543,15 +545,16 @@ function ChapterTestimonials() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
-  const segSize = 0.9 / testimonials.length;
+  const segSize = 1 / testimonials.length;
+  const m = 0.05; // shared fade margin: opacity and position settle together
 
   return (
-    <div ref={ref} style={{ height: `${(testimonials.length + 1) * 70}vh` }} className="relative">
+    <div ref={ref} style={{ height: `${(testimonials.length + 0.5) * 70}vh` }} className="relative">
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-6">
 
         <motion.p
           className="absolute top-28 text-[11px] font-black uppercase tracking-[0.4em] text-primary"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.06, 0.94, 1], [0, 1, 1, 0]) }}
+          style={{ opacity: useTransform(scrollYProgress, [0, 0.03, 0.97, 1], [0, 1, 1, 0]) }}
         >
           Lo que dicen
         </motion.p>
@@ -560,9 +563,9 @@ function ChapterTestimonials() {
           const wStart = i * segSize;
           const wEnd = wStart + segSize;
 
-          const opacity = useTransform(scrollYProgress, [wStart, wStart + 0.07, wEnd - 0.07, wEnd], [0, 1, 1, 0]);
-          const y = useTransform(scrollYProgress, [wStart, wStart + 0.1, wEnd - 0.1, wEnd], [80, 0, 0, -80]);
-          const glowOp = useTransform(scrollYProgress, [wStart + 0.05, (wStart + wEnd) / 2, wEnd - 0.05], [0, 0.4, 0]);
+          const opacity = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [0, 1, 1, 0]);
+          const y = useTransform(scrollYProgress, [wStart, wStart + m, wEnd - m, wEnd], [80, 0, 0, -80]);
+          const glowOp = useTransform(scrollYProgress, [wStart, (wStart + wEnd) / 2, wEnd], [0, 0.4, 0]);
 
           return (
             <motion.div
