@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 
@@ -51,6 +51,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [viewingFile, setViewingFile] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -438,32 +439,38 @@ export function LessonViewer({ courseId, onBack }: Props) {
                         const decodedName = decodeURIComponent(rawName);
                         const displayName = decodedName.replace(/^\d+-/, '');
 
-                        if (meta.type === 'pdf') {
+                        if (viewingFile === url) {
+                          let iframeSrc = url;
+                          const lowerUrl = url.toLowerCase();
+                          if (meta.type === 'ppt' || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.xlsx') || lowerUrl.includes('.docx?') || lowerUrl.includes('.xlsx?')) {
+                             iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+                          } else if (meta.type === 'pdf') {
+                             iframeSrc = url;
+                          } else {
+                             // Google docs viewer for other types, or simply embed.
+                             iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+                          }
+
                           return (
-                            <div key={idx} className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface shadow-sm">
+                            <div key={idx} className="rounded-2xl overflow-hidden border border-lms-border bg-lms-surface shadow-sm mt-4">
                               <div className="flex flex-col p-4 border-b border-lms-border gap-3">
-                                <div className="flex items-center gap-2">
-                                  <meta.icon size={16} className="text-cyan-500" />
-                                  <span className="text-sm font-bold text-slate-700 truncate" title={displayName}>{displayName}</span>
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <meta.icon size={16} className="text-cyan-500" />
+                                    <span className="text-sm font-bold text-slate-700 truncate" title={displayName}>{displayName}</span>
+                                  </div>
+                                  <button onClick={() => setViewingFile(null)} className="text-xs text-slate-500 hover:text-slate-800 border border-slate-300 px-3 py-1 rounded hover:bg-slate-50">Cerrar Visor</button>
                                 </div>
-                                <a
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center justify-center gap-2 bg-cyan-50 text-cyan-600 hover:bg-cyan-100 px-4 py-2 rounded-lg font-bold text-xs transition-colors w-full"
-                                >
-                                  Abrir en nueva pestaña <DownloadCloud size={14} />
-                                </a>
                               </div>
-                              <div className="bg-slate-50 h-[300px] flex items-center justify-center">
-                                <span className="text-slate-400 text-sm font-medium">Previsualización de PDF no disponible en vista compacta.</span>
+                              <div className="bg-slate-50 h-[600px] w-full flex items-center justify-center">
+                                <iframe src={iframeSrc} className="w-full h-full border-0" title={displayName} />
                               </div>
                             </div>
                           );
                         }
 
                         return (
-                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-surface p-4 flex flex-col gap-3 hover:border-cyan-500/30 transition-colors shadow-sm">
+                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-surface p-4 flex flex-col gap-3 hover:border-cyan-500/30 transition-colors shadow-sm mt-4">
                             <div className="flex items-start gap-3">
                               <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-50 flex items-center justify-center border border-cyan-100">
                                 <meta.icon size={20} className="text-cyan-500" />
@@ -477,14 +484,22 @@ export function LessonViewer({ courseId, onBack }: Props) {
                                 </p>
                               </div>
                             </div>
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 hover:border-cyan-200 hover:bg-cyan-50 text-slate-600 hover:text-cyan-600 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
-                            >
-                              <DownloadCloud size={16} /> Descargar Archivo
-                            </a>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              <button
+                                onClick={() => setViewingFile(url)}
+                                className="inline-flex items-center justify-center gap-2 bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 text-cyan-700 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                              >
+                                <Eye size={16} /> Ver en Plataforma
+                              </button>
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                              >
+                                <DownloadCloud size={16} /> Descargar
+                              </a>
+                            </div>
                           </div>
                         );
                       });
