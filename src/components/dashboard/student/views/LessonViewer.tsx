@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
+import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 
 interface Props {
   courseId: string;
@@ -42,6 +43,19 @@ const getFileMeta = (url?: string | null) => {
   if (lowerUrl.endsWith('.pptx') || lowerUrl.endsWith('.ppt') || lowerUrl.includes('.ppt')) return { type: 'ppt', icon: Presentation, label: 'Presentación PPTX' };
   if (lowerUrl.endsWith('.ipynb') || lowerUrl.includes('.ipynb')) return { type: 'code', icon: FileCode, label: 'Notebook Colab / IPYNB' };
   return { type: 'other', icon: FileDown, label: 'Archivo Adjunto' };
+};
+
+const parseStructuredContent = (content?: string | null): { description?: string; temas: string[]; alcances: string[] } | null => {
+  if (!content) return null;
+  try {
+    if (content.trim().startsWith('{')) {
+      const parsed = JSON.parse(content);
+      if (parsed.type === 'structured') {
+        return { description: parsed.description, temas: parsed.temas ?? [], alcances: parsed.alcances ?? [] };
+      }
+    }
+  } catch (e) {}
+  return null;
 };
 
 export function LessonViewer({ courseId, onBack }: Props) {
@@ -491,6 +505,12 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 )}
               </div>
 
+              {(() => {
+                const structured = parseStructuredContent(activeLesson.content);
+                if (!structured?.temas.length) return null;
+                return <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structured.temas} />;
+              })()}
+
               {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
                 <div className="flex flex-col items-center justify-center py-16 bg-lms-surface border border-lms-border rounded-2xl text-lms-text-muted gap-3">
                   <Lock size={32} className="opacity-20" />
@@ -617,6 +637,130 @@ function FileNotesPage({ file, onBack }: FileNotesPageProps) {
           />
           <p className="text-[10px] text-lms-text-muted">Tus notas se guardan automáticamente en este dispositivo.</p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+const KANBAN_COLUMNS: { status: TopicStatus; label: string; icon: typeof HelpCircle; accent: string; dot: string }[] = [
+  { status: 'pending', label: 'Por revisar', icon: HelpCircle, accent: 'border-lms-border', dot: 'bg-slate-400' },
+  { status: 'understood', label: 'Entendido', icon: ThumbsUp, accent: 'border-emerald-500/30', dot: 'bg-emerald-500' },
+  { status: 'not_understood', label: 'No entendido', icon: ThumbsDown, accent: 'border-rose-500/30', dot: 'bg-rose-500' },
+];
+
+interface TopicKanbanProps {
+  lessonId: string;
+  temas: string[];
+}
+
+function TopicKanban({ lessonId, temas }: TopicKanbanProps) {
+  const [statuses, setStatuses] = useState<Map<number, TopicStatus>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<TopicStatus | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getTopicFeedback(lessonId)
+      .then(map => { if (!cancelled) setStatuses(map); })
+      .catch(() => { if (!cancelled) toast.error('No se pudo cargar tu feedback de temas'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [lessonId]);
+
+  const moveTopic = async (idx: number, status: TopicStatus) => {
+    setStatuses(prev => new Map(prev).set(idx, status));
+    try {
+      await setTopicStatus(lessonId, idx, temas[idx], status);
+    } catch (e) {
+      toast.error('No se pudo guardar tu feedback');
+    }
+  };
+
+  const handleDrop = (status: TopicStatus) => {
+    setDragOverStatus(null);
+    if (draggedIdx === null) return;
+    moveTopic(draggedIdx, status);
+    setDraggedIdx(null);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-lms-text-muted flex items-center gap-2">
+          <StickyNote size={14} /> ¿Qué tan claros quedaron los temas?
+        </h3>
+        {!loading && (
+          <span className="text-[10px] text-lms-text-muted">
+            Arrastra una tarjeta o usa los botones
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {KANBAN_COLUMNS.map(col => {
+          const items = temas
+            .map((tema, idx) => ({ tema, idx }))
+            .filter(({ idx }) => (statuses.get(idx) ?? 'pending') === col.status);
+
+          return (
+            <div
+              key={col.status}
+              onDragOver={(e) => { e.preventDefault(); setDragOverStatus(col.status); }}
+              onDragLeave={() => setDragOverStatus(prev => (prev === col.status ? null : prev))}
+              onDrop={(e) => { e.preventDefault(); handleDrop(col.status); }}
+              className={`rounded-2xl border ${col.accent} bg-lms-surface p-3 min-h-[140px] transition-colors ${
+                dragOverStatus === col.status ? 'bg-cyan-500/5 ring-2 ring-cyan-500/30' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <span className={`w-2 h-2 rounded-full ${col.dot}`} />
+                <col.icon size={14} className="text-lms-text-muted" />
+                <span className="text-xs font-bold text-lms-text-primary">{col.label}</span>
+                <span className="ml-auto text-[10px] font-semibold text-lms-text-muted">{items.length}</span>
+              </div>
+
+              <div className="space-y-2">
+                <AnimatePresence initial={false}>
+                  {items.map(({ tema, idx }) => (
+                    <motion.div
+                      key={idx}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      draggable
+                      onDragStart={() => setDraggedIdx(idx)}
+                      onDragEnd={() => setDraggedIdx(null)}
+                      className={`group rounded-xl border border-lms-border bg-lms-bg p-3 cursor-grab active:cursor-grabbing shadow-sm hover:border-cyan-500/30 transition-colors ${
+                        draggedIdx === idx ? 'opacity-40' : ''
+                      }`}
+                    >
+                      <p className="text-xs font-semibold text-lms-text-primary leading-snug">{tema}</p>
+                      <div className="flex items-center gap-1 mt-2.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                        {KANBAN_COLUMNS.filter(c => c.status !== col.status).map(c => (
+                          <button
+                            key={c.status}
+                            onClick={() => moveTopic(idx, c.status)}
+                            title={`Mover a "${c.label}"`}
+                            className="p-1.5 rounded-lg hover:bg-lms-hover text-lms-text-muted hover:text-lms-text-primary transition-colors"
+                          >
+                            <c.icon size={12} />
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {items.length === 0 && (
+                  <div className="text-[10px] text-lms-text-muted/60 text-center py-4">Sin tarjetas</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
