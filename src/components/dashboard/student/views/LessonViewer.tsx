@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, type ReactNode, type ComponentType } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ListChecks, Target, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
@@ -367,53 +367,13 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
               {activeLesson.content && (
                 structuredContent ? (
-                  <>
-                    {structuredContent.description && (
-                      <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
-                        <div className="text-sm md:text-base text-lms-text-primary leading-relaxed">
-                          {structuredContent.description}
-                        </div>
+                  structuredContent.description && (
+                    <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
+                      <div className="text-sm md:text-base text-lms-text-primary leading-relaxed">
+                        {structuredContent.description}
                       </div>
-                    )}
-
-                    {structuredContent.temas.length > 0 && (
-                      <CollapsibleSection
-                        key={`${activeLesson.id}-temas`}
-                        icon={ListChecks}
-                        iconClass="bg-cyan-500/10 text-cyan-500"
-                        title="Temas a cubrir"
-                        count={structuredContent.temas.length}
-                      >
-                        <ul className="space-y-3 m-0 p-0 list-none">
-                          {structuredContent.temas.map((tema, i) => (
-                            <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-primary leading-relaxed">
-                              <span className="text-cyan-400 mt-0.5 font-bold">•</span>
-                              <span>{tema}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CollapsibleSection>
-                    )}
-
-                    {structuredContent.alcances.length > 0 && (
-                      <CollapsibleSection
-                        key={`${activeLesson.id}-alcances`}
-                        icon={Target}
-                        iconClass="bg-emerald-500/10 text-emerald-500"
-                        title="Alcances"
-                        count={structuredContent.alcances.length}
-                      >
-                        <ul className="space-y-3 m-0 p-0 list-none">
-                          {structuredContent.alcances.map((alcance, i) => (
-                            <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-primary leading-relaxed">
-                              <span className="text-emerald-400 mt-0.5 font-bold">•</span>
-                              <span>{alcance}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CollapsibleSection>
-                    )}
-                  </>
+                    </div>
+                  )
                 ) : (
                   <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-white border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
                     <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
@@ -421,76 +381,140 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 )
               )}
 
-              {/* Material Descargable */}
-              {activeLesson.pdf_url && (() => {
-                const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+              {/* Contenido de la sesión: temas, alcances, material y feedback en un solo acordeón tipo Platzi */}
+              {(() => {
+                const rows: { key: string; title: string; count: string; accentClass: string; content: ReactNode }[] = [];
+
+                if (structuredContent && structuredContent.temas.length > 0) {
+                  rows.push({
+                    key: 'temas',
+                    title: 'Temas a cubrir',
+                    count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
+                    accentClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+                    content: (
+                      <ul className="space-y-3 m-0 p-0 list-none">
+                        {structuredContent.temas.map((tema, i) => (
+                          <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-primary leading-relaxed">
+                            <span className="text-cyan-400 mt-0.5 font-bold">•</span>
+                            <span>{tema}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ),
+                  });
+                }
+
+                if (structuredContent && structuredContent.alcances.length > 0) {
+                  rows.push({
+                    key: 'alcances',
+                    title: 'Alcances',
+                    count: `${structuredContent.alcances.length} alcance${structuredContent.alcances.length !== 1 ? 's' : ''}`,
+                    accentClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+                    content: (
+                      <ul className="space-y-3 m-0 p-0 list-none">
+                        {structuredContent.alcances.map((alcance, i) => (
+                          <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-primary leading-relaxed">
+                            <span className="text-emerald-400 mt-0.5 font-bold">•</span>
+                            <span>{alcance}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ),
+                  });
+                }
+
+                if (activeLesson.pdf_url) {
+                  const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+                  rows.push({
+                    key: 'material',
+                    title: 'Material Descargable',
+                    count: `${urls.length} archivo${urls.length !== 1 ? 's' : ''}`,
+                    accentClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+                    content: (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {urls.map((url, idx) => {
+                          const meta = getFileMeta(url);
+                          if (!meta) return null;
+
+                          const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
+                          const decodedName = decodeURIComponent(rawName);
+                          const displayName = decodedName.replace(/^\d+-/, '');
+
+                          const lowerUrl = url.toLowerCase();
+                          let viewerUrl = url;
+                          if (meta.type === 'ppt' || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.xlsx') || lowerUrl.includes('.docx?') || lowerUrl.includes('.xlsx?')) {
+                             viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+                          } else if (meta.type !== 'pdf') {
+                             viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
+                          }
+
+                          return (
+                            <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
+                              <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                                  <meta.icon size={20} className="text-cyan-400" />
+                                </div>
+                                <div className="flex-1 min-w-0 pt-1">
+                                  <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
+                                    {displayName}
+                                  </h4>
+                                  <p className="text-xs text-lms-text-muted truncate mt-0.5">
+                                    Archivo descargable
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                <button
+                                  onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
+                                  className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-400 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                                >
+                                  <Eye size={16} /> Ver Archivo
+                                </button>
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center gap-2 bg-lms-hover border border-lms-border hover:border-lms-text-muted/40 text-lms-text-muted hover:text-lms-text-primary px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                                >
+                                  <DownloadCloud size={16} /> Descargar
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ),
+                  });
+                }
+
+                if (structuredContent && structuredContent.temas.length > 0) {
+                  rows.push({
+                    key: 'kanban',
+                    title: 'Feedback de aprendizaje',
+                    count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
+                    accentClass: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+                    content: <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structuredContent.temas} />,
+                  });
+                }
+
+                if (rows.length === 0) return null;
+
                 return (
-                  <CollapsibleSection
-                    key={`${activeLesson.id}-material`}
-                    icon={FileDown}
-                    iconClass="bg-indigo-500/10 text-indigo-500"
-                    title="Material Descargable"
-                    count={urls.length}
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {urls.map((url, idx) => {
-                        const meta = getFileMeta(url);
-                        if (!meta) return null;
-
-                        const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
-                        const decodedName = decodeURIComponent(rawName);
-                        const displayName = decodedName.replace(/^\d+-/, '');
-
-                        const lowerUrl = url.toLowerCase();
-                        let viewerUrl = url;
-                        if (meta.type === 'ppt' || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.xlsx') || lowerUrl.includes('.docx?') || lowerUrl.includes('.xlsx?')) {
-                           viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
-                        } else if (meta.type !== 'pdf') {
-                           viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
-                        }
-
-                        return (
-                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                                <meta.icon size={20} className="text-cyan-400" />
-                              </div>
-                              <div className="flex-1 min-w-0 pt-1">
-                                <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
-                                  {displayName}
-                                </h4>
-                                <p className="text-xs text-lms-text-muted truncate mt-0.5">
-                                  Archivo descargable
-                                </p>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              <button
-                                onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
-                                className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-400 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
-                              >
-                                <Eye size={16} /> Ver Archivo
-                              </button>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 bg-lms-hover border border-lms-border hover:border-lms-text-muted/40 text-lms-text-muted hover:text-lms-text-primary px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
-                              >
-                                <DownloadCloud size={16} /> Descargar
-                              </a>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CollapsibleSection>
+                  <div className="rounded-3xl border border-lms-border bg-lms-surface overflow-hidden divide-y divide-lms-border">
+                    {rows.map((row, i) => (
+                      <AccordionRow
+                        key={`${activeLesson.id}-${row.key}`}
+                        index={i + 1}
+                        title={row.title}
+                        count={row.count}
+                        accentClass={row.accentClass}
+                      >
+                        {row.content}
+                      </AccordionRow>
+                    ))}
+                  </div>
                 );
               })()}
-
-              {structuredContent && structuredContent.temas.length > 0 && (
-                <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structuredContent.temas} />
-              )}
 
               {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
                 <div className="flex flex-col items-center justify-center py-16 bg-lms-surface border border-lms-border rounded-2xl text-lms-text-muted gap-3">
@@ -540,31 +564,29 @@ export function LessonViewer({ courseId, onBack }: Props) {
   );
 }
 
-interface CollapsibleSectionProps {
-  icon: ComponentType<{ size?: number; className?: string }>;
-  iconClass: string;
+interface AccordionRowProps {
+  index: number;
   title: string;
-  count?: number;
+  count: string;
+  accentClass: string;
   defaultOpen?: boolean;
   children: ReactNode;
 }
 
-function CollapsibleSection({ icon: Icon, iconClass, title, count, defaultOpen = false, children }: CollapsibleSectionProps) {
+function AccordionRow({ index, title, count, accentClass, defaultOpen = false, children }: AccordionRowProps) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-lms-surface border border-lms-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300 hover:border-cyan-500/30">
+    <div>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 p-5 md:p-6 hover:bg-lms-hover/30 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-lms-hover/50 transition-colors text-left"
       >
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>
-          <Icon size={16} />
-        </div>
+        <span className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 text-[10px] font-black ${accentClass}`}>
+          {index}
+        </span>
         <span className="flex-1 text-sm font-bold text-lms-text-primary">{title}</span>
-        {count !== undefined && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-lms-hover text-lms-text-muted">{count}</span>
-        )}
+        <span className="text-[10px] text-lms-text-muted shrink-0">{count}</span>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="shrink-0 text-lms-text-muted">
           <ChevronDown size={16} />
         </motion.div>
@@ -578,7 +600,7 @@ function CollapsibleSection({ icon: Icon, iconClass, title, count, defaultOpen =
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="overflow-hidden"
           >
-            <div className="px-5 md:px-6 pb-6 pt-0.5">{children}</div>
+            <div className="px-5 pb-5 pt-0.5">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
