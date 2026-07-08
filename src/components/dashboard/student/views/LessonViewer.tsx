@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 
@@ -51,6 +52,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -284,6 +286,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {viewingFile ? (
+          <FileNotesPage file={viewingFile} onBack={() => setViewingFile(null)} />
+        ) : (
+        <>
         {/* Lesson topbar */}
         <div className="flex items-center gap-4 px-4 lg:px-6 h-14 bg-lms-surface border-b border-lms-border shrink-0">
           <button
@@ -462,14 +468,12 @@ export function LessonViewer({ courseId, onBack }: Props) {
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2 mt-2">
-                              <a
-                                href={viewerUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
                                 className="inline-flex items-center justify-center gap-2 bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 text-cyan-700 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
                               >
                                 <Eye size={16} /> Ver Archivo
-                              </a>
+                              </button>
                               <a
                                 href={url}
                                 target="_blank"
@@ -527,6 +531,91 @@ export function LessonViewer({ courseId, onBack }: Props) {
               </div>
             </div>
           )}
+        </div>
+        </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface FileNotesPageProps {
+  file: { url: string; viewerUrl: string; name: string };
+  onBack: () => void;
+}
+
+function FileNotesPage({ file, onBack }: FileNotesPageProps) {
+  const storageKey = `openview:file-notes:${file.url}`;
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    setNotes(localStorage.getItem(storageKey) ?? '');
+  }, [storageKey]);
+
+  useEffect(() => {
+    const id = setTimeout(() => localStorage.setItem(storageKey, notes), 400);
+    return () => clearTimeout(id);
+  }, [storageKey, notes]);
+
+  const copyNotes = async () => {
+    if (!notes.trim()) {
+      toast.error('No hay notas para copiar');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(notes);
+      toast.success('Notas copiadas al portapapeles');
+    } catch (e) {
+      toast.error('No se pudieron copiar las notas');
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Topbar */}
+      <div className="flex items-center gap-4 px-4 lg:px-6 h-14 bg-lms-surface border-b border-lms-border shrink-0">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-xs text-lms-text-muted hover:text-cyan-400 font-semibold transition-colors shrink-0"
+        >
+          <ArrowLeft size={14} /> Volver a la lección
+        </button>
+        <h3 className="text-sm font-bold text-lms-text-primary truncate flex-1">{file.name}</h3>
+        <a
+          href={file.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold text-lms-text-muted hover:text-lms-text-primary transition-colors"
+        >
+          <DownloadCloud size={14} /> Descargar
+        </a>
+      </div>
+
+      {/* Body: viewer + notes */}
+      <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+        <div className="lg:col-span-8 h-full min-h-[50vh] bg-slate-100 border-b lg:border-b-0 lg:border-r border-lms-border">
+          <iframe src={file.viewerUrl} title={file.name} className="w-full h-full border-0" />
+        </div>
+
+        <div className="lg:col-span-4 h-full flex flex-col p-4 gap-3 bg-lms-surface">
+          <div className="flex items-center justify-between">
+            <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-lms-text-muted">
+              <StickyNote size={14} /> Mis notas
+            </h4>
+            <button
+              onClick={copyNotes}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-600 hover:text-cyan-500 transition-colors"
+            >
+              <Copy size={13} /> Copiar
+            </button>
+          </div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Escribe aquí tus notas mientras revisas el archivo..."
+            className="flex-1 w-full resize-none rounded-xl border border-lms-border bg-lms-bg p-3 text-sm text-lms-text-primary placeholder:text-lms-text-muted/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+          />
+          <p className="text-[10px] text-lms-text-muted">Tus notas se guardan automáticamente en este dispositivo.</p>
         </div>
       </div>
     </div>
