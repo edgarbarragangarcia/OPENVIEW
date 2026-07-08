@@ -3,26 +3,26 @@ import { motion } from 'motion/react';
 const FEATURES = [
   {
     number: '01',
-    title: 'Automatización Estratégica',
-    description: 'Aprende a integrar soluciones de IA que reducen costos y optimizan procesos clave.',
+    title: 'Instructores Expertos',
+    description: 'Aprende de profesionales activos en la industria, con experiencia real aplicable desde el primer día.',
     colSpan: 'md:col-span-2'
   },
   {
     number: '02',
-    title: 'Análisis Predictivo',
-    description: 'Toma decisiones basadas en datos estructurados y modelos de Machine Learning avanzados.',
+    title: 'Aprendizaje con IA',
+    description: 'Rutas personalizadas y asistencia inteligente que se adaptan a tu ritmo y tus objetivos.',
     colSpan: 'md:col-span-1'
   },
   {
     number: '03',
-    title: 'Liderazgo Digital',
-    description: 'Desarrolla las habilidades directivas necesarias para liderar equipos en la era de la IA.',
+    title: 'Comunidad Activa',
+    description: 'Conecta con otros estudiantes, comparte proyectos y crece acompañado en cada curso.',
     colSpan: 'md:col-span-1'
   },
   {
     number: '04',
-    title: 'Innovación Práctica',
-    description: 'Proyectos reales en donde aplicarás modelos LLM y herramientas generativas a tu negocio.',
+    title: 'Certificaciones',
+    description: 'Valida tus habilidades con certificados que abren puertas en el mercado laboral.',
     colSpan: 'md:col-span-2'
   }
 ];
@@ -43,9 +43,9 @@ export function FeaturesLMS() {
           </div>
           <div className="md:w-1/2 flex items-center">
             <p className="text-slate-600 text-lg leading-relaxed font-light">
-              Creemos en una formación integral donde la estrategia de negocios se encuentra con la tecnología de vanguardia. 
-              Nuestros programas están diseñados para empujar los límites operativos de tu empresa y prepararte 
-              para el futuro del mercado corporativo.
+              Creemos en una formación práctica donde cada curso se construye junto a expertos que ya viven la industria.
+              Nuestros programas están diseñados para que domines habilidades reales y las apliques
+              desde la primera semana.
             </p>
           </div>
         </div>
