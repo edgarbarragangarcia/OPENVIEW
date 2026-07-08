@@ -3,6 +3,7 @@ import { BookOpen, Compass, User, LogOut, Menu, X, Bell, ChevronRight } from 'lu
 import { useAuth } from '../../../contexts/AuthContext';
 import { MyCourses } from './views/MyCourses';
 import { LessonViewer } from './views/LessonViewer';
+import { CourseDetail } from './views/CourseDetail';
 import { Explore } from './views/Explore';
 import { Profile } from './views/Profile';
 
@@ -18,17 +19,29 @@ export function StudentDashboard() {
   const { user, signOut } = useAuth();
   const [view, setView] = useState<StudentView>('my-courses');
   const [viewingCourseId, setViewingCourseId] = useState<string | null>(null);
+  const [viewingDetailId, setViewingDetailId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'ST';
+  const inFullscreenView = !!(viewingCourseId || viewingDetailId);
 
   const renderContent = () => {
     if (viewingCourseId) {
       return <LessonViewer courseId={viewingCourseId} onBack={() => setViewingCourseId(null)} />;
     }
+    if (viewingDetailId) {
+      return (
+        <CourseDetail
+          courseId={viewingDetailId}
+          onBack={() => setViewingDetailId(null)}
+          onEnter={setViewingCourseId}
+          onSelectRelated={setViewingDetailId}
+        />
+      );
+    }
     switch (view) {
-      case 'my-courses': return <MyCourses onCourseSelect={setViewingCourseId} />;
-      case 'explore':    return <Explore onEnroll={() => setView('my-courses')} onCourseSelect={setViewingCourseId} />;
+      case 'my-courses': return <MyCourses onCourseSelect={setViewingDetailId} />;
+      case 'explore':    return <Explore onEnroll={() => setView('my-courses')} onCourseSelect={setViewingDetailId} />;
       case 'profile':    return <Profile />;
     }
   };
@@ -36,6 +49,7 @@ export function StudentDashboard() {
   const handleNavigate = (v: StudentView) => {
     setView(v);
     setViewingCourseId(null);
+    setViewingDetailId(null);
     setSidebarOpen(false);
   };
 
@@ -47,7 +61,7 @@ export function StudentDashboard() {
       )}
 
       {/* SIDEBAR */}
-      {!viewingCourseId && (
+      {!inFullscreenView && (
         <aside className={`
           fixed lg:relative z-30 flex flex-col w-64 h-full bg-lms-surface border-r border-lms-border
           transition-transform duration-300
@@ -73,7 +87,7 @@ export function StudentDashboard() {
           <nav className="flex-1 py-4 px-3 space-y-1">
             <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Menú</p>
             {NAV.map(({ id, label, icon: Icon }) => {
-              const isActive = view === id && !viewingCourseId;
+              const isActive = view === id && !inFullscreenView;
               return (
                 <button
                   key={id}
@@ -112,7 +126,7 @@ export function StudentDashboard() {
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {!viewingCourseId && (
+        {!inFullscreenView && (
           <header className="flex items-center justify-between px-6 h-16 bg-lms-surface border-b border-lms-border shrink-0">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-lms-text-muted hover:text-lms-text-primary">
               <Menu size={22} />
