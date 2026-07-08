@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, type ReactNode, type ComponentType } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, Play, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ListChecks, Target, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
@@ -67,6 +67,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
+  const structuredContent = useMemo(() => parseStructuredContent(activeLesson?.content ?? null), [activeLesson?.id]);
 
   useEffect(() => {
     async function load() {
@@ -349,11 +350,11 @@ export function LessonViewer({ courseId, onBack }: Props) {
               <p className="text-sm">Selecciona una lección del panel izquierdo para comenzar</p>
             </div>
           ) : (
-            <div className="max-w-6xl mx-auto space-y-6">
+            <div className="max-w-4xl mx-auto space-y-5">
 
               {/* Video Player */}
               {activeLesson.video_url && (
-                <div className="rounded-2xl overflow-hidden bg-black aspect-video">
+                <div className="rounded-2xl overflow-hidden bg-black aspect-video shadow-lg shadow-black/10">
                   <iframe
                     src={activeLesson.video_url}
                     title={activeLesson.title}
@@ -364,93 +365,75 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                
-                {/* Text Content (Left Column) */}
-                <div className={`space-y-6 ${activeLesson.pdf_url ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
-                  {activeLesson.content && (() => {
-                    let isStructured = false;
-                    let parsed: any = null;
-                    try {
-                      if (activeLesson.content.trim().startsWith('{')) {
-                        parsed = JSON.parse(activeLesson.content);
-                        if (parsed.type === 'structured') isStructured = true;
-                      }
-                    } catch (e) {}
-
-                    if (isStructured) {
-                      return (
-                        <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
-                          {parsed.description && (
-                            <div className="text-sm md:text-base text-lms-text-primary leading-relaxed mb-6">
-                              {parsed.description}
-                            </div>
-                          )}
-                          
-                          {(parsed.temas?.length > 0 || parsed.alcances?.length > 0) && (() => {
-                            const hasTemas = parsed.temas?.length > 0;
-                            const hasAlcances = parsed.alcances?.length > 0;
-                            const gridColsClass = hasTemas && hasAlcances ? 'md:grid-cols-2' : 'grid-cols-1';
-
-                            return (
-                              <div className={`grid grid-cols-1 ${gridColsClass} gap-6 md:gap-8`}>
-                                {hasTemas && (
-                                  <div className="bg-cyan-50/50 rounded-xl p-5 border border-cyan-100">
-                                    <h3 className="text-cyan-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
-                                      <div className="w-2 h-2 rounded-full bg-cyan-500" />
-                                      Temas a cubrir
-                                    </h3>
-                                    <ul className="space-y-3 m-0 p-0 list-none">
-                                      {parsed.temas.map((tema: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-                                          <span className="text-cyan-400 mt-0.5 font-bold">•</span>
-                                          <span>{tema}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                                
-                                {hasAlcances && (
-                                  <div className="bg-emerald-50/50 rounded-xl p-5 border border-emerald-100">
-                                    <h3 className="text-emerald-600 font-bold mb-4 mt-0 text-sm uppercase tracking-wider flex items-center gap-2">
-                                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                      Alcances
-                                    </h3>
-                                    <ul className="space-y-3 m-0 p-0 list-none">
-                                      {parsed.alcances.map((alcance: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-                                          <span className="text-emerald-400 mt-0.5 font-bold">•</span>
-                                          <span>{alcance}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
+              {activeLesson.content && (
+                structuredContent ? (
+                  <>
+                    {structuredContent.description && (
+                      <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
+                        <div className="text-sm md:text-base text-lms-text-primary leading-relaxed">
+                          {structuredContent.description}
                         </div>
-                      );
-                    }
-
-                    // Fallback to HTML
-                    return (
-                      <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
-                        <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                       </div>
-                    );
-                  })()}
-                </div>
+                    )}
 
-                {/* Attachments (Right Column) */}
-                {activeLesson.pdf_url && (
-                  <div className="lg:col-span-4 space-y-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-lms-text-muted mb-2 px-1">Material Descargable</h3>
-                    {(() => {
-                      const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+                    {structuredContent.temas.length > 0 && (
+                      <CollapsibleSection
+                        key={`${activeLesson.id}-temas`}
+                        icon={ListChecks}
+                        iconClass="bg-cyan-500/10 text-cyan-500"
+                        title="Temas a cubrir"
+                        count={structuredContent.temas.length}
+                      >
+                        <ul className="space-y-3 m-0 p-0 list-none">
+                          {structuredContent.temas.map((tema, i) => (
+                            <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-primary leading-relaxed">
+                              <span className="text-cyan-400 mt-0.5 font-bold">•</span>
+                              <span>{tema}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CollapsibleSection>
+                    )}
 
-                      return urls.map((url, idx) => {
+                    {structuredContent.alcances.length > 0 && (
+                      <CollapsibleSection
+                        key={`${activeLesson.id}-alcances`}
+                        icon={Target}
+                        iconClass="bg-emerald-500/10 text-emerald-500"
+                        title="Alcances"
+                        count={structuredContent.alcances.length}
+                      >
+                        <ul className="space-y-3 m-0 p-0 list-none">
+                          {structuredContent.alcances.map((alcance, i) => (
+                            <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-primary leading-relaxed">
+                              <span className="text-emerald-400 mt-0.5 font-bold">•</span>
+                              <span>{alcance}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CollapsibleSection>
+                    )}
+                  </>
+                ) : (
+                  <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
+                    <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                  </div>
+                )
+              )}
+
+              {/* Material Descargable */}
+              {activeLesson.pdf_url && (() => {
+                const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+                return (
+                  <CollapsibleSection
+                    key={`${activeLesson.id}-material`}
+                    icon={FileDown}
+                    iconClass="bg-indigo-500/10 text-indigo-500"
+                    title="Material Descargable"
+                    count={urls.length}
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {urls.map((url, idx) => {
                         const meta = getFileMeta(url);
                         if (!meta) return null;
 
@@ -467,7 +450,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                         }
 
                         return (
-                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-surface p-4 flex flex-col gap-3 hover:border-cyan-500/30 transition-colors shadow-sm mt-4">
+                          <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 hover:border-cyan-500/30 hover:shadow-md transition-all">
                             <div className="flex items-start gap-3">
                               <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-50 flex items-center justify-center border border-cyan-100">
                                 <meta.icon size={20} className="text-cyan-500" />
@@ -499,17 +482,15 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             </div>
                           </div>
                         );
-                      });
-                    })()}
-                  </div>
-                )}
-              </div>
-
-              {(() => {
-                const structured = parseStructuredContent(activeLesson.content);
-                if (!structured?.temas.length) return null;
-                return <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structured.temas} />;
+                      })}
+                    </div>
+                  </CollapsibleSection>
+                );
               })()}
+
+              {structuredContent && structuredContent.temas.length > 0 && (
+                <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structuredContent.temas} />
+              )}
 
               {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
                 <div className="flex flex-col items-center justify-center py-16 bg-lms-surface border border-lms-border rounded-2xl text-lms-text-muted gap-3">
@@ -555,6 +536,52 @@ export function LessonViewer({ courseId, onBack }: Props) {
         </>
         )}
       </div>
+    </div>
+  );
+}
+
+interface CollapsibleSectionProps {
+  icon: ComponentType<{ size?: number; className?: string }>;
+  iconClass: string;
+  title: string;
+  count?: number;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}
+
+function CollapsibleSection({ icon: Icon, iconClass, title, count, defaultOpen = false, children }: CollapsibleSectionProps) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="bg-lms-surface border border-lms-border rounded-2xl shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 p-5 md:p-6 hover:bg-lms-hover/30 transition-colors text-left"
+      >
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>
+          <Icon size={16} />
+        </div>
+        <span className="flex-1 text-sm font-bold text-lms-text-primary">{title}</span>
+        {count !== undefined && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-lms-hover text-lms-text-muted">{count}</span>
+        )}
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="shrink-0 text-lms-text-muted">
+          <ChevronDown size={16} />
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 md:px-6 pb-6 pt-0.5">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
