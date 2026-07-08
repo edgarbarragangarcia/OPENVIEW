@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Plus, BookOpen } from 'lucide-react';
-import { Course, getCourseById, createCourse, updateCourse, getCategories, Category, createModule } from '../../../../lib/courses';
+import { Course, getCourseById, createCourse, updateCourse, getCategories, Category, createModule, updateLesson } from '../../../../lib/courses';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { ModuleBuilder } from './ModuleBuilder';
 import { PromptModal } from '../../shared/Modals';
@@ -18,6 +18,7 @@ export function CourseForm({ courseId, onBack }: CourseFormProps) {
   const [courseData, setCourseData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'details' | 'content'>('details');
   const [showModulePrompt, setShowModulePrompt] = useState(false);
+  const [draggedLesson, setDraggedLesson] = useState<{ lessonId: string; fromModuleId: string } | null>(null);
 
   const [formData, setFormData] = useState<Partial<Course>>({
     title: '',
@@ -95,6 +96,19 @@ export function CourseForm({ courseId, onBack }: CourseFormProps) {
       toast.error('Error creando módulo', { style: { background: '#ef4444', color: '#fff' } });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLessonDrop = async (lessonId: string, fromModuleId: string, toModuleId: string) => {
+    if (fromModuleId === toModuleId) return;
+    try {
+      const toMod = courseData?.modules?.find((m: any) => m.id === toModuleId);
+      const newPosition = toMod?.lessons?.length ?? 0;
+      await updateLesson(lessonId, { module_id: toModuleId, position: newPosition });
+      await loadCourse();
+      toast.success('Lección movida al bloque', { style: { background: '#1c2030', color: '#fff' } });
+    } catch (err) {
+      toast.error('Error moviendo lección', { style: { background: '#ef4444', color: '#fff' } });
     }
   };
 
@@ -258,11 +272,17 @@ export function CourseForm({ courseId, onBack }: CourseFormProps) {
               courseData.modules
                 .sort((a: any, b: any) => a.position - b.position)
                 .map((mod: any) => (
-                  <ModuleBuilder 
-                    key={mod.id} 
-                    courseId={courseId!} 
-                    module={mod} 
-                    onRefresh={loadCourse} 
+                  <ModuleBuilder
+                    key={mod.id}
+                    courseId={courseId!}
+                    module={mod}
+                    onRefresh={loadCourse}
+                    draggedLesson={draggedLesson}
+                    onLessonDragStart={(lessonId, fromModuleId) =>
+                      setDraggedLesson({ lessonId, fromModuleId })
+                    }
+                    onLessonDragEnd={() => setDraggedLesson(null)}
+                    onLessonDrop={handleLessonDrop}
                   />
                 ))
             )}
