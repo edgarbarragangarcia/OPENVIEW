@@ -369,7 +369,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 structuredContent ? (
                   structuredContent.description && (
                     <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
-                      <div className="text-sm md:text-base text-lms-text-primary leading-relaxed">
+                      <div className="text-xs md:text-sm text-lms-text-primary leading-relaxed">
                         {structuredContent.description}
                       </div>
                     </div>
