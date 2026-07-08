@@ -1,58 +1,86 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Compass, ClipboardCheck, PlayCircle, Users, Award, ArrowRight } from 'lucide-react';
+import { getCategoriesWithCounts, type Category } from '../lib/courses';
 
-// ─── Rutas de Aprendizaje ────────────────────────────────────────────────────
+// ─── Escuelas / Categorías (estilo grid de "schools" de Platzi) ─────────────
 
-const learningPaths = [
-  { name: 'Inteligencia Artificial', tags: 'IA · Automatización · Datos', color: '#0d59f2', desc: 'Domina los modelos y herramientas de IA que están redefiniendo la industria.' },
-  { name: 'Liderazgo', tags: 'Gestión · Equipos · Estrategia', color: '#10b981', desc: 'Desarrolla las habilidades directivas para liderar equipos y proyectos de alto impacto.' },
-  { name: 'Tecnología', tags: 'Desarrollo · Cloud · Producto', color: '#6366f1', desc: 'Construye software robusto con las prácticas y herramientas que usan los mejores equipos.' },
-  { name: 'Negocios', tags: 'Finanzas · Operaciones · Ventas', color: '#f59e0b', desc: 'Aprende a tomar decisiones de negocio con visión estratégica y datos reales.' },
-  { name: 'Marketing Digital', tags: 'Growth · Contenido · Analítica', color: '#ec4899', desc: 'Convierte audiencias en comunidades y comunidades en resultados medibles.' },
-];
+const CATEGORY_META: Record<string, { color: string; desc: string }> = {
+  ia: { color: '#0d59f2', desc: 'Domina los modelos y herramientas de IA que están redefiniendo la industria.' },
+  liderazgo: { color: '#10b981', desc: 'Desarrolla las habilidades directivas para liderar equipos y proyectos de alto impacto.' },
+  tecnologia: { color: '#6366f1', desc: 'Construye software robusto con las prácticas y herramientas que usan los mejores equipos.' },
+  negocios: { color: '#f59e0b', desc: 'Aprende a tomar decisiones de negocio con visión estratégica y datos reales.' },
+  marketing: { color: '#ec4899', desc: 'Convierte audiencias en comunidades y comunidades en resultados medibles.' },
+};
+const FALLBACK_COLORS = ['#0d59f2', '#10b981', '#6366f1', '#f59e0b', '#ec4899', '#0891b2', '#7c3aed'];
 
-export function LearningPathsSection() {
+interface CategoriesSectionProps {
+  onSelectCategory: (categoryId: number) => void;
+}
+
+export function CategoriesSection({ onSelectCategory }: CategoriesSectionProps) {
+  const [categories, setCategories] = useState<(Category & { courseCount: number })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getCategoriesWithCounts()
+      .then(setCategories)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!loading && categories.length === 0) return null;
+
   return (
     <section className="py-32 px-6 sm:px-10 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-          <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 leading-tight">
-            Rutas de <br />
-            <span className="text-gradient italic font-black">Aprendizaje</span>
+        <div className="max-w-2xl mb-16">
+          <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 leading-tight mb-4">
+            Escuelas de <br />
+            <span className="text-gradient italic font-black">Open View</span>
           </h2>
-          <p className="text-slate-500 text-lg font-light max-w-md">
-            Elige el camino que impulsa tu carrera y avanza curso a curso con un plan claro.
+          <p className="text-slate-500 text-lg font-light">
+            Elige la escuela que impulsa tu carrera y explora todos sus cursos.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {learningPaths.map((p, i) => (
-            <motion.div
-              key={p.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              className={`group relative overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 p-8 sm:p-10 card-glow card-glow-brand ${i === 0 ? 'md:col-span-2' : ''}`}
-            >
-              <div
-                className="absolute -top-1/2 -left-1/4 w-[400px] h-[400px] rounded-full pointer-events-none opacity-[0.07] group-hover:opacity-[0.12] transition-opacity duration-500"
-                style={{ background: `radial-gradient(circle, ${p.color} 0%, transparent 70%)`, filter: 'blur(60px)' }}
-              />
-              <div className="relative z-10">
-                <p className="text-xs font-bold uppercase tracking-[0.25em] mb-4" style={{ color: p.color }}>
-                  {p.tags}
-                </p>
-                <h3 className="font-serif font-black text-slate-900 text-2xl sm:text-3xl mb-3">
-                  {p.name}
-                </h3>
-                <p className="text-slate-500 font-light leading-relaxed max-w-xl">
-                  {p.desc}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => <div key={i} className="h-56 bg-slate-100 rounded-3xl animate-pulse" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((cat, i) => {
+              const meta = CATEGORY_META[cat.slug] ?? { color: FALLBACK_COLORS[i % FALLBACK_COLORS.length], desc: 'Explora los cursos de esta escuela.' };
+              return (
+                <motion.button
+                  key={cat.id}
+                  onClick={() => onSelectCategory(cat.id)}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.5, delay: i * 0.06 }}
+                  className="group text-left relative overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 p-8 card-glow card-glow-brand"
+                >
+                  <div
+                    className="absolute -top-1/3 -right-1/4 w-[300px] h-[300px] rounded-full pointer-events-none opacity-[0.08] group-hover:opacity-[0.14] transition-opacity duration-500"
+                    style={{ background: `radial-gradient(circle, ${meta.color} 0%, transparent 70%)`, filter: 'blur(50px)' }}
+                  />
+                  <div className="relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: meta.color }}>
+                      {cat.courseCount} curso{cat.courseCount !== 1 ? 's' : ''}
+                    </p>
+                    <h3 className="font-serif font-black text-slate-900 text-2xl mb-3">{cat.name}</h3>
+                    <p className="text-slate-500 font-light text-sm leading-relaxed">{meta.desc}</p>
+                    <div className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider" style={{ color: meta.color }}>
+                      Ver cursos <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

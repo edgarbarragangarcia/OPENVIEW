@@ -151,7 +151,12 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
   );
 }
 
-export function CourseGrid() {
+interface CourseGridProps {
+  selectedCategoryId?: number | null;
+  onClearFilter?: () => void;
+}
+
+export function CourseGrid({ selectedCategoryId = null, onClearFilter }: CourseGridProps) {
   const [courses, setCourses] = useState<CourseWithModules[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -180,34 +185,48 @@ export function CourseGrid() {
     load();
   }, []);
 
+  const filtered = selectedCategoryId
+    ? courses.filter(c => c.category_id === selectedCategoryId)
+    : courses;
+  const filteredCategoryName = selectedCategoryId
+    ? courses.find(c => c.category_id === selectedCategoryId)?.categories?.name
+    : null;
+
   return (
     <section id="cursos" className="py-32 px-6 sm:px-10 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-end mb-20 gap-8">
           <div>
             <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 mb-4 leading-tight">
-              Programas <br />
-              <span className="text-gradient italic font-black">Ejecutivos</span>
+              {filteredCategoryName ?? 'Programas'} <br />
+              <span className="text-gradient italic font-black">{filteredCategoryName ? 'Cursos' : 'Ejecutivos'}</span>
             </h2>
           </div>
-          <button className="group flex items-center gap-3 text-slate-900 font-bold tracking-widest uppercase text-sm border-b-2 border-primary-light pb-2 hover:text-primary transition-colors">
-            Ver Catálogo Completo
-            <ArrowRight className="h-5 w-5 transform group-hover:translate-x-2 text-primary transition-transform" />
-          </button>
+          {selectedCategoryId ? (
+            <button
+              onClick={onClearFilter}
+              className="group flex items-center gap-3 text-slate-900 font-bold tracking-widest uppercase text-sm border-b-2 border-primary-light pb-2 hover:text-primary transition-colors"
+            >
+              Ver Catálogo Completo
+              <ArrowRight className="h-5 w-5 transform group-hover:translate-x-2 text-primary transition-transform" />
+            </button>
+          ) : (
+            <div className="text-slate-400 text-sm font-medium">{filtered.length} curso{filtered.length !== 1 ? 's' : ''} disponibles</div>
+          )}
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {[1,2,3].map(i => <div key={i} className="h-96 bg-slate-100 rounded-[2rem] animate-pulse" />)}
           </div>
-        ) : courses.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-100">
             <h3 className="text-2xl font-bold text-slate-800 mb-2">Próximamente</h3>
             <p className="text-slate-500">Estamos preparando nuevos programas ejecutivos.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {courses.map((course, idx) => (
+            {filtered.map((course, idx) => (
               <CourseCard key={course.id} course={course} idx={idx} />
             ))}
           </div>

@@ -160,6 +160,24 @@ export async function getCategories() {
   return data as Category[];
 }
 
+export async function getCategoriesWithCounts() {
+  const [{ data: categories, error: catErr }, { data: courses, error: courseErr }] = await Promise.all([
+    supabase.from('categories').select('*').order('name'),
+    supabase.from('courses').select('category_id').eq('published', true),
+  ]);
+  if (catErr) throw catErr;
+  if (courseErr) throw courseErr;
+
+  const counts = new Map<number, number>();
+  (courses ?? []).forEach((c: { category_id: number | null }) => {
+    if (c.category_id) counts.set(c.category_id, (counts.get(c.category_id) ?? 0) + 1);
+  });
+
+  return (categories as Category[])
+    .map(cat => ({ ...cat, courseCount: counts.get(cat.id) ?? 0 }))
+    .filter(cat => cat.courseCount > 0);
+}
+
 // ── Admin stats ───────────────────────────────────────────────
 
 export async function getAdminStats() {
