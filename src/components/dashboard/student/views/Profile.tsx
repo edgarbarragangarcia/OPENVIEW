@@ -36,9 +36,9 @@ export function Profile() {
     : '—';
 
   const stats = [
-    { icon: BookOpen, label: 'Cursos inscritos', value: enrollmentCount, color: 'text-cyan-500', bg: 'bg-cyan-50', border: 'border-cyan-100' },
-    { icon: Award, label: 'Nivel', value: 'Estudiante', color: 'text-violet-500', bg: 'bg-violet-50', border: 'border-violet-100' },
-    { icon: Shield, label: 'Estado', value: 'Activo', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+    { icon: BookOpen, label: 'Cursos inscritos', value: enrollmentCount, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+    { icon: Award, label: 'Nivel', value: 'Estudiante', color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+    { icon: Shield, label: 'Estado', value: 'Activo', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   ];
 
   return (

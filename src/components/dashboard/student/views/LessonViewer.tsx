@@ -415,7 +415,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     )}
                   </>
                 ) : (
-                  <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
+                  <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-white border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
                     <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                   </div>
                 )
@@ -452,14 +452,14 @@ export function LessonViewer({ courseId, onBack }: Props) {
                         return (
                           <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
                             <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-50 flex items-center justify-center border border-cyan-100">
-                                <meta.icon size={20} className="text-cyan-500" />
+                              <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                                <meta.icon size={20} className="text-cyan-400" />
                               </div>
                               <div className="flex-1 min-w-0 pt-1">
-                                <h4 className="text-sm font-bold text-slate-700 truncate" title={decodedName}>
+                                <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
                                   {displayName}
                                 </h4>
-                                <p className="text-xs text-slate-500 truncate mt-0.5">
+                                <p className="text-xs text-lms-text-muted truncate mt-0.5">
                                   Archivo descargable
                                 </p>
                               </div>
@@ -467,7 +467,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             <div className="grid grid-cols-2 gap-2 mt-2">
                               <button
                                 onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
-                                className="inline-flex items-center justify-center gap-2 bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 text-cyan-700 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                                className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-400 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
                               >
                                 <Eye size={16} /> Ver Archivo
                               </button>
@@ -475,7 +475,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                                className="inline-flex items-center justify-center gap-2 bg-lms-hover border border-lms-border hover:border-lms-text-muted/40 text-lms-text-muted hover:text-lms-text-primary px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
                               >
                                 <DownloadCloud size={16} /> Descargar
                               </a>
