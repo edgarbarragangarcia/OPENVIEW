@@ -209,7 +209,7 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
                 <div className="flex flex-col gap-1.5">
                   {getUrlsList().map((url, i) => (
                     <div key={i} className="flex items-center justify-between bg-lms-bg border border-lms-border rounded-lg px-3 py-2">
-                      <span className="text-xs truncate">{decodeURIComponent(url.split('/').pop() || '')}</span>
+                      <span className="text-xs text-lms-text-primary truncate">{decodeURIComponent(url.split('/').pop() || '')}</span>
                       <button type="button" onClick={() => handleRemoveUrl(url)} className="text-red-400"><X size={14} /></button>
                     </div>
                   ))}

@@ -51,7 +51,7 @@ export function AdminDashboard() {
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'AD';
 
   return (
-    <div className="flex h-screen bg-lms-bg overflow-hidden font-sans">
+    <div className="flex h-screen bg-lms-bg text-lms-text-primary overflow-hidden font-sans">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
