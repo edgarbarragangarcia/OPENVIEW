@@ -320,7 +320,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
         ) : (
         <>
         {/* Lesson topbar */}
-        <div className="flex items-center gap-4 px-4 lg:px-6 h-14 bg-lms-surface border-b border-lms-border shrink-0">
+        <div className="flex items-center gap-4 px-4 lg:px-6 h-16 bg-lms-surface border-b border-lms-border shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden flex items-center gap-2 text-xs text-lms-text-muted hover:text-lms-text-primary font-semibold shrink-0"
@@ -665,7 +665,7 @@ function FileNotesPage({ file, onBack }: FileNotesPageProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Topbar */}
-      <div className="flex items-center gap-4 px-4 lg:px-6 h-14 bg-lms-surface border-b border-lms-border shrink-0">
+      <div className="flex items-center gap-4 px-4 lg:px-6 h-16 bg-lms-surface border-b border-lms-border shrink-0">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-xs text-lms-text-muted hover:text-cyan-400 font-semibold transition-colors shrink-0"
