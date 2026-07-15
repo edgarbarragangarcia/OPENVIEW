@@ -13,20 +13,15 @@ import { getOrCreateCanvas, saveCanvas } from '../../../../lib/canvas';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type NodeType = 'process' | 'decision' | 'start' | 'end' | 'document' | 'database' | 'action' | 'note';
-
 /**
- * SPEC format based on Karpathy's structured specification method.
- * Each field maps to: Purpose → Inputs → Steps → Outputs → Success → Failures
+ * Node types map directly onto Karpathy's SPEC method: every non-terminal
+ * block IS one of the six SPEC facets (Objetivo, Entradas, Pasos, Salidas,
+ * Criterios de Éxito, Modos de Fallo). Legacy shape types are kept only so
+ * canvases created before this model still render without crashing.
  */
-interface NodeSpec {
-  objective: string;      // One-line purpose: "What does this do?"
-  inputs: string[];       // What enters this step
-  steps: string[];        // Ordered list of sub-steps or actions
-  outputs: string[];      // What comes out of this step
-  success: string[];      // How to know it worked
-  failures: string[];     // What can go wrong / failure modes
-}
+type SpecNodeType = 'objective' | 'inputs' | 'steps' | 'outputs' | 'success' | 'failures';
+type LegacyNodeType = 'process' | 'decision' | 'document' | 'database' | 'action' | 'note';
+type NodeType = 'start' | 'end' | SpecNodeType | LegacyNodeType;
 
 interface CanvasNode {
   id: string;
@@ -35,7 +30,7 @@ interface CanvasNode {
   y: number;
   title: string;
   color: string;
-  spec: NodeSpec;
+  content: string;
 }
 
 interface Connection {
@@ -47,80 +42,84 @@ interface Connection {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
+interface SpecSection {
+  key: SpecNodeType;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  question: string;
+  placeholder: string;
+}
+
+/** The six steps of Karpathy's SPEC method, in order. This is the single source of truth for both the block palette and the progress bar. */
+const SPEC_SECTIONS: SpecSection[] = [
+  { key: 'objective', label: 'Objetivo',           icon: Target,       color: '#3b82f6', question: '¿Qué hace exactamente este paso? (una sola oración clara)', placeholder: 'Ej: Validar la identidad del usuario antes de permitir el acceso al sistema...' },
+  { key: 'inputs',    label: 'Entradas',            icon: LogIn,        color: '#22c55e', question: '¿Qué información, datos o artefactos entran a este paso?', placeholder: 'Ej: Correo y contraseña ingresados por el usuario...' },
+  { key: 'steps',     label: 'Pasos',               icon: List,         color: '#8b5cf6', question: '¿Cuál es esta sub-acción concreta dentro del proceso?', placeholder: 'Ej: Verificar el hash de la contraseña contra la base de datos...' },
+  { key: 'outputs',   label: 'Salidas',             icon: LogOutIcon,   color: '#06b6d4', question: '¿Qué produce este paso? ¿Qué sale como resultado?', placeholder: 'Ej: Token de sesión firmado...' },
+  { key: 'success',   label: 'Criterios de Éxito',  icon: CheckCircle2, color: '#10b981', question: '¿Cómo sabes que funcionó correctamente?', placeholder: 'Ej: El usuario accede al dashboard en menos de 2 segundos...' },
+  { key: 'failures',  label: 'Modos de Fallo',      icon: AlertTriangle, color: '#ef4444', question: '¿Qué puede salir mal? ¿Cuál es este riesgo o error?', placeholder: 'Ej: Contraseña incorrecta tras 5 intentos bloquea la cuenta...' },
+];
+
 const NODE_TYPES: Record<NodeType, { label: string; icon: React.ElementType; defaultColor: string }> = {
-  start:    { label: 'Inicio',      icon: Zap,          defaultColor: '#22c55e' },
-  end:      { label: 'Fin',         icon: Target,        defaultColor: '#ef4444' },
-  process:  { label: 'Proceso',     icon: Square,        defaultColor: '#3b82f6' },
-  decision: { label: 'Decisión',    icon: GitBranch,     defaultColor: '#f59e0b' },
-  document: { label: 'Documento',   icon: FileText,      defaultColor: '#8b5cf6' },
-  database: { label: 'Datos',       icon: Database,      defaultColor: '#06b6d4' },
-  action:   { label: 'Acción',      icon: CheckSquare,   defaultColor: '#ec4899' },
-  note:     { label: 'Nota',        icon: Info,          defaultColor: '#94a3b8' },
-};
+  start: { label: 'Inicio', icon: Zap, defaultColor: '#22c55e' },
+  end:   { label: 'Fin',    icon: Target, defaultColor: '#ef4444' },
+  ...Object.fromEntries(SPEC_SECTIONS.map(s => [s.key, { label: s.label, icon: s.icon, defaultColor: s.color }])),
+  // Legacy shape types — no longer offered in the palette, kept only so old canvases don't crash on render.
+  process:  { label: 'Proceso',   icon: Square,      defaultColor: '#3b82f6' },
+  decision: { label: 'Decisión',  icon: GitBranch,   defaultColor: '#f59e0b' },
+  document: { label: 'Documento', icon: FileText,    defaultColor: '#8b5cf6' },
+  database: { label: 'Datos',     icon: Database,    defaultColor: '#06b6d4' },
+  action:   { label: 'Acción',    icon: CheckSquare, defaultColor: '#ec4899' },
+  note:     { label: 'Nota',      icon: Info,        defaultColor: '#94a3b8' },
+} as Record<NodeType, { label: string; icon: React.ElementType; defaultColor: string }>;
+
+/** Order in which block types appear in the left palette: Inicio, the six Karpathy steps, Fin. */
+const PALETTE_TYPES: NodeType[] = ['start', ...SPEC_SECTIONS.map(s => s.key), 'end'];
 
 const PALETTE_COLORS = [
   '#3b82f6','#22c55e','#ef4444','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#94a3b8',
   '#0ea5e9','#10b981','#f97316','#a855f7','#14b8a6','#f43f5e','#334155','#1e293b',
 ];
 
-const EMPTY_SPEC: NodeSpec = {
-  objective: '',
-  inputs: [''],
-  steps: [''],
-  outputs: [''],
-  success: [''],
-  failures: [''],
-};
-
-function makeSpec(overrides: Partial<NodeSpec> = {}): NodeSpec {
-  return { ...EMPTY_SPEC, ...overrides };
-}
-
 const NODE_CARD_W = 200;
 const NODE_CARD_H = 150; // collapsed height
 
 function getId() { return Math.random().toString(36).slice(2, 9); }
 
+function isTerminalType(type: NodeType) {
+  return type === 'start' || type === 'end';
+}
+
 function getNodeCenter(node: CanvasNode) {
-  const isTerminal = node.type === 'start' || node.type === 'end';
+  const isTerminal = isTerminalType(node.type);
   const w = isTerminal ? 140 : NODE_CARD_W;
   const h = isTerminal ? 80 : NODE_CARD_H;
   return { x: node.x + w / 2, y: node.y + h / 2 };
 }
 
-/** A block is "SPEC-complete" (per Karpathy's method) when every section has at least one non-empty entry. */
-function isSpecComplete(node: CanvasNode): boolean {
-  if (node.type === 'start' || node.type === 'end') return true;
-  const s = node.spec;
-  return Boolean(s.objective.trim())
-    && s.inputs.some(v => v.trim())
-    && s.steps.some(v => v.trim())
-    && s.outputs.some(v => v.trim())
-    && s.success.some(v => v.trim())
-    && s.failures.some(v => v.trim());
+/** A block is "complete" when its single SPEC facet has content written in. */
+function isNodeComplete(node: CanvasNode): boolean {
+  if (isTerminalType(node.type)) return true;
+  return node.content.trim().length > 0;
 }
 
 // ─── Consultant Prompt Generator ──────────────────────────────────────────────
+
+function groupNodesBySection(nodes: CanvasNode[]) {
+  return SPEC_SECTIONS.map(sec => ({
+    section: sec,
+    items: nodes.filter(n => n.type === sec.key),
+  }));
+}
 
 function generateConsultantPrompt(canvasName: string, nodes: CanvasNode[], connections: Connection[]): string {
   const nodeById = new Map(nodes.map(n => [n.id, n]));
   const nodeLabel = (n: CanvasNode) => n.title || NODE_TYPES[n.type].label;
 
-  const blocksText = nodes.map((n, i) => {
-    const header = `${i + 1}. [${NODE_TYPES[n.type].label.toUpperCase()}] ${nodeLabel(n)}`;
-    const isTerminal = n.type === 'start' || n.type === 'end';
-    if (isTerminal) return header;
-
-    const lines = [
-      n.spec.objective && `   - Objetivo: ${n.spec.objective}`,
-      n.spec.inputs.filter(Boolean).length > 0 && `   - Entradas: ${n.spec.inputs.filter(Boolean).join(', ')}`,
-      n.spec.steps.filter(Boolean).length > 0 && `   - Pasos: ${n.spec.steps.filter(Boolean).map((s, idx) => `(${idx + 1}) ${s}`).join(' ')}`,
-      n.spec.outputs.filter(Boolean).length > 0 && `   - Salidas: ${n.spec.outputs.filter(Boolean).join(', ')}`,
-      n.spec.success.filter(Boolean).length > 0 && `   - Criterios de éxito: ${n.spec.success.filter(Boolean).join(', ')}`,
-      n.spec.failures.filter(Boolean).length > 0 && `   - Modos de fallo: ${n.spec.failures.filter(Boolean).join(', ')}`,
-    ].filter(Boolean).join('\n');
-
-    return lines ? `${header}\n${lines}` : `${header}\n   (sin detalle SPEC definido)`;
+  const specText = groupNodesBySection(nodes).map(({ section, items }) => {
+    if (items.length === 0) return `**${section.label}:** _sin bloques definidos_`;
+    return `**${section.label}:**\n${items.map(n => `- ${n.content || '(sin contenido)'}`).join('\n')}`;
   }).join('\n\n');
 
   const flowText = connections.length > 0
@@ -135,11 +134,11 @@ function generateConsultantPrompt(canvasName: string, nodes: CanvasNode[], conne
 
   return `Eres un consultor senior de transformación digital especializado en automatización de procesos con agentes de IA (agentes LLM con herramientas/function-calling, RPA, human-in-the-loop).
 
-Te entrego un proceso de negocio llamado "${canvasName}", mapeado con el método SPEC (Objetivo → Entradas → Pasos → Salidas → Criterios de Éxito → Modos de Fallo) de Andrej Karpathy.
+Te entrego un proceso de negocio llamado "${canvasName}", especificado con el método SPEC de Andrej Karpathy (Objetivo → Entradas → Pasos → Salidas → Criterios de Éxito → Modos de Fallo).
 
-## Bloques del proceso
+## Especificación (SPEC)
 
-${blocksText}
+${specText}
 
 ## Flujo / conexiones entre bloques
 
@@ -149,9 +148,9 @@ ${flowText}
 
 Actuando como consultor, evalúa este proceso y entrega:
 
-1. **Diagnóstico por bloque**: para cada bloque no terminal, indica si es candidato a automatizarse con un agente de IA, qué tipo de agente sería el adecuado (conversacional, con herramientas/function-calling, RPA determinista, o si debe seguir siendo humano) y por qué.
-2. **Riesgos si se automatiza**: para cada bloque automatizable, qué podría salir mal (alucinaciones, decisiones irreversibles, falta de contexto) usando como referencia los "Modos de Fallo" ya definidos, y qué controles se necesitarían (aprobación humana, límites de acción, logging/auditoría).
-3. **Rediseño del proceso con agentes de IA**: propone un nuevo flujo señalando qué bloques pasan a ejecutarse con agentes, cuáles siguen siendo humanos, y dónde deben existir puntos de control o aprobación.
+1. **Diagnóstico por sección**: para cada Paso definido, indica si es candidato a automatizarse con un agente de IA, qué tipo de agente sería el adecuado (conversacional, con herramientas/function-calling, RPA determinista, o si debe seguir siendo humano) y por qué.
+2. **Riesgos si se automatiza**: qué podría salir mal (alucinaciones, decisiones irreversibles, falta de contexto) usando como referencia los "Modos de Fallo" ya definidos, y qué controles se necesitarían (aprobación humana, límites de acción, logging/auditoría).
+3. **Rediseño del proceso con agentes de IA**: propone un nuevo flujo señalando qué pasos pasan a ejecutarse con agentes, cuáles siguen siendo humanos, y dónde deben existir puntos de control o aprobación.
 4. **Priorización**: ordena las oportunidades de automatización por impacto (tiempo/costo ahorrado) vs. esfuerzo de implementación (bajo/medio/alto).
 5. **Plan de acción**: qué implementarías primero como piloto y qué necesitarías (datos, integraciones, herramientas, permisos) para lograrlo.
 
@@ -165,28 +164,13 @@ function generateSpecDocument(canvasName: string, nodes: CanvasNode[], connectio
   const nodeLabel = (n: CanvasNode) => n.title || NODE_TYPES[n.type].label;
   const today = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const section = (label: string, items: string[]) => {
-    const vals = items.filter(Boolean);
-    return vals.length > 0
-      ? `**${label}:**\n${vals.map(v => `- ${v}`).join('\n')}`
-      : `**${label}:** _sin definir_`;
-  };
-
-  const blocksText = nodes.map((n, i) => {
-    const heading = `### ${i + 1}. ${nodeLabel(n)} _(${NODE_TYPES[n.type].label})_`;
-    const isTerminal = n.type === 'start' || n.type === 'end';
-    if (isTerminal) return heading;
-
-    return [
-      heading,
-      n.spec.objective ? `**Objetivo:** ${n.spec.objective}` : '**Objetivo:** _sin definir_',
-      section('Entradas', n.spec.inputs),
-      section('Pasos', n.spec.steps),
-      section('Salidas', n.spec.outputs),
-      section('Criterios de Éxito', n.spec.success),
-      section('Modos de Fallo', n.spec.failures),
-    ].join('\n\n');
-  }).join('\n\n---\n\n');
+  const specText = groupNodesBySection(nodes).map(({ section, items }, i) => {
+    const heading = `## ${i + 1}. ${section.label}`;
+    if (items.length === 0) return `${heading}\n\n_Sin bloques definidos._`;
+    const ordered = section.key === 'steps';
+    const list = items.map((n, idx) => `${ordered ? `${idx + 1}.` : '-'} ${n.content || '_sin contenido_'}`).join('\n');
+    return `${heading}\n\n${list}`;
+  }).join('\n\n');
 
   const flowText = connections.length > 0
     ? connections.map(c => {
@@ -206,9 +190,7 @@ Generado el ${today}
 
 ${flowText}
 
-## Bloques
-
-${blocksText}
+${specText}
 `;
 }
 
@@ -245,23 +227,6 @@ function ArrowLine({ from, to, label, selected, onClick }: {
 
 // ─── SPEC Card ───────────────────────────────────────────────────────────────
 
-interface SpecSection {
-  key: keyof NodeSpec;
-  label: string;
-  icon: React.ElementType;
-  color: string;
-  plural: boolean;
-}
-
-const SPEC_SECTIONS: SpecSection[] = [
-  { key: 'objective', label: 'Objetivo',            icon: Target,         color: '#3b82f6', plural: false },
-  { key: 'inputs',    label: 'Entradas',             icon: LogIn,          color: '#22c55e', plural: true  },
-  { key: 'steps',     label: 'Pasos',                icon: List,           color: '#8b5cf6', plural: true  },
-  { key: 'outputs',   label: 'Salidas',              icon: LogOutIcon,     color: '#06b6d4', plural: true  },
-  { key: 'success',   label: 'Criterios de Éxito',   icon: CheckCircle2,   color: '#10b981', plural: true  },
-  { key: 'failures',  label: 'Modos de Fallo',       icon: AlertTriangle,  color: '#ef4444', plural: true  },
-];
-
 function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, onStartConnect, onDelete, onEdit }: {
   node: CanvasNode;
   selected: boolean;
@@ -272,51 +237,9 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
   onDelete: () => void;
   onEdit: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const cfg = NODE_TYPES[node.type];
   const Icon = cfg.icon;
-  const isTerminal = node.type === 'start' || node.type === 'end';
-
-  const renderSpecPreview = () => {
-    if (isTerminal) return null;
-    const obj = node.spec.objective;
-    return (
-      <div className="px-3 pb-3 space-y-2">
-        {/* Objective */}
-        {obj ? (
-          <div className="flex items-start gap-2">
-            <div className="w-4 h-4 rounded-md flex items-center justify-center shrink-0 mt-0.5"
-              style={{ background: '#3b82f615', color: '#3b82f6' }}>
-              <Target size={8} />
-            </div>
-            <p className="text-[10px] text-slate-500 leading-relaxed line-clamp-2">{obj}</p>
-          </div>
-        ) : (
-          <p className="text-[10px] text-slate-300 italic">Sin objetivo definido...</p>
-        )}
-
-        {/* Mini badge pills */}
-        <div className="flex flex-wrap gap-1">
-          {node.spec.inputs.filter(Boolean).slice(0, 2).map((inp, i) => (
-            <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
-              style={{ background: '#22c55e15', color: '#16a34a' }}>↓ {inp}</span>
-          ))}
-          {node.spec.outputs.filter(Boolean).slice(0, 2).map((out, i) => (
-            <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
-              style={{ background: '#06b6d415', color: '#0891b2' }}>↑ {out}</span>
-          ))}
-        </div>
-        {/* Steps count */}
-        {node.spec.steps.filter(Boolean).length > 0 && (
-          <div className="flex items-center gap-1">
-            <List size={9} className="text-slate-400" />
-            <span className="text-[9px] text-slate-400">{node.spec.steps.filter(Boolean).length} paso(s) definidos</span>
-          </div>
-        )}
-      </div>
-    );
-  };
-
+  const isTerminal = isTerminalType(node.type);
   const cardHeight = isTerminal ? 80 : NODE_CARD_H;
 
   return (
@@ -347,7 +270,7 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
             className={`absolute -top-2.5 left-1 z-20 w-5 h-5 rounded-full border shadow-sm flex items-center justify-center ${
               complete ? 'bg-emerald-50 border-emerald-300' : 'bg-amber-50 border-amber-300'
             }`}
-            title={complete ? 'SPEC completo' : 'SPEC incompleto: faltan secciones por definir'}
+            title={complete ? 'Bloque completo' : 'Falta escribir el contenido de este bloque'}
           >
             {complete
               ? <CheckCircle2 size={10} className="text-emerald-500" />
@@ -377,10 +300,14 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
             )}
           </div>
 
-          {/* SPEC Preview (collapsed) */}
+          {/* Content preview */}
           {!isTerminal && (
-            <div className="flex-1 overflow-hidden">
-              {renderSpecPreview()}
+            <div className="flex-1 overflow-hidden px-3 pb-3 pt-2">
+              {node.content ? (
+                <p className="text-[10px] text-slate-500 leading-relaxed line-clamp-4">{node.content}</p>
+              ) : (
+                <p className="text-[10px] text-slate-300 italic">Sin definir todavía...</p>
+              )}
             </div>
           )}
         </div>
@@ -416,54 +343,20 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
   );
 }
 
-// ─── SPEC Edit Modal ──────────────────────────────────────────────────────────
+// ─── Node Edit Modal ──────────────────────────────────────────────────────────
 
-function SpecEditModal({ node, isNew, onSave, onClose }: {
+function NodeEditModal({ node, onSave, onClose }: {
   node: CanvasNode;
-  isNew?: boolean;
   onSave: (updates: Partial<CanvasNode>) => void;
   onClose: () => void;
 }) {
   const [title, setTitle] = useState(node.title);
   const [color, setColor] = useState(node.color);
   const [type, setType] = useState<NodeType>(node.type);
-  const [spec, setSpec] = useState<NodeSpec>({ ...node.spec });
-  const [activeSection, setActiveSection] = useState<keyof NodeSpec>('objective');
-  const sectionIdx = SPEC_SECTIONS.findIndex(s => s.key === activeSection);
+  const [content, setContent] = useState(node.content);
 
-  const goNextOrSave = () => {
-    if (sectionIdx === SPEC_SECTIONS.length - 1) {
-      onSave({ title, color, type, spec });
-      onClose();
-    } else {
-      setActiveSection(SPEC_SECTIONS[sectionIdx + 1].key);
-    }
-  };
-
-  const goPrev = () => {
-    if (sectionIdx > 0) setActiveSection(SPEC_SECTIONS[sectionIdx - 1].key);
-  };
-
-  const updateList = (key: keyof NodeSpec, idx: number, val: string) => {
-    setSpec(prev => {
-      const arr = [...(prev[key] as string[])];
-      arr[idx] = val;
-      return { ...prev, [key]: arr };
-    });
-  };
-
-  const addItem = (key: keyof NodeSpec) => {
-    setSpec(prev => ({ ...prev, [key]: [...(prev[key] as string[]), ''] }));
-  };
-
-  const removeItem = (key: keyof NodeSpec, idx: number) => {
-    setSpec(prev => {
-      const arr = (prev[key] as string[]).filter((_, i) => i !== idx);
-      return { ...prev, [key]: arr.length === 0 ? [''] : arr };
-    });
-  };
-
-  const activeSec = SPEC_SECTIONS.find(s => s.key === activeSection)!;
+  const section = SPEC_SECTIONS.find(s => s.key === type);
+  const cfg = NODE_TYPES[type];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -471,20 +364,18 @@ function SpecEditModal({ node, isNew, onSave, onClose }: {
       onClick={onClose}
     >
       <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        {/* Modal Header */}
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${color}20`, color }}>
-              {(() => { const Icon = NODE_TYPES[type].icon; return <Icon size={16} />; })()}
+              <cfg.icon size={16} />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900">{isNew ? 'Crear bloque SPEC' : 'Editar SPEC'}</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">
-                {isNew ? `Paso ${sectionIdx + 1} de ${SPEC_SECTIONS.length} · Formato Karpathy` : 'Formato Karpathy · Especificación Estructurada'}
-              </p>
+              <h3 className="text-base font-black text-slate-900">{cfg.label}</h3>
+              <p className="text-[10px] text-slate-400 font-semibold">Método SPEC de Andrej Karpathy</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-400">
@@ -492,152 +383,77 @@ function SpecEditModal({ node, isNew, onSave, onClose }: {
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* LEFT: Meta & Section Nav */}
-          <div className="w-52 border-r border-slate-100 flex flex-col shrink-0">
-            {/* Title & Color */}
-            <div className="p-4 space-y-3 border-b border-slate-100">
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre</p>
-                <input value={title} onChange={e => setTitle(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300"
-                  placeholder="Nombre del nodo..." />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipo</p>
-                <div className="grid grid-cols-4 gap-1">
-                  {(Object.entries(NODE_TYPES) as [NodeType, typeof NODE_TYPES[NodeType]][]).map(([key, cfg]) => {
-                    const Icon = cfg.icon;
-                    return (
-                      <button key={key} onClick={() => setType(key)} title={cfg.label}
-                        className={`flex items-center justify-center p-1.5 rounded-lg border transition-all ${type === key ? 'border-sky-400 bg-sky-50' : 'border-slate-100 hover:border-slate-300'}`}
-                        style={{ color: type === key ? cfg.defaultColor : '#94a3b8' }}>
-                        <Icon size={13} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Color</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {PALETTE_COLORS.slice(0, 8).map(c => (
-                    <button key={c} onClick={() => setColor(c)}
-                      className={`w-5 h-5 rounded-full border-2 transition-all ${color === c ? 'border-slate-700 scale-110' : 'border-transparent hover:scale-105'}`}
-                      style={{ background: c }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* SPEC Section Nav */}
-            <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-2 mb-2">Secciones SPEC</p>
-              {SPEC_SECTIONS.map((sec, idx) => {
-                const Icon = sec.icon;
-                const isActive = activeSection === sec.key;
-                const isLocked = Boolean(isNew) && idx > sectionIdx;
-                const isDone = Boolean(isNew) && idx < sectionIdx;
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          {/* Type switcher */}
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipo de bloque</p>
+            <div className="grid grid-cols-4 gap-1">
+              {PALETTE_TYPES.map(key => {
+                const c = NODE_TYPES[key];
                 return (
-                  <button key={sec.key}
-                    onClick={() => { if (!isLocked) setActiveSection(sec.key); }}
-                    disabled={isLocked}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-all ${
-                      isActive ? 'bg-slate-900 text-white' : isLocked ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-50 text-slate-600'
-                    }`}>
-                    <Icon size={12} style={{ color: isActive ? 'white' : sec.color }} />
-                    <span className="text-[11px] font-bold flex-1">{sec.label}</span>
-                    {isDone && <CheckCircle2 size={11} className="text-emerald-400" />}
+                  <button key={key} onClick={() => setType(key)} title={c.label}
+                    className={`flex items-center justify-center p-1.5 rounded-lg border transition-all ${type === key ? 'border-sky-400 bg-sky-50' : 'border-slate-100 hover:border-slate-300'}`}
+                    style={{ color: type === key ? c.defaultColor : '#94a3b8' }}>
+                    <c.icon size={13} />
                   </button>
                 );
               })}
-            </nav>
+            </div>
           </div>
 
-          {/* RIGHT: Section Editor */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 shrink-0">
-              <div className="flex items-center gap-2.5 mb-1">
-                {(() => { const Icon = activeSec.icon; return <Icon size={16} style={{ color: activeSec.color }} />; })()}
-                <h4 className="text-sm font-black text-slate-900">{activeSec.label}</h4>
+          {/* Name */}
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre corto</p>
+            <input value={title} onChange={e => setTitle(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300"
+              placeholder={cfg.label} />
+          </div>
+
+          {/* Color */}
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Color</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PALETTE_COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)}
+                  className={`w-5 h-5 rounded-full border-2 transition-all ${color === c ? 'border-slate-700 scale-110' : 'border-transparent hover:scale-105'}`}
+                  style={{ background: c }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Content — only for the six Karpathy SPEC block types; legacy/terminal types have nothing to fill in */}
+          {section && (
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <section.icon size={13} style={{ color: section.color }} />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{section.label}</p>
               </div>
-              <p className="text-[11px] text-slate-400">
-                {activeSection === 'objective' && '¿Qué hace exactamente este paso? (una sola oración clara)'}
-                {activeSection === 'inputs'    && '¿Qué información, datos o artefactos entran a este paso?'}
-                {activeSection === 'steps'     && '¿Cuáles son las sub-acciones ordenadas que se ejecutan?'}
-                {activeSection === 'outputs'   && '¿Qué produce este paso? ¿Qué sale como resultado?'}
-                {activeSection === 'success'   && '¿Cómo sabes que funcionó correctamente?'}
-                {activeSection === 'failures'  && '¿Qué puede salir mal? ¿Cuáles son los riesgos o errores comunes?'}
-              </p>
+              <p className="text-[11px] text-slate-400 mb-2">{section.question}</p>
+              <textarea
+                autoFocus
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                rows={5}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-300 resize-none"
+                placeholder={section.placeholder}
+              />
             </div>
-
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-              {activeSection === 'objective' ? (
-                <textarea
-                  value={spec.objective}
-                  onChange={e => setSpec(prev => ({ ...prev, objective: e.target.value }))}
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-300 resize-none"
-                  placeholder="Ej: Validar la identidad del usuario antes de permitir el acceso al sistema..."
-                />
-              ) : (
-                <>
-                  {(spec[activeSection] as string[]).map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2 group/item">
-                      <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-black shrink-0"
-                        style={{ borderColor: `${activeSec.color}40`, color: activeSec.color }}>
-                        {idx + 1}
-                      </div>
-                      <input
-                        value={item}
-                        onChange={e => updateList(activeSection, idx, e.target.value)}
-                        className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-300"
-                        placeholder={`${activeSec.label.slice(0, -1)} ${idx + 1}...`}
-                      />
-                      <button onClick={() => removeItem(activeSection, idx)}
-                        className="opacity-0 group-hover/item:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0">
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  <button onClick={() => addItem(activeSection)}
-                    className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-sky-500 transition-colors mt-1 ml-7">
-                    <Plus size={12} /> Agregar {activeSec.label.toLowerCase().replace('s de ', ' de ')}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 shrink-0 bg-slate-50/50">
           <div className="flex-1 text-[10px] text-slate-400">
-            {isNew
-              ? '💡 Completa cada sección en orden: así se aplica el método de especificación de Karpathy'
-              : '💡 Método SPEC basado en el enfoque de especificación estructurada de Andrej Karpathy'}
+            💡 Cada bloque es una de las seis secciones del método SPEC
           </div>
-          {isNew && sectionIdx > 0 && (
-            <button onClick={goPrev}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
-              Atrás
-            </button>
-          )}
           <button onClick={onClose}
             className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
             Cancelar
           </button>
-          {isNew ? (
-            <button onClick={goNextOrSave}
-              className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg">
-              {sectionIdx === SPEC_SECTIONS.length - 1 ? 'Guardar SPEC' : 'Siguiente →'}
-            </button>
-          ) : (
-            <button onClick={() => { onSave({ title, color, type, spec }); onClose(); }}
-              className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg">
-              Guardar SPEC
-            </button>
-          )}
+          <button onClick={() => { onSave({ title, color, type, content }); onClose(); }}
+            className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg">
+            Guardar
+          </button>
         </div>
       </motion.div>
     </motion.div>
@@ -753,7 +569,6 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedConnId, setSelectedConnId] = useState<string | null>(null);
   const [editingNode, setEditingNode] = useState<CanvasNode | null>(null);
-  const [editingNodeIsNew, setEditingNodeIsNew] = useState(false);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0.75);
   const [pan, setPan] = useState({ x: 40, y: 20 });
@@ -785,14 +600,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
             y: n.pos_y,
             title: n.title,
             color: n.color,
-            spec: {
-              objective: n.spec_objective ?? '',
-              inputs:   n.spec_inputs  ?? [''],
-              steps:    n.spec_steps   ?? [''],
-              outputs:  n.spec_outputs ?? [''],
-              success:  n.spec_success ?? [''],
-              failures: n.spec_failures ?? [''],
-            },
+            content: n.spec_objective ?? '',
           })));
         }
 
@@ -830,12 +638,12 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
           color:         n.color,
           pos_x:         n.x,
           pos_y:         n.y,
-          spec_objective: n.spec.objective,
-          spec_inputs:   n.spec.inputs.filter(Boolean),
-          spec_steps:    n.spec.steps.filter(Boolean),
-          spec_outputs:  n.spec.outputs.filter(Boolean),
-          spec_success:  n.spec.success.filter(Boolean),
-          spec_failures: n.spec.failures.filter(Boolean),
+          spec_objective: n.content,
+          spec_inputs:   [],
+          spec_steps:    [],
+          spec_outputs:  [],
+          spec_success:  [],
+          spec_failures: [],
         })),
         connections: connections.map(c => ({
           conn_key:  c.id,
@@ -960,19 +768,20 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
       y: (150 + Math.random() * 200) / zoom,
       title: cfg.label,
       color: cfg.defaultColor,
-      spec: makeSpec(),
+      content: '',
     };
     setNodes(prev => [...prev, newNode]);
     setSelectedNodeId(newNode.id);
-    const isTerminal = type === 'start' || type === 'end';
-    setTimeout(() => {
-      setEditingNodeIsNew(!isTerminal);
-      setEditingNode(newNode);
-    }, 50);
+    if (!isTerminalType(type)) {
+      setTimeout(() => setEditingNode(newNode), 50);
+    }
   };
 
-  const nonTerminalNodes = nodes.filter(n => n.type !== 'start' && n.type !== 'end');
-  const completeCount = nonTerminalNodes.filter(isSpecComplete).length;
+  const sectionStats = SPEC_SECTIONS.map(sec => {
+    const items = nodes.filter(n => n.type === sec.key);
+    const done = items.filter(n => n.content.trim().length > 0).length;
+    return { ...sec, total: items.length, done };
+  });
 
   return (
     <div className="flex flex-col h-full bg-[#f8f9fc] font-sans"
@@ -994,30 +803,6 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
         )}
 
         <div className="flex-1" />
-
-        {/* Completeness indicator */}
-        {nonTerminalNodes.length > 0 && (
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-[11px] font-bold text-slate-600 mr-1"
-            title="Bloques con las 6 secciones SPEC completas">
-            {completeCount === nonTerminalNodes.length
-              ? <CheckCircle2 size={12} className="text-emerald-500" />
-              : <AlertTriangle size={12} className="text-amber-500" />}
-            {completeCount}/{nonTerminalNodes.length} SPECs completos
-          </div>
-        )}
-
-        {/* SPEC legend */}
-        <div className="hidden lg:flex items-center gap-3 mr-2">
-          {SPEC_SECTIONS.map(s => {
-            const Icon = s.icon;
-            return (
-              <div key={s.key} className="flex items-center gap-1" title={s.label}>
-                <Icon size={11} style={{ color: s.color }} />
-                <span className="text-[10px] font-bold text-slate-400">{s.label}</span>
-              </div>
-            );
-          })}
-        </div>
 
         {/* Zoom */}
         <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
@@ -1059,11 +844,35 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
         </button>
       </header>
 
+      {/* SPEC PROGRESS BAR */}
+      <div className="flex items-center gap-2 px-5 h-12 bg-white border-b border-slate-200 shrink-0 overflow-x-auto">
+        {sectionStats.map(sec => {
+          const Icon = sec.icon;
+          const isEmpty = sec.total === 0;
+          const pct = sec.total > 0 ? Math.round((sec.done / sec.total) * 100) : 0;
+          return (
+            <div key={sec.key}
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl shrink-0 ${isEmpty ? 'opacity-40' : ''}`}
+              style={{ background: `${sec.color}0d` }}
+              title={`${sec.label}: ${sec.done}/${sec.total} bloques completos`}
+            >
+              <Icon size={12} style={{ color: sec.color }} />
+              <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">{sec.label}</span>
+              <span className="text-[10px] font-black whitespace-nowrap" style={{ color: sec.color }}>{sec.done}/{sec.total}</span>
+              <div className="w-10 h-1 rounded-full bg-slate-200 overflow-hidden shrink-0">
+                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: sec.color }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT PANEL */}
         <aside className="w-52 bg-white border-r border-slate-200 flex flex-col py-4 px-3 gap-1.5 overflow-y-auto shrink-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 mb-1">Bloques SPEC</p>
-          {(Object.entries(NODE_TYPES) as [NodeType, typeof NODE_TYPES[NodeType]][]).map(([type, cfg]) => {
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 mb-1">Bloques del método Karpathy</p>
+          {PALETTE_TYPES.map(type => {
+            const cfg = NODE_TYPES[type];
             const Icon = cfg.icon;
             return (
               <button key={type} onClick={() => addNode(type)}
@@ -1077,19 +886,6 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
               </button>
             );
           })}
-
-          <div className="border-t border-slate-100 mt-3 pt-3 space-y-2 px-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Secciones SPEC</p>
-            {SPEC_SECTIONS.map(sec => {
-              const Icon = sec.icon;
-              return (
-                <div key={sec.key} className="flex items-center gap-2">
-                  <Icon size={11} style={{ color: sec.color }} />
-                  <span className="text-[10px] text-slate-500 font-semibold">{sec.label}</span>
-                </div>
-              );
-            })}
-          </div>
 
           <div className="border-t border-slate-100 mt-3 pt-3 px-2 space-y-1.5">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Atajos</p>
@@ -1151,7 +947,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
                   node={node}
                   selected={selectedNodeId === node.id}
                   connectingFrom={connectingFrom === node.id}
-                  complete={isSpecComplete(node)}
+                  complete={isNodeComplete(node)}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
                   onStartConnect={() => setConnectingFrom(node.id)}
                   onDelete={() => {
@@ -1159,7 +955,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
                     setConnections(prev => prev.filter(c => c.fromId !== node.id && c.toId !== node.id));
                     setSelectedNodeId(null);
                   }}
-                  onEdit={() => { setEditingNodeIsNew(false); setEditingNode(node); }}
+                  onEdit={() => setEditingNode(node)}
                 />
               ))}
             </g>
@@ -1192,16 +988,15 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
         </div>
       </div>
 
-      {/* SPEC Edit Modal */}
+      {/* Node Edit Modal */}
       <AnimatePresence>
         {editingNode && (
-          <SpecEditModal
+          <NodeEditModal
             node={editingNode}
-            isNew={editingNodeIsNew}
             onSave={updates => {
               setNodes(prev => prev.map(n => n.id === editingNode.id ? { ...n, ...updates } : n));
             }}
-            onClose={() => { setEditingNode(null); setEditingNodeIsNew(false); }}
+            onClose={() => setEditingNode(null)}
           />
         )}
       </AnimatePresence>

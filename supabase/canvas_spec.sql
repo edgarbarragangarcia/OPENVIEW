@@ -30,8 +30,11 @@ CREATE TABLE IF NOT EXISTS public.canvas_nodes (
   id          UUID        NOT NULL DEFAULT gen_random_uuid(),
   canvas_id   UUID        NOT NULL,
   node_key    TEXT        NOT NULL,           -- ID local del nodo (string corto)
-  type        TEXT        NOT NULL DEFAULT 'process'
-                          CHECK (type IN ('process','decision','start','end','document','database','action','note')),
+  -- 'objective'..'failures' son los 6 pasos del método SPEC de Karpathy (bloques del canvas actual).
+  -- 'process'/'decision'/'document'/'database'/'action'/'note' son tipos legados de una versión anterior
+  -- (paleta de formas de flowchart) que se mantienen solo para no romper canvases ya guardados.
+  type        TEXT        NOT NULL DEFAULT 'objective'
+                          CHECK (type IN ('start','end','objective','inputs','steps','outputs','success','failures','process','decision','document','database','action','note')),
   title       TEXT        NOT NULL DEFAULT '',
   color       TEXT        NOT NULL DEFAULT '#3b82f6',
   pos_x       NUMERIC     NOT NULL DEFAULT 100,
