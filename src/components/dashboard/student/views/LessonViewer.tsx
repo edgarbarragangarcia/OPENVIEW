@@ -129,6 +129,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
       }
     } catch (e) {
       console.error(e);
+      toast.error(e instanceof Error ? e.message : 'No se pudo actualizar tu progreso');
     }
   };
 
@@ -576,10 +577,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
                           if (!completed.has(activeLesson.id)) toggleComplete(activeLesson.id);
                           if (next) setActiveLesson(next);
                         }}
-                        disabled={!next}
+                        disabled={!next && completed.has(activeLesson.id)}
                         className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg shadow-cyan-500/20"
                       >
-                        {next ? 'Siguiente lección' : '¡Curso completado!'} <ChevronRight size={16} />
+                        {next ? 'Siguiente lección' : completed.has(activeLesson.id) ? '¡Curso completado!' : 'Marcar como completada'} <ChevronRight size={16} />
                       </button>
                     </>
                   );
