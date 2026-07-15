@@ -71,6 +71,11 @@ export function Header({ onLoginClick }: HeaderProps) {
             <div
               key={item}
               className="relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-pointer flex items-center gap-1.5 group"
+              onClick={() => {
+                if (item === 'Rutas de Aprendizaje') {
+                   document.getElementById('rutas')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
             >
               {item}
               {(item === 'Explorar Cursos' || item === 'Rutas de Aprendizaje') && (

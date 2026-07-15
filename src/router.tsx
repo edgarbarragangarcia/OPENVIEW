@@ -9,6 +9,7 @@ import { CourseGrid } from './components/CourseGrid';
 import { FeaturesLMS } from './components/FeaturesLMS';
 import { CategoriesSection, ProcessSection, TestimonialsSection, FinalCTA } from './components/AcademiaSections';
 import { AuthModal } from './components/AuthModal';
+import { LearningPathSection } from './components/LearningPathSection';
 
 function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -25,6 +26,7 @@ function LandingPage() {
       <Header onLoginClick={openAuth} />
       <main className="relative">
         <LMSHero onCtaClick={openAuth} />
+        <LearningPathSection onEnroll={openAuth} />
         <FeaturesLMS />
         <CategoriesSection onSelectCategory={handleSelectCategory} />
         <CourseGrid selectedCategoryId={selectedCategoryId} onClearFilter={() => setSelectedCategoryId(null)} />
