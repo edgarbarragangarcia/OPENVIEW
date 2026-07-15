@@ -76,8 +76,8 @@ function makeSpec(overrides: Partial<NodeSpec> = {}): NodeSpec {
   return { ...EMPTY_SPEC, ...overrides };
 }
 
-const NODE_CARD_W = 280;
-const NODE_CARD_H = 220; // collapsed height
+const NODE_CARD_W = 200;
+const NODE_CARD_H = 150; // collapsed height
 
 function getId() { return Math.random().toString(36).slice(2, 9); }
 
