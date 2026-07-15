@@ -5,8 +5,10 @@ import {
   Layers, GitBranch, Database, FileText,
   Zap, Target, RotateCcw, Square, CheckSquare, Info,
   ChevronDown, ChevronUp, ArrowRight, AlertTriangle, CheckCircle2,
-  LogIn, LogOut as LogOutIcon, List, Eye, EyeOff
+  LogIn, LogOut as LogOutIcon, List, Eye, EyeOff, Save, Loader2
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { getOrCreateCanvas, saveCanvas } from '../../../../lib/canvas';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -532,9 +534,10 @@ const INITIAL_CONNECTIONS: Connection[] = [
 
 interface ProcessCanvasProps {
   onBack: () => void;
+  courseId?: string;
 }
 
-export function ProcessCanvas({ onBack }: ProcessCanvasProps) {
+export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
   const [nodes, setNodes] = useState<CanvasNode[]>(INITIAL_NODES);
   const [connections, setConnections] = useState<Connection[]>(INITIAL_CONNECTIONS);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -546,6 +549,94 @@ export function ProcessCanvas({ onBack }: ProcessCanvasProps) {
   const [isPanning, setIsPanning] = useState(false);
   const [canvasName, setCanvasName] = useState('Canvas de Procesos');
   const [editingName, setEditingName] = useState(false);
+  const [canvasId, setCanvasId] = useState<string | null>(null);
+  const [loadingCanvas, setLoadingCanvas] = useState(true);
+  const [savingCanvas, setSavingCanvas] = useState(false);
+
+  // Load canvas from Supabase on mount
+  useEffect(() => {
+    getOrCreateCanvas(courseId)
+      .then(({ canvas, nodes: dbNodes, connections: dbConns }) => {
+        setCanvasId(canvas.id);
+        setCanvasName(canvas.name);
+        setZoom(canvas.zoom ?? 0.75);
+        setPan({ x: canvas.pan_x ?? 40, y: canvas.pan_y ?? 20 });
+
+        if (dbNodes.length > 0) {
+          setNodes(dbNodes.map(n => ({
+            id: n.node_key,
+            type: n.type as NodeType,
+            x: n.pos_x,
+            y: n.pos_y,
+            title: n.title,
+            color: n.color,
+            spec: {
+              objective: n.spec_objective ?? '',
+              inputs:   n.spec_inputs  ?? [''],
+              steps:    n.spec_steps   ?? [''],
+              outputs:  n.spec_outputs ?? [''],
+              success:  n.spec_success ?? [''],
+              failures: n.spec_failures ?? [''],
+            },
+          })));
+        }
+
+        if (dbConns.length > 0) {
+          setConnections(dbConns.map(c => ({
+            id: c.conn_key,
+            fromId: c.from_node,
+            toId: c.to_node,
+            label: c.label ?? '',
+          })));
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando canvas:', err);
+        toast.error('No se pudo cargar el canvas');
+      })
+      .finally(() => setLoadingCanvas(false));
+  }, [courseId]);
+
+  // Save canvas to Supabase
+  const handleSave = useCallback(async () => {
+    if (!canvasId) return;
+    setSavingCanvas(true);
+    try {
+      await saveCanvas({
+        canvasId,
+        name: canvasName,
+        zoom,
+        panX: pan.x,
+        panY: pan.y,
+        nodes: nodes.map(n => ({
+          node_key:      n.id,
+          type:          n.type,
+          title:         n.title,
+          color:         n.color,
+          pos_x:         n.x,
+          pos_y:         n.y,
+          spec_objective: n.spec.objective,
+          spec_inputs:   n.spec.inputs.filter(Boolean),
+          spec_steps:    n.spec.steps.filter(Boolean),
+          spec_outputs:  n.spec.outputs.filter(Boolean),
+          spec_success:  n.spec.success.filter(Boolean),
+          spec_failures: n.spec.failures.filter(Boolean),
+        })),
+        connections: connections.map(c => ({
+          conn_key:  c.id,
+          from_node: c.fromId,
+          to_node:   c.toId,
+          label:     c.label ?? '',
+        })),
+      });
+      toast.success('Canvas guardado correctamente');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al guardar el canvas');
+    } finally {
+      setSavingCanvas(false);
+    }
+  }, [canvasId, canvasName, zoom, pan, nodes, connections]);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef<{ id: string; startX: number; startY: number; nodeX: number; nodeY: number } | null>(null);
@@ -695,8 +786,13 @@ export function ProcessCanvas({ onBack }: ProcessCanvasProps) {
           </button>
         </div>
 
-        <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all shadow">
-          Guardar Canvas
+        <button
+          onClick={handleSave}
+          disabled={savingCanvas || loadingCanvas}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all shadow disabled:opacity-60"
+        >
+          {savingCanvas ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+          {savingCanvas ? 'Guardando...' : 'Guardar Canvas'}
         </button>
       </header>
 
