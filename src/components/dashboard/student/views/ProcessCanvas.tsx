@@ -254,6 +254,17 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
         className="relative select-none group"
         style={{ width: isTerminal ? 140 : NODE_CARD_W, height: cardHeight, cursor: 'grab' }}
       >
+        {/* Soft pulse to mark the start of the flow */}
+        {node.type === 'start' && (
+          <motion.div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{ background: node.color }}
+            initial={{ opacity: 0.35, scale: 1 }}
+            animate={{ opacity: [0.35, 0, 0.35], scale: [1, 1.4, 1] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
+          />
+        )}
+
         <div
           className={`absolute inset-0 ${isTerminal ? 'rounded-full' : 'rounded-2xl'} border-2 bg-white transition-all duration-200`}
           style={{
@@ -282,9 +293,14 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
         <div className="relative z-10 flex flex-col h-full">
           {/* Header */}
           <div className={`flex items-center gap-2 px-3 py-2.5 ${isTerminal ? 'justify-center h-full' : 'border-b border-slate-100'}`}>
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: `${node.color}20`, color: node.color }}>
-              <Icon size={12} />
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110"
+              style={{
+                background: `linear-gradient(135deg, ${node.color}38, ${node.color}0a)`,
+                boxShadow: `0 2px 6px ${node.color}20, inset 0 1px 0 ${node.color}25`,
+                border: `1px solid ${node.color}25`,
+                color: node.color,
+              }}>
+              <Icon size={13} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-black text-slate-800 leading-tight truncate">{node.title || cfg.label}</p>
@@ -370,8 +386,14 @@ function NodeEditModal({ node, onSave, onClose }: {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${color}20`, color }}>
-              <cfg.icon size={16} />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg, ${color}38, ${color}0a)`,
+                boxShadow: `0 2px 8px ${color}25, inset 0 1px 0 ${color}25`,
+                border: `1px solid ${color}25`,
+                color,
+              }}>
+              <cfg.icon size={17} />
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900">{cfg.label}</h3>
@@ -504,7 +526,7 @@ function TextModal({ title, subtitle, icon: Icon, accentClass, text, downloadFil
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${accentClass}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm ${accentClass}`}>
               <Icon size={16} />
             </div>
             <div>
@@ -862,11 +884,14 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
           const pct = sec.total > 0 ? Math.round((sec.done / sec.total) * 100) : 0;
           return (
             <div key={sec.key}
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl shrink-0 ${isEmpty ? 'opacity-40' : ''}`}
-              style={{ background: `${sec.color}0d` }}
+              className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl shrink-0 transition-all hover:scale-[1.03] ${isEmpty ? 'opacity-40' : ''}`}
+              style={{ background: `linear-gradient(135deg, ${sec.color}16, ${sec.color}05)`, border: `1px solid ${sec.color}20` }}
               title={`${sec.label}: ${sec.done}/${sec.total} bloques completos`}
             >
-              <Icon size={12} style={{ color: sec.color }} />
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `${sec.color}22`, boxShadow: `inset 0 1px 0 ${sec.color}30` }}>
+                <Icon size={12} style={{ color: sec.color }} />
+              </div>
               <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">{sec.label}</span>
               <span className="text-[10px] font-black whitespace-nowrap" style={{ color: sec.color }}>{sec.done}/{sec.total}</span>
               <div className="w-10 h-1 rounded-full bg-slate-200 overflow-hidden shrink-0">
@@ -887,12 +912,17 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
             return (
               <button key={type} onClick={() => addNode(type)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all text-left group">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: `${cfg.defaultColor}18`, color: cfg.defaultColor }}>
-                  <Icon size={13} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
+                  style={{
+                    background: `linear-gradient(135deg, ${cfg.defaultColor}35, ${cfg.defaultColor}0a)`,
+                    boxShadow: `0 2px 8px ${cfg.defaultColor}25, inset 0 1px 0 ${cfg.defaultColor}20`,
+                    border: `1px solid ${cfg.defaultColor}25`,
+                    color: cfg.defaultColor,
+                  }}>
+                  <Icon size={16} />
                 </div>
                 <span className="text-xs font-bold text-slate-700">{cfg.label}</span>
-                <Plus size={11} className="ml-auto text-slate-300 group-hover:text-sky-400 transition-colors" />
+                <Plus size={11} className="ml-auto text-slate-300 group-hover:text-sky-400 group-hover:scale-125 transition-all" />
               </button>
             );
           })}
