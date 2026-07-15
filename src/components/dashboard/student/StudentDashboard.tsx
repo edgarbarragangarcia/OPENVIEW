@@ -1,17 +1,19 @@
 import { useState } from 'react';
-import { BookOpen, Compass, User, LogOut, Menu, X, Bell, ChevronRight } from 'lucide-react';
+import { BookOpen, Compass, User, LogOut, Menu, X, Bell, ChevronRight, Workflow } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { MyCourses } from './views/MyCourses';
 import { LessonViewer } from './views/LessonViewer';
 import { CourseDetail } from './views/CourseDetail';
 import { Explore } from './views/Explore';
 import { Profile } from './views/Profile';
+import { ProcessCanvas } from './views/ProcessCanvas';
 
-type StudentView = 'my-courses' | 'explore' | 'profile';
+type StudentView = 'my-courses' | 'explore' | 'canvas' | 'profile';
 
 const NAV = [
   { id: 'my-courses', label: 'Mi Aprendizaje', icon: BookOpen },
   { id: 'explore',    label: 'Explorar',        icon: Compass },
+  { id: 'canvas',     label: 'Canvas SPEC',      icon: Workflow },
   { id: 'profile',    label: 'Mi Perfil',        icon: User },
 ];
 
@@ -42,6 +44,7 @@ export function StudentDashboard() {
     switch (view) {
       case 'my-courses': return <MyCourses onCourseSelect={setViewingDetailId} />;
       case 'explore':    return <Explore onEnroll={() => setView('my-courses')} onCourseSelect={setViewingDetailId} />;
+      case 'canvas':     return <ProcessCanvas onBack={() => setView('my-courses')} />;
       case 'profile':    return <Profile />;
     }
   };
