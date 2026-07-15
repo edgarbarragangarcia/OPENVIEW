@@ -150,11 +150,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
     );
   }
 
-  // If canvas is open, render it fullscreen
-  if (showCanvas) {
-    return <ProcessCanvas onBack={() => setShowCanvas(false)} />;
-  }
-
   return (
     <div className="flex h-full bg-lms-bg overflow-hidden">
 
@@ -317,8 +312,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
       )}
 
       {/* ── Main Content ── */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {viewingFile ? (
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-white">
+        {showCanvas ? (
+          <ProcessCanvas onBack={() => setShowCanvas(false)} courseId={courseId} />
+        ) : viewingFile ? (
           <FileNotesPage file={viewingFile} onBack={() => setViewingFile(null)} />
         ) : (
         <>
