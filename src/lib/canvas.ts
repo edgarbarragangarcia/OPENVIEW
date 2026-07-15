@@ -86,6 +86,7 @@ export async function getOrCreateCanvas(courseId?: string): Promise<FullCanvas> 
       .single();
 
     if (createErr) throw createErr;
+    if (!newCanvas) throw new Error('No se pudo crear el canvas (acceso denegado)');
     canvas = newCanvas as CanvasRecord;
   }
 
