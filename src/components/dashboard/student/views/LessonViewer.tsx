@@ -6,6 +6,7 @@ import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { ProcessCanvas } from './ProcessCanvas';
+import { CanvasListView } from './CanvasListView';
 
 interface Props {
   courseId: string;
@@ -68,7 +69,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
-  const [showCanvas, setShowCanvas] = useState(false);
+  const [canvasView, setCanvasView] = useState<'list' | { canvasId: string } | null>(null);
+  const showCanvas = canvasView !== null;
   const structuredContent = useMemo(() => parseStructuredContent(activeLesson?.content ?? null), [activeLesson?.id]);
 
   useEffect(() => {
@@ -201,7 +203,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
             {/* M1 — Canvas SPEC (always first, fixed) */}
             <button
-              onClick={() => { setShowCanvas(true); setSidebarOpen(false); }}
+              onClick={() => { setCanvasView('list'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
                 showCanvas
                   ? 'bg-cyan-500/15 text-cyan-400'
@@ -255,7 +257,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: lIdx * 0.04, type: 'spring', stiffness: 400, damping: 30 }}
-                                onClick={() => { setActiveLesson(lesson); setShowCanvas(false); setSidebarOpen(false); }}
+                                onClick={() => { setActiveLesson(lesson); setCanvasView(null); setSidebarOpen(false); }}
                                 whileHover={{ x: 2 }}
                                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all text-left ${
                                   isActive
@@ -313,8 +315,14 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-white">
-        {showCanvas ? (
-          <ProcessCanvas onBack={() => setShowCanvas(false)} courseId={courseId} />
+        {canvasView === 'list' ? (
+          <CanvasListView
+            courseId={courseId}
+            onOpen={id => setCanvasView({ canvasId: id })}
+            onBack={() => setCanvasView(null)}
+          />
+        ) : canvasView ? (
+          <ProcessCanvas canvasId={canvasView.canvasId} onBack={() => setCanvasView('list')} />
         ) : viewingFile ? (
           <FileNotesPage file={viewingFile} onBack={() => setViewingFile(null)} />
         ) : (

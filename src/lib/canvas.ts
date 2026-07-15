@@ -47,63 +47,74 @@ export interface FullCanvas {
   connections: ConnectionRecord[];
 }
 
-// ─── Get or create user's canvas for a course ────────────────────────────────
+// ─── List / create / load / delete canvases (multi-canvas support) ───────────
 
-export async function getOrCreateCanvas(courseId?: string): Promise<FullCanvas> {
+export async function listCanvases(courseId?: string): Promise<CanvasRecord[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No autenticado');
 
-  // Try to find existing canvas for this user (+ optional course)
   let query = supabase
     .from('process_canvases')
     .select('*')
     .eq('user_id', user.id)
-    .order('updated_at', { ascending: false })
-    .limit(1);
+    .order('updated_at', { ascending: false });
 
   if (courseId) query = query.eq('course_id', courseId);
 
-  const { data: canvases, error: fetchErr } = await query;
-  if (fetchErr) throw fetchErr;
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as CanvasRecord[];
+}
 
-  let canvas: CanvasRecord;
+export async function createCanvas(courseId?: string, name = 'Canvas de Procesos'): Promise<CanvasRecord> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No autenticado');
 
-  if (canvases && canvases.length > 0) {
-    canvas = canvases[0] as CanvasRecord;
-  } else {
-    // Create a new canvas
-    const { data: newCanvas, error: createErr } = await supabase
-      .from('process_canvases')
-      .insert({
-        user_id: user.id,
-        course_id: courseId ?? null,
-        name: 'Mi Canvas de Procesos',
-        zoom: 0.75,
-        pan_x: 40,
-        pan_y: 20,
-      })
-      .select()
-      .single();
+  const { data, error } = await supabase
+    .from('process_canvases')
+    .insert({
+      user_id: user.id,
+      course_id: courseId ?? null,
+      name,
+      zoom: 0.75,
+      pan_x: 40,
+      pan_y: 20,
+    })
+    .select()
+    .single();
 
-    if (createErr) throw createErr;
-    if (!newCanvas) throw new Error('No se pudo crear el canvas (acceso denegado)');
-    canvas = newCanvas as CanvasRecord;
-  }
+  if (error) throw error;
+  if (!data) throw new Error('No se pudo crear el canvas (acceso denegado)');
+  return data as CanvasRecord;
+}
 
-  // Load nodes and connections
+export async function getCanvasById(canvasId: string): Promise<FullCanvas> {
+  const { data: canvas, error: canvasErr } = await supabase
+    .from('process_canvases')
+    .select('*')
+    .eq('id', canvasId)
+    .single();
+  if (canvasErr) throw canvasErr;
+  if (!canvas) throw new Error('Canvas no encontrado');
+
   const [{ data: nodes, error: nodesErr }, { data: connections, error: connsErr }] = await Promise.all([
-    supabase.from('canvas_nodes').select('*').eq('canvas_id', canvas.id),
-    supabase.from('canvas_connections').select('*').eq('canvas_id', canvas.id),
+    supabase.from('canvas_nodes').select('*').eq('canvas_id', canvasId),
+    supabase.from('canvas_connections').select('*').eq('canvas_id', canvasId),
   ]);
 
   if (nodesErr) throw nodesErr;
   if (connsErr) throw connsErr;
 
   return {
-    canvas,
+    canvas: canvas as CanvasRecord,
     nodes: (nodes ?? []) as NodeRecord[],
     connections: (connections ?? []) as ConnectionRecord[],
   };
+}
+
+export async function deleteCanvas(canvasId: string): Promise<void> {
+  const { error } = await supabase.from('process_canvases').delete().eq('id', canvasId);
+  if (error) throw error;
 }
 
 // ─── Save entire canvas (upsert approach) ────────────────────────────────────

@@ -9,7 +9,7 @@ import {
   Sparkles, ClipboardCopy, Download
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getOrCreateCanvas, saveCanvas } from '../../../../lib/canvas';
+import { getCanvasById, saveCanvas } from '../../../../lib/canvas';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -560,10 +560,10 @@ const INITIAL_CONNECTIONS: Connection[] = [];
 
 interface ProcessCanvasProps {
   onBack: () => void;
-  courseId?: string;
+  canvasId: string;
 }
 
-export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
+export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
   const [nodes, setNodes] = useState<CanvasNode[]>(INITIAL_NODES);
   const [connections, setConnections] = useState<Connection[]>(INITIAL_CONNECTIONS);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -575,7 +575,6 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
   const [isPanning, setIsPanning] = useState(false);
   const [canvasName, setCanvasName] = useState('Canvas de Procesos');
   const [editingName, setEditingName] = useState(false);
-  const [canvasId, setCanvasId] = useState<string | null>(null);
   const [loadingCanvas, setLoadingCanvas] = useState(true);
   const [savingCanvas, setSavingCanvas] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
@@ -585,44 +584,39 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
 
   // Load canvas from Supabase on mount
   useEffect(() => {
-    getOrCreateCanvas(courseId)
+    setLoadingCanvas(true);
+    getCanvasById(canvasId)
       .then(({ canvas, nodes: dbNodes, connections: dbConns }) => {
-        setCanvasId(canvas.id);
         setCanvasName(canvas.name);
         setZoom(canvas.zoom ?? 0.75);
         setPan({ x: canvas.pan_x ?? 40, y: canvas.pan_y ?? 20 });
 
-        if (dbNodes.length > 0) {
-          setNodes(dbNodes.map(n => ({
-            id: n.node_key,
-            type: n.type as NodeType,
-            x: n.pos_x,
-            y: n.pos_y,
-            title: n.title,
-            color: n.color,
-            content: n.spec_objective ?? '',
-          })));
-        }
+        setNodes(dbNodes.map(n => ({
+          id: n.node_key,
+          type: n.type as NodeType,
+          x: n.pos_x,
+          y: n.pos_y,
+          title: n.title,
+          color: n.color,
+          content: n.spec_objective ?? '',
+        })));
 
-        if (dbConns.length > 0) {
-          setConnections(dbConns.map(c => ({
-            id: c.conn_key,
-            fromId: c.from_node,
-            toId: c.to_node,
-            label: c.label ?? '',
-          })));
-        }
+        setConnections(dbConns.map(c => ({
+          id: c.conn_key,
+          fromId: c.from_node,
+          toId: c.to_node,
+          label: c.label ?? '',
+        })));
       })
       .catch(err => {
         console.error('Error cargando canvas:', err);
         toast.error('No se pudo cargar el canvas');
       })
       .finally(() => setLoadingCanvas(false));
-  }, [courseId]);
+  }, [canvasId]);
 
   // Save canvas to Supabase
   const handleSave = useCallback(async () => {
-    if (!canvasId) return;
     setSavingCanvas(true);
     try {
       await saveCanvas({
@@ -789,6 +783,10 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
 
       {/* TOP BAR */}
       <header className="flex items-center gap-3 px-5 h-16 bg-white border-b border-slate-200 shrink-0 z-10 shadow-sm">
+
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-cyan-600 font-semibold transition-colors shrink-0 pr-3 border-r border-slate-200">
+          <ArrowLeft size={14} /> Mis Canvas
+        </button>
 
         {editingName ? (
           <input autoFocus value={canvasName} onChange={e => setCanvasName(e.target.value)}
