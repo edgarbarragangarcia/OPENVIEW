@@ -6,7 +6,7 @@ import {
   Zap, Target, RotateCcw, Square, CheckSquare, Info,
   ChevronDown, ChevronUp, ArrowRight, AlertTriangle, CheckCircle2,
   LogIn, LogOut as LogOutIcon, List, Eye, EyeOff, Save, Loader2,
-  Sparkles, ClipboardCopy, Download
+  Sparkles, ClipboardCopy, Download, Workflow, LayoutGrid
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getCanvasById, saveCanvas } from '../../../../lib/canvas';
@@ -572,6 +572,101 @@ function TextModal({ title, subtitle, icon: Icon, accentClass, text, downloadFil
   );
 }
 
+// ─── Board (Kanban) View ───────────────────────────────────────────────────────
+// Same nodes/setNodes state as the flow map — this is just an alternate lens
+// over that state, so anything done here or in the flow view stays in sync.
+
+function BoardView({ nodes, onEdit, onDelete, onAddNode, onMoveToColumn }: {
+  nodes: CanvasNode[];
+  onEdit: (node: CanvasNode) => void;
+  onDelete: (id: string) => void;
+  onAddNode: (type: SpecNodeType) => void;
+  onMoveToColumn: (nodeId: string, type: SpecNodeType) => void;
+}) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverType, setDragOverType] = useState<SpecNodeType | null>(null);
+
+  return (
+    <div className="flex-1 overflow-x-auto overflow-y-hidden bg-[#f8f9fc]">
+      <div className="flex gap-4 h-full p-5 min-w-max">
+        {SPEC_SECTIONS.map(sec => {
+          const items = nodes.filter(n => n.type === sec.key);
+          const Icon = sec.icon;
+          const isDragOver = dragOverType === sec.key;
+          return (
+            <div key={sec.key}
+              onDragOver={e => { e.preventDefault(); setDragOverType(sec.key); }}
+              onDragLeave={() => setDragOverType(prev => (prev === sec.key ? null : prev))}
+              onDrop={e => {
+                e.preventDefault();
+                setDragOverType(null);
+                if (draggedId) onMoveToColumn(draggedId, sec.key);
+                setDraggedId(null);
+              }}
+              className={`w-64 shrink-0 rounded-2xl border bg-white flex flex-col transition-colors ${
+                isDragOver ? 'ring-2 ring-cyan-400 bg-cyan-50/40' : 'border-slate-200'
+              }`}
+            >
+              <div className="flex items-center gap-2 px-3 py-3 border-b border-slate-100 shrink-0">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: `${sec.color}20` }}>
+                  <Icon size={12} style={{ color: sec.color }} />
+                </div>
+                <span className="text-xs font-black text-slate-700 flex-1 truncate">{sec.label}</span>
+                <span className="text-[10px] font-bold text-slate-400 shrink-0">{items.length}</span>
+                <button onClick={() => onAddNode(sec.key)}
+                  className="w-5 h-5 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors shrink-0">
+                  <Plus size={12} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                {items.length === 0 && (
+                  <p className="text-[10px] text-slate-300 italic text-center py-6">Sin bloques</p>
+                )}
+                {items.map(n => {
+                  const complete = isNodeComplete(n);
+                  return (
+                    <div key={n.id}
+                      draggable
+                      onDragStart={() => setDraggedId(n.id)}
+                      onDragEnd={() => setDraggedId(null)}
+                      onClick={() => onEdit(n)}
+                      className={`group rounded-xl border bg-white p-3 cursor-grab active:cursor-grabbing shadow-sm hover:border-cyan-300 hover:shadow-md transition-all ${
+                        draggedId === n.id ? 'opacity-40' : ''
+                      }`}
+                      style={{ borderColor: complete ? '#e2e8f0' : '#fbbf2480' }}
+                    >
+                      <div className="flex items-start justify-between gap-1">
+                        <p className="text-xs font-bold text-slate-800 leading-snug flex-1">{n.title || sec.label}</p>
+                        <button onClick={e => { e.stopPropagation(); onDelete(n.id); }}
+                          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0">
+                          <Trash2 size={10} />
+                        </button>
+                      </div>
+                      {n.content ? (
+                        <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed line-clamp-3">{n.content}</p>
+                      ) : (
+                        <p className="text-[10px] text-slate-300 italic mt-1.5">Sin definir todavía...</p>
+                      )}
+                      {!complete && (
+                        <div className="flex items-center gap-1 mt-2 text-amber-500">
+                          <AlertTriangle size={9} />
+                          <span className="text-[9px] font-bold">Incompleto</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
 const INITIAL_NODES: CanvasNode[] = [];
@@ -603,6 +698,7 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [showDocModal, setShowDocModal] = useState(false);
   const [generatedDoc, setGeneratedDoc] = useState('');
+  const [viewMode, setViewMode] = useState<'flow' | 'board'>('flow');
 
   // Load canvas from Supabase on mount
   useEffect(() => {
@@ -836,7 +932,22 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
 
         <div className="flex-1" />
 
+        {/* View mode toggle */}
+        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+          <button onClick={() => setViewMode('flow')}
+            title="Vista de flujo"
+            className={`p-1.5 rounded-lg transition-all ${viewMode === 'flow' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>
+            <Workflow size={14} />
+          </button>
+          <button onClick={() => setViewMode('board')}
+            title="Vista de columnas"
+            className={`p-1.5 rounded-lg transition-all ${viewMode === 'board' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>
+            <LayoutGrid size={14} />
+          </button>
+        </div>
+
         {/* Zoom */}
+        {viewMode === 'flow' && (
         <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
           <button onClick={() => setZoom(z => Math.max(0.25, z - 0.1))} className="w-7 h-7 rounded-lg hover:bg-white flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all">
             <ZoomOut size={13} />
@@ -849,6 +960,7 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
             <Maximize2 size={13} />
           </button>
         </div>
+        )}
 
         <button
           onClick={handleExportDoc}
@@ -946,6 +1058,18 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
         </aside>
 
         {/* CANVAS SVG */}
+        {viewMode === 'board' ? (
+          <BoardView
+            nodes={nodes}
+            onEdit={setEditingNode}
+            onDelete={id => {
+              setNodes(prev => prev.filter(n => n.id !== id));
+              setConnections(prev => prev.filter(c => c.fromId !== id && c.toId !== id));
+            }}
+            onAddNode={addNode}
+            onMoveToColumn={(nodeId, type) => setNodes(prev => prev.map(n => n.id === nodeId ? { ...n, type } : n))}
+          />
+        ) : (
         <div className="flex-1 relative overflow-hidden">
           <svg ref={svgRef}
             className="absolute inset-0 w-full h-full"
@@ -1024,6 +1148,7 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
             )}
           </AnimatePresence>
         </div>
+        )}
       </div>
 
       {/* Node Edit Modal */}
