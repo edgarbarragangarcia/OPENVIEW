@@ -156,168 +156,172 @@ export function LessonViewer({ courseId, onBack }: Props) {
   }
 
   return (
-    <div className="flex h-full bg-lms-bg overflow-hidden">
+    <div className="flex h-full bg-white overflow-hidden">
 
       {/* ── Sidebar: Course Index ── */}
       <aside className={`
-        flex flex-col shrink-0 h-full bg-lms-surface border-r border-lms-border overflow-hidden
+        flex flex-col shrink-0 h-full bg-white border-r border-slate-200 overflow-hidden
         fixed lg:relative z-30 transition-all duration-300
         ${sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 lg:translate-x-0'}
         ${desktopSidebarOpen ? 'lg:w-72' : 'lg:w-0 lg:border-transparent'}
       `}>
         <div className="w-72 h-full flex flex-col">
-          {/* Course header */}
-          <div className="p-4 border-b border-lms-border">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-xs text-lms-text-muted hover:text-cyan-400 font-semibold transition-colors mb-4"
-          >
-            <ArrowLeft size={14} /> Volver a mis cursos
-          </button>
-          <h2 className="text-sm font-black text-lms-text-primary line-clamp-2">{course.title}</h2>
-          {/* Progress */}
-          <div className="mt-3 space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-lms-text-muted">Tu progreso</span>
-              <span className="text-cyan-400 font-bold">{progressPct}%</span>
+
+          {/* Logo header — same as StudentDashboard */}
+          <div className="flex items-center justify-between px-5 h-16 border-b border-slate-200 shrink-0">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="Open View Logo" className="w-10 h-10 object-contain rounded-lg mix-blend-multiply" />
+              <div>
+                <p className="font-black text-sm text-slate-900 leading-none mb-0.5">OpenView</p>
+                <p className="text-[10px] text-sky-500 font-bold uppercase tracking-widest leading-none">Academia</p>
+              </div>
             </div>
-            <div className="h-1.5 bg-lms-hover rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-sky-500 rounded-full transition-all duration-500"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-lms-text-muted">{completed.size} de {totalLessons} lecciones completadas</p>
+            <button onClick={onBack}
+              className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-sky-500 transition-colors">
+              <ArrowLeft size={12} /> Salir
+            </button>
           </div>
-        </div>
 
-        {/* Module / Lesson list */}
-        <div className="flex-1 overflow-y-auto py-2">
+          {/* Course header */}
+          <div className="px-5 py-4 border-b border-slate-100">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Curso actual</p>
+            <h2 className="text-sm font-black text-slate-900 line-clamp-2 leading-snug">{course.title}</h2>
+            {/* Progress */}
+            <div className="mt-3 space-y-1.5">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-400 font-semibold">Tu progreso</span>
+                <span className="text-cyan-500 font-black">{progressPct}%</span>
+              </div>
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-slate-400">{completed.size} de {totalLessons} lecciones completadas</p>
+            </div>
+          </div>
 
-          {/* M1 — Canvas SPEC (always first, fixed) */}
-          <div className="mb-1">
+          {/* Module / Lesson list */}
+          <div className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+
+            {/* M1 — Canvas SPEC (always first, fixed) */}
             <motion.button
               onClick={() => { setShowCanvas(true); setSidebarOpen(false); }}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ x: 3 }}
+              whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl mx-2 transition-colors group hover:bg-lms-hover/50"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all group text-left"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-[10px] font-black text-cyan-500 shrink-0">M1</span>
-                <div className="flex items-center gap-2">
-                  <Workflow size={13} className="text-sky-500 shrink-0" />
-                  <span className="text-xs font-bold text-left text-lms-text-muted group-hover:text-lms-text-primary transition-colors">
-                    Canvas de Procesos SPEC
-                  </span>
-                </div>
+              <span className="text-[10px] font-black text-cyan-500 w-6 shrink-0">M1</span>
+              <div className="w-6 h-6 rounded-lg bg-sky-50 flex items-center justify-center shrink-0">
+                <Workflow size={12} className="text-sky-500" />
               </div>
-              <ChevronRight size={14} className="shrink-0 text-lms-text-muted" />
+              <span className="text-xs font-semibold text-slate-500 group-hover:text-slate-800 transition-colors flex-1 text-left leading-snug">
+                Canvas de Procesos SPEC
+              </span>
+              <ChevronRight size={13} className="text-slate-300 group-hover:text-sky-400 transition-colors shrink-0" />
             </motion.button>
-          </div>
 
-          {course.modules.map((mod, mIdx) => {
-            const isModOpen = openModules.has(mod.id);
-            return (
-              <div key={mod.id} className="mb-1">
-                <motion.button
-                  onClick={() => toggleModule(mod.id)}
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mx-2 transition-colors group ${
-                    isModOpen ? 'bg-lms-hover/80' : 'hover:bg-lms-hover/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
+            {course.modules.map((mod, mIdx) => {
+              const isModOpen = openModules.has(mod.id);
+              return (
+                <div key={mod.id}>
+                  <motion.button
+                    onClick={() => toggleModule(mod.id)}
+                    whileHover={{ x: 3 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                      isModOpen ? 'bg-slate-50' : 'hover:bg-slate-50'
+                    }`}
+                  >
                     <motion.span
-                      animate={{ color: isModOpen ? '#22d3ee' : '#64748b' }}
+                      animate={{ color: isModOpen ? '#06b6d4' : '#94a3b8' }}
                       transition={{ duration: 0.2 }}
-                      className="text-[10px] font-black shrink-0"
+                      className="text-[10px] font-black w-6 shrink-0 text-left"
                     >
                       M{mIdx + 2}
                     </motion.span>
-                    <span className={`text-xs font-bold text-left transition-colors ${
-                      isModOpen ? 'text-lms-text-primary' : 'text-lms-text-muted'
+                    <span className={`text-xs font-semibold text-left flex-1 leading-snug transition-colors ${
+                      isModOpen ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-800'
                     }`}>
                       {mod.title}
                     </span>
-                  </div>
-                  <motion.div
-                    animate={{ rotate: isModOpen ? 90 : 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    className="shrink-0 text-lms-text-muted"
-                  >
-                    <ChevronRight size={14} />
-                  </motion.div>
-                </motion.button>
-
-                <AnimatePresence initial={false}>
-                  {isModOpen && (
                     <motion.div
-                      key="content"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                      className="overflow-hidden"
+                      animate={{ rotate: isModOpen ? 90 : 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                      className="shrink-0 text-slate-300"
                     >
-                      <div className="pb-2 pt-1">
-                        {mod.lessons.map((lesson, lIdx) => {
-                          const isActive = activeLesson?.id === lesson.id;
-                          const isDone = completed.has(lesson.id);
-                          return (
-                            <motion.button
-                              key={lesson.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: lIdx * 0.04, type: 'spring', stiffness: 400, damping: 30 }}
-                              onClick={() => { setActiveLesson(lesson); setSidebarOpen(false); }}
-                              whileHover={{ x: 4 }}
-                              whileTap={{ scale: 0.97 }}
-                              className={`w-full flex items-center gap-3 pl-8 pr-4 py-2.5 transition-all text-left rounded-xl mx-2 mb-0.5 ${
-                                isActive
-                                  ? 'bg-gradient-to-r from-cyan-500/20 to-sky-500/10 border border-cyan-500/30 shadow-lg shadow-cyan-500/10'
-                                  : 'hover:bg-lms-hover/60'
-                              }`}
-                            >
-                              <div className="shrink-0">
-                                <AnimatePresence mode="wait" initial={false}>
-                                  {isDone ? (
-                                    <motion.div key="done" initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 25 }}>
-                                      <CheckCircle size={15} className="text-emerald-400" />
-                                    </motion.div>
-                                  ) : isActive ? (
-                                    <motion.div key="active" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500 }}>
-                                      <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-400 flex items-center justify-center">
-                                        <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                                      </div>
-                                    </motion.div>
-                                  ) : (
-                                    <motion.div key="idle" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                      <Circle size={15} className="text-lms-text-muted/40" />
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-xs font-semibold transition-colors ${
-                                  isActive ? 'text-cyan-400' : isDone ? 'text-lms-text-muted' : 'text-lms-text-primary'
-                                }`}>
-                                  {lIdx + 1}. {lesson.title}
-                                </p>
-                                {lesson.duration_min > 0 && (
-                                  <p className="text-[10px] text-lms-text-muted mt-0.5">{lesson.duration_min} min</p>
-                                )}
-                              </div>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
+                      <ChevronRight size={13} />
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                  </motion.button>
+
+                  <AnimatePresence initial={false}>
+                    {isModOpen && (
+                      <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-9 pr-2 pb-2 pt-0.5 space-y-0.5">
+                          {mod.lessons.map((lesson, lIdx) => {
+                            const isActive = activeLesson?.id === lesson.id;
+                            const isDone = completed.has(lesson.id);
+                            return (
+                              <motion.button
+                                key={lesson.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: lIdx * 0.04, type: 'spring', stiffness: 400, damping: 30 }}
+                                onClick={() => { setActiveLesson(lesson); setSidebarOpen(false); }}
+                                whileHover={{ x: 2 }}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all text-left ${
+                                  isActive
+                                    ? 'bg-cyan-50 border border-cyan-200 shadow-sm'
+                                    : 'hover:bg-slate-50'
+                                }`}
+                              >
+                                <div className="shrink-0 w-4">
+                                  <AnimatePresence mode="wait" initial={false}>
+                                    {isDone ? (
+                                      <motion.div key="done" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                                        <CheckCircle size={14} className="text-emerald-400" />
+                                      </motion.div>
+                                    ) : isActive ? (
+                                      <motion.div key="active" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                                        <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-400 flex items-center justify-center">
+                                          <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                                        </div>
+                                      </motion.div>
+                                    ) : (
+                                      <motion.div key="idle" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                                        <Circle size={14} className="text-slate-200" />
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-[11px] font-semibold leading-snug transition-colors ${
+                                    isActive ? 'text-cyan-600' : isDone ? 'text-slate-400' : 'text-slate-600'
+                                  }`}>
+                                    {lIdx + 1}. {lesson.title}
+                                  </p>
+                                  {lesson.duration_min > 0 && (
+                                    <p className="text-[9px] text-slate-300 mt-0.5">{lesson.duration_min} min</p>
+                                  )}
+                                </div>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
             );
           })}
         </div>
