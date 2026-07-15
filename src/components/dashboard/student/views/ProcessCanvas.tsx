@@ -313,18 +313,18 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
         </div>
 
         {/* Controls */}
-        {!isTerminal && (
-          <div className={`absolute -top-2.5 right-1 z-20 flex gap-1 transition-all duration-200 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        <div className={`absolute -top-2.5 right-1 z-20 flex gap-1 transition-all duration-200 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          {!isTerminal && (
             <button onMouseDown={e => { e.stopPropagation(); onEdit(); }}
               className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-colors">
               <Edit3 size={8} />
             </button>
-            <button onMouseDown={e => { e.stopPropagation(); onDelete(); }}
-              className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-300 transition-colors">
-              <Trash2 size={8} />
-            </button>
-          </div>
-        )}
+          )}
+          <button onMouseDown={e => { e.stopPropagation(); onDelete(); }}
+            className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-300 transition-colors">
+            <Trash2 size={8} />
+          </button>
+        </div>
 
         {/* Connect handle (right side) */}
         <button
