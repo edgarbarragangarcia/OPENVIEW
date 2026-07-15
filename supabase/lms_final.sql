@@ -48,6 +48,10 @@ CREATE POLICY "profiles_self_update" ON public.profiles FOR UPDATE USING (auth.u
 -- Admin ve todos los perfiles
 CREATE POLICY "profiles_admin_select" ON public.profiles FOR SELECT USING (public.is_admin());
 CREATE POLICY "profiles_admin_all"    ON public.profiles FOR ALL   USING (public.is_admin());
+-- Cualquier usuario autenticado puede ver el perfil de quien creó un curso (instructor)
+CREATE POLICY "profiles_course_instructor_select" ON public.profiles FOR SELECT USING (
+  EXISTS (SELECT 1 FROM public.courses c WHERE c.created_by = profiles.id)
+);
 
 -- 4. TRIGGER: crear perfil automáticamente al registrarse
 CREATE OR REPLACE FUNCTION public.handle_new_user()

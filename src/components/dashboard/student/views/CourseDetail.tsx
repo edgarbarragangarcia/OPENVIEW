@@ -58,7 +58,7 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
             .from('profiles')
             .select('full_name, avatar_url, bio')
             .eq('id', data.created_by)
-            .single();
+            .maybeSingle();
           if (!cancelled) setInstructor(prof);
         }
 
