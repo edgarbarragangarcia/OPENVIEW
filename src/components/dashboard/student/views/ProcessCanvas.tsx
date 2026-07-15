@@ -344,7 +344,7 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
         {/* Completeness badge */}
         {!isTerminal && (
           <div
-            className={`absolute -top-2.5 left-1 w-5 h-5 rounded-full border shadow-sm flex items-center justify-center ${
+            className={`absolute -top-2.5 left-1 z-20 w-5 h-5 rounded-full border shadow-sm flex items-center justify-center ${
               complete ? 'bg-emerald-50 border-emerald-300' : 'bg-amber-50 border-amber-300'
             }`}
             title={complete ? 'SPEC completo' : 'SPEC incompleto: faltan secciones por definir'}
@@ -387,7 +387,7 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
 
         {/* Controls */}
         {!isTerminal && (
-          <div className={`absolute -top-2.5 right-1 flex gap-1 transition-all duration-200 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          <div className={`absolute -top-2.5 right-1 z-20 flex gap-1 transition-all duration-200 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
             <button onMouseDown={e => { e.stopPropagation(); onEdit(); }}
               className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-colors">
               <Edit3 size={8} />
@@ -402,7 +402,7 @@ function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, o
         {/* Connect handle (right side) */}
         <button
           onMouseDown={e => { e.stopPropagation(); onStartConnect(); }}
-          className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center transition-all duration-200 shadow-sm ${
+          className={`absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center transition-all duration-200 shadow-sm ${
             connectingFrom
               ? 'opacity-100 border-sky-500'
               : 'opacity-0 group-hover:opacity-100 border-slate-300 hover:border-sky-400'
