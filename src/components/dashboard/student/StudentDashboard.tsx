@@ -13,7 +13,6 @@ type StudentView = 'my-courses' | 'explore' | 'canvas' | 'profile';
 const NAV = [
   { id: 'my-courses', label: 'Mi Aprendizaje', icon: BookOpen },
   { id: 'explore',    label: 'Explorar',        icon: Compass },
-  { id: 'canvas',     label: 'Canvas SPEC',      icon: Workflow },
   { id: 'profile',    label: 'Mi Perfil',        icon: User },
 ];
 
@@ -44,7 +43,6 @@ export function StudentDashboard() {
     switch (view) {
       case 'my-courses': return <MyCourses onEnter={setViewingCourseId} onCourseSelect={setViewingDetailId} />;
       case 'explore':    return <Explore onEnroll={() => setView('my-courses')} onCourseSelect={setViewingDetailId} />;
-      case 'canvas':     return <ProcessCanvas onBack={() => setView('my-courses')} />;
       case 'profile':    return <Profile />;
     }
   };

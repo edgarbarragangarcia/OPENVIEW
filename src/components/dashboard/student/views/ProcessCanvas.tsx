@@ -466,69 +466,9 @@ function SpecEditModal({ node, onSave, onClose }: {
 
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
-const INITIAL_NODES: CanvasNode[] = [
-  {
-    id: 'start-1', type: 'start', x: 60, y: 220, title: 'Inicio', color: '#22c55e',
-    spec: makeSpec({ objective: 'Punto de entrada del proceso.' }),
-  },
-  {
-    id: 'proc-1', type: 'process', x: 240, y: 160, title: 'Recibir Solicitud', color: '#3b82f6',
-    spec: makeSpec({
-      objective: 'Capturar y registrar la solicitud del usuario o sistema entrante.',
-      inputs: ['Formulario de solicitud', 'ID de usuario'],
-      steps: ['Validar formato de entrada', 'Asignar ID único', 'Registrar timestamp'],
-      outputs: ['Ticket de solicitud creado', 'Confirmación al solicitante'],
-      success: ['Solicitud registrada con ID único', 'Notificación enviada'],
-      failures: ['Datos incompletos en el formulario', 'Timeout de conexión'],
-    }),
-  },
-  {
-    id: 'dec-1', type: 'decision', x: 560, y: 160, title: '¿Datos válidos?', color: '#f59e0b',
-    spec: makeSpec({
-      objective: 'Verificar si los datos de la solicitud cumplen con los criterios requeridos.',
-      inputs: ['Ticket de solicitud'],
-      steps: ['Revisar campos obligatorios', 'Validar formato de datos', 'Comprobar permisos'],
-      outputs: ['Decisión: Sí / No'],
-      success: ['Todos los campos completos y en formato correcto'],
-      failures: ['Campo requerido vacío', 'Formato de fecha inválido'],
-    }),
-  },
-  {
-    id: 'action-1', type: 'action', x: 840, y: 80, title: 'Procesar', color: '#22c55e',
-    spec: makeSpec({
-      objective: 'Ejecutar el procesamiento principal cuando los datos son válidos.',
-      inputs: ['Solicitud validada'],
-      steps: ['Ejecutar lógica de negocio', 'Actualizar base de datos', 'Generar resultado'],
-      outputs: ['Resultado procesado', 'Log de operación'],
-      success: ['Operación completada sin errores', 'Resultado almacenado'],
-      failures: ['Error en base de datos', 'Timeout de procesamiento'],
-    }),
-  },
-  {
-    id: 'action-2', type: 'action', x: 840, y: 300, title: 'Notificar Error', color: '#ef4444',
-    spec: makeSpec({
-      objective: 'Informar al usuario sobre el error en sus datos y solicitar corrección.',
-      inputs: ['Lista de errores de validación'],
-      steps: ['Generar mensaje de error claro', 'Enviar notificación', 'Registrar intento fallido'],
-      outputs: ['Mensaje de error al usuario', 'Registro en log'],
-      success: ['Usuario notificado exitosamente'],
-      failures: ['Canal de notificación no disponible'],
-    }),
-  },
-  {
-    id: 'end-1', type: 'end', x: 1100, y: 220, title: 'Fin', color: '#ef4444',
-    spec: makeSpec({ objective: 'Punto de terminación del proceso.' }),
-  },
-];
+const INITIAL_NODES: CanvasNode[] = [];
 
-const INITIAL_CONNECTIONS: Connection[] = [
-  { id: 'c1', fromId: 'start-1', toId: 'proc-1' },
-  { id: 'c2', fromId: 'proc-1', toId: 'dec-1' },
-  { id: 'c3', fromId: 'dec-1', toId: 'action-1', label: 'Sí' },
-  { id: 'c4', fromId: 'dec-1', toId: 'action-2', label: 'No' },
-  { id: 'c5', fromId: 'action-1', toId: 'end-1' },
-  { id: 'c6', fromId: 'action-2', toId: 'end-1' },
-];
+const INITIAL_CONNECTIONS: Connection[] = [];
 
 // ─── Main Canvas ─────────────────────────────────────────────────────────────
 
