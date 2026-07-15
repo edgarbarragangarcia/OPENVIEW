@@ -658,6 +658,8 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef<{ id: string; startX: number; startY: number; nodeX: number; nodeY: number } | null>(null);
   const panStartRef = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const zoomRef = useRef(zoom);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
 
   const onNodeMouseDown = useCallback((e: React.MouseEvent, nodeId: string) => {
     if (connectingFrom) {
@@ -675,29 +677,39 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
     draggingRef.current = { id: nodeId, startX: e.clientX, startY: e.clientY, nodeX: node.x, nodeY: node.y };
   }, [connectingFrom, nodes]);
 
-  const onSvgMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const dragging = draggingRef.current;
-    if (dragging) {
-      const dx = (e.clientX - dragging.startX) / zoom;
-      const dy = (e.clientY - dragging.startY) / zoom;
-      setNodes(prev => prev.map(n =>
-        n.id === dragging.id
-          ? { ...n, x: Math.max(0, dragging.nodeX + dx), y: Math.max(0, dragging.nodeY + dy) }
-          : n
-      ));
-    }
-    if (panStartRef.current) {
-      setPan({
-        x: panStartRef.current.panX + (e.clientX - panStartRef.current.x),
-        y: panStartRef.current.panY + (e.clientY - panStartRef.current.y),
-      });
-    }
-  }, [zoom]);
-
-  const onSvgMouseUp = useCallback(() => {
-    draggingRef.current = null;
-    panStartRef.current = null;
-    setIsPanning(false);
+  // Node-drag and canvas-pan tracking is attached to `window` (not just the SVG)
+  // so it keeps working even if the cursor leaves the canvas area mid-drag.
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      const dragging = draggingRef.current;
+      if (dragging) {
+        const z = zoomRef.current;
+        const dx = (e.clientX - dragging.startX) / z;
+        const dy = (e.clientY - dragging.startY) / z;
+        setNodes(prev => prev.map(n =>
+          n.id === dragging.id
+            ? { ...n, x: Math.max(0, dragging.nodeX + dx), y: Math.max(0, dragging.nodeY + dy) }
+            : n
+        ));
+      }
+      if (panStartRef.current) {
+        setPan({
+          x: panStartRef.current.panX + (e.clientX - panStartRef.current.x),
+          y: panStartRef.current.panY + (e.clientY - panStartRef.current.y),
+        });
+      }
+    };
+    const handleUp = () => {
+      draggingRef.current = null;
+      panStartRef.current = null;
+      setIsPanning(false);
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
   }, []);
 
   const onSvgMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
@@ -907,8 +919,6 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
         <div className="flex-1 relative overflow-hidden">
           <svg ref={svgRef}
             className="absolute inset-0 w-full h-full"
-            onMouseMove={onSvgMouseMove}
-            onMouseUp={onSvgMouseUp}
             onMouseDown={onSvgMouseDown}
             onWheel={onWheel}
           >
