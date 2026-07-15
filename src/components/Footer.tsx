@@ -16,8 +16,13 @@ export function Footer() {
             transition={{ duration: 0.5 }}
             className="col-span-1 lg:col-span-2"
           >
-            <a href="/" className="text-3xl font-black tracking-tighter text-slate-900 group">
-              OPEN<span className="text-primary group-hover:text-blue-600 transition-colors">VIEW</span>
+            <a href="/" className="flex items-center gap-3 group">
+              <img src="/logo.png" alt="Open View Academy Logo" className="h-10 w-auto object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105" />
+              <div className="flex flex-col justify-center">
+                <span className="text-3xl font-black tracking-tighter text-slate-900 leading-none">
+                  OPEN<span className="text-primary group-hover:text-blue-600 transition-colors">VIEW</span>
+                </span>
+              </div>
             </a>
             <p className="mt-8 max-w-xs text-lg font-light leading-relaxed text-slate-500">
               Transformando la educación digital con cursos prácticos, instructores expertos y tecnología de vanguardia.

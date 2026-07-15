@@ -31,3 +31,4 @@ CREATE POLICY "topic_feedback_own_update" ON public.topic_feedback FOR UPDATE US
 CREATE POLICY "topic_feedback_admin_all"  ON public.topic_feedback FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+
