@@ -70,12 +70,10 @@ export function StudentDashboard() {
           {/* Logo */}
           <div className="flex items-center justify-between px-5 h-16 border-b border-lms-border shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <BookOpen size={16} className="text-white" />
-              </div>
+              <img src="/logo.png" alt="Open View Logo" className="w-10 h-10 object-contain rounded-lg mix-blend-multiply" />
               <div>
-                <p className="font-black text-sm text-lms-text-primary">OpenView</p>
-                <p className="text-[10px] text-cyan-400 font-semibold uppercase tracking-widest">Academia</p>
+                <p className="font-black text-sm text-lms-text-primary leading-none mb-1">OpenView</p>
+                <p className="text-[10px] text-sky-500 font-bold uppercase tracking-widest leading-none">Academia</p>
               </div>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-lms-text-muted">

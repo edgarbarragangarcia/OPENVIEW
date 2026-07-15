@@ -68,15 +68,13 @@ export function AdminDashboard() {
       `}>
         {/* Logo */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-lms-border shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <BookOpen size={16} className="text-white" />
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="Open View Logo" className="w-10 h-10 object-contain rounded-lg mix-blend-multiply" />
+              <div>
+                <p className="font-black text-sm text-lms-text-primary tracking-wide leading-none mb-1">OpenView</p>
+                <p className="text-[10px] text-violet-500 font-bold uppercase tracking-widest leading-none">Admin</p>
+              </div>
             </div>
-            <div>
-              <p className="font-black text-sm text-lms-text-primary tracking-wide">OpenView</p>
-              <p className="text-[10px] text-violet-400 font-semibold uppercase tracking-widest">Admin</p>
-            </div>
-          </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-lms-text-muted hover:text-lms-text-primary">
             <X size={20} />
           </button>
