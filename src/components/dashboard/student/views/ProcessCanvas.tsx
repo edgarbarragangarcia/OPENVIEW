@@ -6,7 +6,7 @@ import {
   Zap, Target, RotateCcw, Square, CheckSquare, Info,
   ChevronDown, ChevronUp, ArrowRight, AlertTriangle, CheckCircle2,
   LogIn, LogOut as LogOutIcon, List, Eye, EyeOff, Save, Loader2,
-  Sparkles, ClipboardCopy
+  Sparkles, ClipboardCopy, Download
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOrCreateCanvas, saveCanvas } from '../../../../lib/canvas';
@@ -88,6 +88,18 @@ function getNodeCenter(node: CanvasNode) {
   return { x: node.x + w / 2, y: node.y + h / 2 };
 }
 
+/** A block is "SPEC-complete" (per Karpathy's method) when every section has at least one non-empty entry. */
+function isSpecComplete(node: CanvasNode): boolean {
+  if (node.type === 'start' || node.type === 'end') return true;
+  const s = node.spec;
+  return Boolean(s.objective.trim())
+    && s.inputs.some(v => v.trim())
+    && s.steps.some(v => v.trim())
+    && s.outputs.some(v => v.trim())
+    && s.success.some(v => v.trim())
+    && s.failures.some(v => v.trim());
+}
+
 // ─── Consultant Prompt Generator ──────────────────────────────────────────────
 
 function generateConsultantPrompt(canvasName: string, nodes: CanvasNode[], connections: Connection[]): string {
@@ -146,6 +158,60 @@ Actuando como consultor, evalúa este proceso y entrega:
 Sé específico y crítico: no asumas que todo debe automatizarse, señala explícitamente qué pasos deben seguir siendo humanos y por qué.`;
 }
 
+// ─── SPEC Document Generator ───────────────────────────────────────────────────
+
+function generateSpecDocument(canvasName: string, nodes: CanvasNode[], connections: Connection[]): string {
+  const nodeById = new Map(nodes.map(n => [n.id, n]));
+  const nodeLabel = (n: CanvasNode) => n.title || NODE_TYPES[n.type].label;
+  const today = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const section = (label: string, items: string[]) => {
+    const vals = items.filter(Boolean);
+    return vals.length > 0
+      ? `**${label}:**\n${vals.map(v => `- ${v}`).join('\n')}`
+      : `**${label}:** _sin definir_`;
+  };
+
+  const blocksText = nodes.map((n, i) => {
+    const heading = `### ${i + 1}. ${nodeLabel(n)} _(${NODE_TYPES[n.type].label})_`;
+    const isTerminal = n.type === 'start' || n.type === 'end';
+    if (isTerminal) return heading;
+
+    return [
+      heading,
+      n.spec.objective ? `**Objetivo:** ${n.spec.objective}` : '**Objetivo:** _sin definir_',
+      section('Entradas', n.spec.inputs),
+      section('Pasos', n.spec.steps),
+      section('Salidas', n.spec.outputs),
+      section('Criterios de Éxito', n.spec.success),
+      section('Modos de Fallo', n.spec.failures),
+    ].join('\n\n');
+  }).join('\n\n---\n\n');
+
+  const flowText = connections.length > 0
+    ? connections.map(c => {
+        const from = nodeById.get(c.fromId);
+        const to = nodeById.get(c.toId);
+        return `- ${from ? nodeLabel(from) : '?'} → ${to ? nodeLabel(to) : '?'}${c.label ? ` (${c.label})` : ''}`;
+      }).join('\n')
+    : '_Sin conexiones definidas todavía._';
+
+  return `# ${canvasName}
+
+**Documento de Especificación de Proceso**
+Método SPEC (Objetivo → Entradas → Pasos → Salidas → Criterios de Éxito → Modos de Fallo) — Andrej Karpathy
+Generado el ${today}
+
+## Flujo del proceso
+
+${flowText}
+
+## Bloques
+
+${blocksText}
+`;
+}
+
 // ─── Arrow ───────────────────────────────────────────────────────────────────
 
 function ArrowLine({ from, to, label, selected, onClick }: {
@@ -196,10 +262,11 @@ const SPEC_SECTIONS: SpecSection[] = [
   { key: 'failures',  label: 'Modos de Fallo',       icon: AlertTriangle,  color: '#ef4444', plural: true  },
 ];
 
-function SpecCardNode({ node, selected, connectingFrom, onMouseDown, onStartConnect, onDelete, onEdit }: {
+function SpecCardNode({ node, selected, connectingFrom, complete, onMouseDown, onStartConnect, onDelete, onEdit }: {
   node: CanvasNode;
   selected: boolean;
   connectingFrom: boolean;
+  complete: boolean;
   onMouseDown: (e: React.MouseEvent) => void;
   onStartConnect: () => void;
   onDelete: () => void;
@@ -267,12 +334,26 @@ function SpecCardNode({ node, selected, connectingFrom, onMouseDown, onStartConn
         <div
           className={`absolute inset-0 ${isTerminal ? 'rounded-full' : 'rounded-2xl'} border-2 bg-white transition-all duration-200`}
           style={{
-            borderColor: selected ? '#38bdf8' : `${node.color}50`,
+            borderColor: selected ? '#38bdf8' : !isTerminal && !complete ? '#f59e0b80' : `${node.color}50`,
             boxShadow: selected
               ? `0 0 0 3px #38bdf820, 0 8px 32px ${node.color}25`
               : `0 2px 12px ${node.color}15, 0 1px 3px rgba(0,0,0,0.06)`,
           }}
         />
+
+        {/* Completeness badge */}
+        {!isTerminal && (
+          <div
+            className={`absolute -top-2.5 left-1 w-5 h-5 rounded-full border shadow-sm flex items-center justify-center ${
+              complete ? 'bg-emerald-50 border-emerald-300' : 'bg-amber-50 border-amber-300'
+            }`}
+            title={complete ? 'SPEC completo' : 'SPEC incompleto: faltan secciones por definir'}
+          >
+            {complete
+              ? <CheckCircle2 size={10} className="text-emerald-500" />
+              : <AlertTriangle size={10} className="text-amber-500" />}
+          </div>
+        )}
 
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full">
@@ -337,8 +418,9 @@ function SpecCardNode({ node, selected, connectingFrom, onMouseDown, onStartConn
 
 // ─── SPEC Edit Modal ──────────────────────────────────────────────────────────
 
-function SpecEditModal({ node, onSave, onClose }: {
+function SpecEditModal({ node, isNew, onSave, onClose }: {
   node: CanvasNode;
+  isNew?: boolean;
   onSave: (updates: Partial<CanvasNode>) => void;
   onClose: () => void;
 }) {
@@ -347,6 +429,20 @@ function SpecEditModal({ node, onSave, onClose }: {
   const [type, setType] = useState<NodeType>(node.type);
   const [spec, setSpec] = useState<NodeSpec>({ ...node.spec });
   const [activeSection, setActiveSection] = useState<keyof NodeSpec>('objective');
+  const sectionIdx = SPEC_SECTIONS.findIndex(s => s.key === activeSection);
+
+  const goNextOrSave = () => {
+    if (sectionIdx === SPEC_SECTIONS.length - 1) {
+      onSave({ title, color, type, spec });
+      onClose();
+    } else {
+      setActiveSection(SPEC_SECTIONS[sectionIdx + 1].key);
+    }
+  };
+
+  const goPrev = () => {
+    if (sectionIdx > 0) setActiveSection(SPEC_SECTIONS[sectionIdx - 1].key);
+  };
 
   const updateList = (key: keyof NodeSpec, idx: number, val: string) => {
     setSpec(prev => {
@@ -385,8 +481,10 @@ function SpecEditModal({ node, onSave, onClose }: {
               {(() => { const Icon = NODE_TYPES[type].icon; return <Icon size={16} />; })()}
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900">Editar SPEC</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Formato Karpathy · Especificación Estructurada</p>
+              <h3 className="text-base font-black text-slate-900">{isNew ? 'Crear bloque SPEC' : 'Editar SPEC'}</h3>
+              <p className="text-[10px] text-slate-400 font-semibold">
+                {isNew ? `Paso ${sectionIdx + 1} de ${SPEC_SECTIONS.length} · Formato Karpathy` : 'Formato Karpathy · Especificación Estructurada'}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-400">
@@ -435,16 +533,21 @@ function SpecEditModal({ node, onSave, onClose }: {
             {/* SPEC Section Nav */}
             <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
               <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-2 mb-2">Secciones SPEC</p>
-              {SPEC_SECTIONS.map(sec => {
+              {SPEC_SECTIONS.map((sec, idx) => {
                 const Icon = sec.icon;
                 const isActive = activeSection === sec.key;
+                const isLocked = Boolean(isNew) && idx > sectionIdx;
+                const isDone = Boolean(isNew) && idx < sectionIdx;
                 return (
-                  <button key={sec.key} onClick={() => setActiveSection(sec.key)}
+                  <button key={sec.key}
+                    onClick={() => { if (!isLocked) setActiveSection(sec.key); }}
+                    disabled={isLocked}
                     className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-all ${
-                      isActive ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-600'
+                      isActive ? 'bg-slate-900 text-white' : isLocked ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-50 text-slate-600'
                     }`}>
                     <Icon size={12} style={{ color: isActive ? 'white' : sec.color }} />
-                    <span className="text-[11px] font-bold">{sec.label}</span>
+                    <span className="text-[11px] font-bold flex-1">{sec.label}</span>
+                    {isDone && <CheckCircle2 size={11} className="text-emerald-400" />}
                   </button>
                 );
               })}
@@ -510,32 +613,68 @@ function SpecEditModal({ node, onSave, onClose }: {
         {/* Footer */}
         <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 shrink-0 bg-slate-50/50">
           <div className="flex-1 text-[10px] text-slate-400">
-            💡 Método SPEC basado en el enfoque de especificación estructurada de Andrej Karpathy
+            {isNew
+              ? '💡 Completa cada sección en orden: así se aplica el método de especificación de Karpathy'
+              : '💡 Método SPEC basado en el enfoque de especificación estructurada de Andrej Karpathy'}
           </div>
+          {isNew && sectionIdx > 0 && (
+            <button onClick={goPrev}
+              className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+              Atrás
+            </button>
+          )}
           <button onClick={onClose}
             className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
             Cancelar
           </button>
-          <button onClick={() => { onSave({ title, color, type, spec }); onClose(); }}
-            className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg">
-            Guardar SPEC
-          </button>
+          {isNew ? (
+            <button onClick={goNextOrSave}
+              className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg">
+              {sectionIdx === SPEC_SECTIONS.length - 1 ? 'Guardar SPEC' : 'Siguiente →'}
+            </button>
+          ) : (
+            <button onClick={() => { onSave({ title, color, type, spec }); onClose(); }}
+              className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg">
+              Guardar SPEC
+            </button>
+          )}
         </div>
       </motion.div>
     </motion.div>
   );
 }
 
-// ─── AI Consultant Prompt Modal ───────────────────────────────────────────────
+// ─── Generic Text Output Modal (AI prompt / SPEC document) ────────────────────
 
-function PromptModal({ prompt, onClose }: { prompt: string; onClose: () => void }) {
+function TextModal({ title, subtitle, icon: Icon, accentClass, text, downloadFileName, onClose }: {
+  title: string;
+  subtitle: string;
+  icon: React.ElementType;
+  accentClass: string;
+  text: string;
+  downloadFileName?: string;
+  onClose: () => void;
+}) {
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(prompt);
-      toast.success('Prompt copiado al portapapeles');
+      await navigator.clipboard.writeText(text);
+      toast.success('Copiado al portapapeles');
     } catch {
       toast.error('No se pudo copiar. Selecciona el texto manualmente.');
     }
+  };
+
+  const handleDownload = () => {
+    if (!downloadFileName) return;
+    const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = downloadFileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -549,12 +688,12 @@ function PromptModal({ prompt, onClose }: { prompt: string; onClose: () => void 
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-violet-100 text-violet-600">
-              <Sparkles size={16} />
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${accentClass}`}>
+              <Icon size={16} />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900">Prompt para evaluación con IA</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Cópialo y pégalo en Claude para una evaluación de consultoría</p>
+              <h3 className="text-base font-black text-slate-900">{title}</h3>
+              <p className="text-[10px] text-slate-400 font-semibold">{subtitle}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-400">
@@ -565,7 +704,7 @@ function PromptModal({ prompt, onClose }: { prompt: string; onClose: () => void 
         <div className="flex-1 overflow-y-auto p-5">
           <textarea
             readOnly
-            value={prompt}
+            value={text}
             className="w-full h-80 px-4 py-3 rounded-xl border border-slate-200 text-xs text-slate-700 font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-violet-300"
             onClick={e => (e.target as HTMLTextAreaElement).select()}
           />
@@ -579,9 +718,15 @@ function PromptModal({ prompt, onClose }: { prompt: string; onClose: () => void 
             className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
             Cerrar
           </button>
+          {downloadFileName && (
+            <button onClick={handleDownload}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+              <Download size={13} /> Descargar .md
+            </button>
+          )}
           <button onClick={handleCopy}
             className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition-colors shadow-lg">
-            <ClipboardCopy size={13} /> Copiar prompt
+            <ClipboardCopy size={13} /> Copiar
           </button>
         </div>
       </motion.div>
@@ -608,6 +753,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedConnId, setSelectedConnId] = useState<string | null>(null);
   const [editingNode, setEditingNode] = useState<CanvasNode | null>(null);
+  const [editingNodeIsNew, setEditingNodeIsNew] = useState(false);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0.75);
   const [pan, setPan] = useState({ x: 40, y: 20 });
@@ -619,6 +765,8 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
   const [savingCanvas, setSavingCanvas] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState('');
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [generatedDoc, setGeneratedDoc] = useState('');
 
   // Load canvas from Supabase on mount
   useEffect(() => {
@@ -795,6 +943,15 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
     setShowPromptModal(true);
   };
 
+  const handleExportDoc = () => {
+    if (nodes.length === 0) {
+      toast.error('Agrega al menos un bloque al canvas primero');
+      return;
+    }
+    setGeneratedDoc(generateSpecDocument(canvasName, nodes, connections));
+    setShowDocModal(true);
+  };
+
   const addNode = (type: NodeType) => {
     const cfg = NODE_TYPES[type];
     const newNode: CanvasNode = {
@@ -807,8 +964,15 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
     };
     setNodes(prev => [...prev, newNode]);
     setSelectedNodeId(newNode.id);
-    setTimeout(() => setEditingNode(newNode), 50);
+    const isTerminal = type === 'start' || type === 'end';
+    setTimeout(() => {
+      setEditingNodeIsNew(!isTerminal);
+      setEditingNode(newNode);
+    }, 50);
   };
+
+  const nonTerminalNodes = nodes.filter(n => n.type !== 'start' && n.type !== 'end');
+  const completeCount = nonTerminalNodes.filter(isSpecComplete).length;
 
   return (
     <div className="flex flex-col h-full bg-[#f8f9fc] font-sans"
@@ -830,6 +994,17 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
         )}
 
         <div className="flex-1" />
+
+        {/* Completeness indicator */}
+        {nonTerminalNodes.length > 0 && (
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-[11px] font-bold text-slate-600 mr-1"
+            title="Bloques con las 6 secciones SPEC completas">
+            {completeCount === nonTerminalNodes.length
+              ? <CheckCircle2 size={12} className="text-emerald-500" />
+              : <AlertTriangle size={12} className="text-amber-500" />}
+            {completeCount}/{nonTerminalNodes.length} SPECs completos
+          </div>
+        )}
 
         {/* SPEC legend */}
         <div className="hidden lg:flex items-center gap-3 mr-2">
@@ -857,6 +1032,14 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
             <Maximize2 size={13} />
           </button>
         </div>
+
+        <button
+          onClick={handleExportDoc}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"
+        >
+          <FileText size={13} />
+          Exportar SPEC
+        </button>
 
         <button
           onClick={handleGeneratePrompt}
@@ -968,6 +1151,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
                   node={node}
                   selected={selectedNodeId === node.id}
                   connectingFrom={connectingFrom === node.id}
+                  complete={isSpecComplete(node)}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
                   onStartConnect={() => setConnectingFrom(node.id)}
                   onDelete={() => {
@@ -975,7 +1159,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
                     setConnections(prev => prev.filter(c => c.fromId !== node.id && c.toId !== node.id));
                     setSelectedNodeId(null);
                   }}
-                  onEdit={() => setEditingNode(node)}
+                  onEdit={() => { setEditingNodeIsNew(false); setEditingNode(node); }}
                 />
               ))}
             </g>
@@ -1013,10 +1197,11 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
         {editingNode && (
           <SpecEditModal
             node={editingNode}
+            isNew={editingNodeIsNew}
             onSave={updates => {
               setNodes(prev => prev.map(n => n.id === editingNode.id ? { ...n, ...updates } : n));
             }}
-            onClose={() => setEditingNode(null)}
+            onClose={() => { setEditingNode(null); setEditingNodeIsNew(false); }}
           />
         )}
       </AnimatePresence>
@@ -1024,7 +1209,29 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
       {/* AI Consultant Prompt Modal */}
       <AnimatePresence>
         {showPromptModal && (
-          <PromptModal prompt={generatedPrompt} onClose={() => setShowPromptModal(false)} />
+          <TextModal
+            title="Prompt para evaluación con IA"
+            subtitle="Cópialo y pégalo en Claude para una evaluación de consultoría"
+            icon={Sparkles}
+            accentClass="bg-violet-100 text-violet-600"
+            text={generatedPrompt}
+            onClose={() => setShowPromptModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* SPEC Document Export Modal */}
+      <AnimatePresence>
+        {showDocModal && (
+          <TextModal
+            title="Documento SPEC"
+            subtitle="Especificación completa del proceso, lista para compartir o archivar"
+            icon={FileText}
+            accentClass="bg-sky-100 text-sky-600"
+            text={generatedDoc}
+            downloadFileName={`${canvasName || 'canvas'}-spec.md`}
+            onClose={() => setShowDocModal(false)}
+          />
         )}
       </AnimatePresence>
     </div>
