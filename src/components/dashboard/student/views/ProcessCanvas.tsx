@@ -710,7 +710,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
     if (e.target === svgRef.current || (e.target as Element).tagName === 'rect') {
       setSelectedNodeId(null);
       setSelectedConnId(null);
-      if (e.altKey || e.button === 1) {
+      if (e.button === 0 || e.button === 1) {
         setIsPanning(true);
         panStartRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
       }
@@ -892,7 +892,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
             {[
               ['Clic en nodo', 'Seleccionar'],
               ['⊕ handle', 'Conectar'],
-              ['Alt+Drag', 'Mover vista'],
+              ['Drag en fondo', 'Mover vista'],
               ['Scroll', 'Zoom'],
               ['Del', 'Eliminar'],
               ['Esc', 'Cancelar'],
