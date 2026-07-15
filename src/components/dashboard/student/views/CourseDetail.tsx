@@ -51,7 +51,6 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
         const data = await getCourseById(courseId);
         if (cancelled) return;
         setCourse(data);
-        setOpenModules(new Set(data.modules?.[0] ? [data.modules[0].id] : []));
 
         if (data.created_by) {
           const { data: prof } = await supabase
