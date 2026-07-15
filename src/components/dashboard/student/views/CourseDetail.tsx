@@ -11,6 +11,7 @@ interface Props {
   onBack: () => void;
   onEnter: (courseId: string) => void;
   onSelectRelated: (courseId: string) => void;
+  isEmbedded?: boolean;
 }
 
 interface Instructor {
@@ -33,7 +34,7 @@ const LEVEL_LABELS: Record<string, string> = {
   advanced: 'Avanzado',
 };
 
-export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated }: Props) {
+export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmbedded }: Props) {
   const [course, setCourse] = useState<any>(null);
   const [instructor, setInstructor] = useState<Instructor | null>(null);
   const [related, setRelated] = useState<RelatedCourse[]>([]);
@@ -128,16 +129,18 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated }: Pro
   const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length ?? 0), 0);
 
   return (
-    <div className="min-h-full bg-lms-bg">
+    <div className="min-h-full bg-white">
       {/* Topbar */}
-      <div className="flex items-center gap-4 px-4 lg:px-8 h-14 bg-lms-surface border-b border-lms-border sticky top-0 z-10">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-xs text-lms-text-muted hover:text-cyan-400 font-semibold transition-colors"
-        >
-          <ArrowLeft size={14} /> Volver
-        </button>
-      </div>
+      {!isEmbedded && (
+        <div className="flex items-center gap-4 px-4 lg:px-8 h-14 bg-white border-b border-slate-200 sticky top-0 z-10">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-xs text-slate-500 hover:text-cyan-600 font-semibold transition-colors"
+          >
+            <ArrowLeft size={14} /> Volver
+          </button>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto p-4 lg:p-8 space-y-10">
 
