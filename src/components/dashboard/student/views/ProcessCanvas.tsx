@@ -5,7 +5,8 @@ import {
   Layers, GitBranch, Database, FileText,
   Zap, Target, RotateCcw, Square, CheckSquare, Info,
   ChevronDown, ChevronUp, ArrowRight, AlertTriangle, CheckCircle2,
-  LogIn, LogOut as LogOutIcon, List, Eye, EyeOff, Save, Loader2
+  LogIn, LogOut as LogOutIcon, List, Eye, EyeOff, Save, Loader2,
+  Sparkles, ClipboardCopy
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOrCreateCanvas, saveCanvas } from '../../../../lib/canvas';
@@ -85,6 +86,64 @@ function getNodeCenter(node: CanvasNode) {
   const w = isTerminal ? 140 : NODE_CARD_W;
   const h = isTerminal ? 80 : NODE_CARD_H;
   return { x: node.x + w / 2, y: node.y + h / 2 };
+}
+
+// ─── Consultant Prompt Generator ──────────────────────────────────────────────
+
+function generateConsultantPrompt(canvasName: string, nodes: CanvasNode[], connections: Connection[]): string {
+  const nodeById = new Map(nodes.map(n => [n.id, n]));
+  const nodeLabel = (n: CanvasNode) => n.title || NODE_TYPES[n.type].label;
+
+  const blocksText = nodes.map((n, i) => {
+    const header = `${i + 1}. [${NODE_TYPES[n.type].label.toUpperCase()}] ${nodeLabel(n)}`;
+    const isTerminal = n.type === 'start' || n.type === 'end';
+    if (isTerminal) return header;
+
+    const lines = [
+      n.spec.objective && `   - Objetivo: ${n.spec.objective}`,
+      n.spec.inputs.filter(Boolean).length > 0 && `   - Entradas: ${n.spec.inputs.filter(Boolean).join(', ')}`,
+      n.spec.steps.filter(Boolean).length > 0 && `   - Pasos: ${n.spec.steps.filter(Boolean).map((s, idx) => `(${idx + 1}) ${s}`).join(' ')}`,
+      n.spec.outputs.filter(Boolean).length > 0 && `   - Salidas: ${n.spec.outputs.filter(Boolean).join(', ')}`,
+      n.spec.success.filter(Boolean).length > 0 && `   - Criterios de éxito: ${n.spec.success.filter(Boolean).join(', ')}`,
+      n.spec.failures.filter(Boolean).length > 0 && `   - Modos de fallo: ${n.spec.failures.filter(Boolean).join(', ')}`,
+    ].filter(Boolean).join('\n');
+
+    return lines ? `${header}\n${lines}` : `${header}\n   (sin detalle SPEC definido)`;
+  }).join('\n\n');
+
+  const flowText = connections.length > 0
+    ? connections.map(c => {
+        const from = nodeById.get(c.fromId);
+        const to = nodeById.get(c.toId);
+        const fromLabel = from ? nodeLabel(from) : '?';
+        const toLabel = to ? nodeLabel(to) : '?';
+        return `- ${fromLabel} → ${toLabel}${c.label ? ` (${c.label})` : ''}`;
+      }).join('\n')
+    : '(Sin conexiones definidas todavía)';
+
+  return `Eres un consultor senior de transformación digital especializado en automatización de procesos con agentes de IA (agentes LLM con herramientas/function-calling, RPA, human-in-the-loop).
+
+Te entrego un proceso de negocio llamado "${canvasName}", mapeado con el método SPEC (Objetivo → Entradas → Pasos → Salidas → Criterios de Éxito → Modos de Fallo) de Andrej Karpathy.
+
+## Bloques del proceso
+
+${blocksText}
+
+## Flujo / conexiones entre bloques
+
+${flowText}
+
+## Lo que necesito de ti
+
+Actuando como consultor, evalúa este proceso y entrega:
+
+1. **Diagnóstico por bloque**: para cada bloque no terminal, indica si es candidato a automatizarse con un agente de IA, qué tipo de agente sería el adecuado (conversacional, con herramientas/function-calling, RPA determinista, o si debe seguir siendo humano) y por qué.
+2. **Riesgos si se automatiza**: para cada bloque automatizable, qué podría salir mal (alucinaciones, decisiones irreversibles, falta de contexto) usando como referencia los "Modos de Fallo" ya definidos, y qué controles se necesitarían (aprobación humana, límites de acción, logging/auditoría).
+3. **Rediseño del proceso con agentes de IA**: propone un nuevo flujo señalando qué bloques pasan a ejecutarse con agentes, cuáles siguen siendo humanos, y dónde deben existir puntos de control o aprobación.
+4. **Priorización**: ordena las oportunidades de automatización por impacto (tiempo/costo ahorrado) vs. esfuerzo de implementación (bajo/medio/alto).
+5. **Plan de acción**: qué implementarías primero como piloto y qué necesitarías (datos, integraciones, herramientas, permisos) para lograrlo.
+
+Sé específico y crítico: no asumas que todo debe automatizarse, señala explícitamente qué pasos deben seguir siendo humanos y por qué.`;
 }
 
 // ─── Arrow ───────────────────────────────────────────────────────────────────
@@ -467,6 +526,69 @@ function SpecEditModal({ node, onSave, onClose }: {
   );
 }
 
+// ─── AI Consultant Prompt Modal ───────────────────────────────────────────────
+
+function PromptModal({ prompt, onClose }: { prompt: string; onClose: () => void }) {
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success('Prompt copiado al portapapeles');
+    } catch {
+      toast.error('No se pudo copiar. Selecciona el texto manualmente.');
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-violet-100 text-violet-600">
+              <Sparkles size={16} />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900">Prompt para evaluación con IA</h3>
+              <p className="text-[10px] text-slate-400 font-semibold">Cópialo y pégalo en Claude para una evaluación de consultoría</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-400">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          <textarea
+            readOnly
+            value={prompt}
+            className="w-full h-80 px-4 py-3 rounded-xl border border-slate-200 text-xs text-slate-700 font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-violet-300"
+            onClick={e => (e.target as HTMLTextAreaElement).select()}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 shrink-0 bg-slate-50/50">
+          <div className="flex-1 text-[10px] text-slate-400">
+            💡 Generado a partir de los bloques y conexiones de tu canvas actual
+          </div>
+          <button onClick={onClose}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+            Cerrar
+          </button>
+          <button onClick={handleCopy}
+            className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition-colors shadow-lg">
+            <ClipboardCopy size={13} /> Copiar prompt
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
 const INITIAL_NODES: CanvasNode[] = [];
@@ -495,6 +617,8 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
   const [canvasId, setCanvasId] = useState<string | null>(null);
   const [loadingCanvas, setLoadingCanvas] = useState(true);
   const [savingCanvas, setSavingCanvas] = useState(false);
+  const [showPromptModal, setShowPromptModal] = useState(false);
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
 
   // Load canvas from Supabase on mount
   useEffect(() => {
@@ -662,6 +786,15 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
     return () => window.removeEventListener('keydown', handler);
   }, [selectedNodeId, selectedConnId, editingNode, editingName]);
 
+  const handleGeneratePrompt = () => {
+    if (nodes.length === 0) {
+      toast.error('Agrega al menos un bloque al canvas primero');
+      return;
+    }
+    setGeneratedPrompt(generateConsultantPrompt(canvasName, nodes, connections));
+    setShowPromptModal(true);
+  };
+
   const addNode = (type: NodeType) => {
     const cfg = NODE_TYPES[type];
     const newNode: CanvasNode = {
@@ -724,6 +857,14 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
             <Maximize2 size={13} />
           </button>
         </div>
+
+        <button
+          onClick={handleGeneratePrompt}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition-all shadow"
+        >
+          <Sparkles size={13} />
+          Evaluar con IA
+        </button>
 
         <button
           onClick={handleSave}
@@ -877,6 +1018,13 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
             }}
             onClose={() => setEditingNode(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* AI Consultant Prompt Modal */}
+      <AnimatePresence>
+        {showPromptModal && (
+          <PromptModal prompt={generatedPrompt} onClose={() => setShowPromptModal(false)} />
         )}
       </AnimatePresence>
     </div>
