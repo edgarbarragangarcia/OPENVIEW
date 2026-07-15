@@ -81,7 +81,10 @@ const NODE_CARD_H = 220; // collapsed height
 function getId() { return Math.random().toString(36).slice(2, 9); }
 
 function getNodeCenter(node: CanvasNode) {
-  return { x: node.x + NODE_CARD_W / 2, y: node.y + NODE_CARD_H / 2 };
+  const isTerminal = node.type === 'start' || node.type === 'end';
+  const w = isTerminal ? 140 : NODE_CARD_W;
+  const h = isTerminal ? 80 : NODE_CARD_H;
+  return { x: node.x + w / 2, y: node.y + h / 2 };
 }
 
 // ─── Arrow ───────────────────────────────────────────────────────────────────
