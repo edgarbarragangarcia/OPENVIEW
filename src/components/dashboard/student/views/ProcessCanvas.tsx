@@ -788,7 +788,7 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
       style={{ cursor: isPanning ? 'grabbing' : connectingFrom ? 'crosshair' : 'default' }}>
 
       {/* TOP BAR */}
-      <header className="flex items-center gap-3 px-5 h-14 bg-white border-b border-slate-200 shrink-0 z-10 shadow-sm">
+      <header className="flex items-center gap-3 px-5 h-16 bg-white border-b border-slate-200 shrink-0 z-10 shadow-sm">
 
         {editingName ? (
           <input autoFocus value={canvasName} onChange={e => setCanvasName(e.target.value)}
