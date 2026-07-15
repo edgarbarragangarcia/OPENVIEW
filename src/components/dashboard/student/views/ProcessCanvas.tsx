@@ -678,12 +678,6 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
 
       {/* TOP BAR */}
       <header className="flex items-center gap-3 px-5 h-14 bg-white border-b border-slate-200 shrink-0 z-10 shadow-sm">
-        <button onClick={onBack}
-          className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-sky-500 transition-colors group">
-          <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-          Volver
-        </button>
-        <div className="w-px h-5 bg-slate-200" />
 
         {editingName ? (
           <input autoFocus value={canvasName} onChange={e => setCanvasName(e.target.value)}
