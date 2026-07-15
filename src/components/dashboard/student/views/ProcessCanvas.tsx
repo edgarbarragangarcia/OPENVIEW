@@ -593,17 +593,19 @@ export function ProcessCanvas({ onBack, courseId }: ProcessCanvasProps) {
     e.stopPropagation();
     setSelectedNodeId(nodeId);
     setSelectedConnId(null);
-    const node = nodes.find(n => n.id === nodeId)!;
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
     draggingRef.current = { id: nodeId, startX: e.clientX, startY: e.clientY, nodeX: node.x, nodeY: node.y };
   }, [connectingFrom, nodes]);
 
   const onSvgMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    if (draggingRef.current) {
-      const dx = (e.clientX - draggingRef.current.startX) / zoom;
-      const dy = (e.clientY - draggingRef.current.startY) / zoom;
+    const dragging = draggingRef.current;
+    if (dragging) {
+      const dx = (e.clientX - dragging.startX) / zoom;
+      const dy = (e.clientY - dragging.startY) / zoom;
       setNodes(prev => prev.map(n =>
-        n.id === draggingRef.current!.id
-          ? { ...n, x: Math.max(0, draggingRef.current!.nodeX + dx), y: Math.max(0, draggingRef.current!.nodeY + dy) }
+        n.id === dragging.id
+          ? { ...n, x: Math.max(0, dragging.nodeX + dx), y: Math.max(0, dragging.nodeY + dy) }
           : n
       ));
     }
