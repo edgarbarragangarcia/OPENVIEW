@@ -397,7 +397,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
               {/* Contenido de la sesión: temas, alcances, material y feedback en un solo acordeón tipo Platzi */}
               {(() => {
-                const rows: { key: string; title: string; count: string; accentClass: string; content: ReactNode }[] = [];
+                const rows: { key: string; title: string; count: string; accentClass: string; bgClass: string; borderClass: string; content: ReactNode }[] = [];
 
                 if (structuredContent && structuredContent.temas.length > 0) {
                   rows.push({
@@ -405,6 +405,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     title: 'Temas a cubrir',
                     count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
                     accentClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+                    bgClass: 'bg-cyan-500/5 hover:bg-cyan-500/10',
+                    borderClass: 'border-cyan-500/20',
                     content: (
                       <ul className="space-y-3 m-0 p-0 list-none">
                         {structuredContent.temas.map((tema, i) => (
@@ -424,6 +426,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     title: 'Alcances',
                     count: `${structuredContent.alcances.length} alcance${structuredContent.alcances.length !== 1 ? 's' : ''}`,
                     accentClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+                    bgClass: 'bg-emerald-500/5 hover:bg-emerald-500/10',
+                    borderClass: 'border-emerald-500/20',
                     content: (
                       <ul className="space-y-3 m-0 p-0 list-none">
                         {structuredContent.alcances.map((alcance, i) => (
@@ -444,6 +448,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     title: 'Material Descargable',
                     count: `${urls.length} archivo${urls.length !== 1 ? 's' : ''}`,
                     accentClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+                    bgClass: 'bg-indigo-500/5 hover:bg-indigo-500/10',
+                    borderClass: 'border-indigo-500/20',
                     content: (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {urls.map((url, idx) => {
@@ -507,6 +513,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     title: 'Feedback de aprendizaje',
                     count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
                     accentClass: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+                    bgClass: 'bg-violet-500/5 hover:bg-violet-500/10',
+                    borderClass: 'border-violet-500/20',
                     content: <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structuredContent.temas} />,
                   });
                 }
@@ -514,17 +522,18 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 if (rows.length === 0) return null;
 
                 return (
-                  <div className="rounded-3xl border border-lms-border bg-lms-surface overflow-hidden divide-y divide-lms-border">
+                  <div className="space-y-4">
                     {rows.map((row, i) => (
-                      <AccordionRow
-                        key={`${activeLesson.id}-${row.key}`}
-                        index={i + 1}
-                        title={row.title}
-                        count={row.count}
-                        accentClass={row.accentClass}
-                      >
-                        {row.content}
-                      </AccordionRow>
+                      <div key={`${activeLesson.id}-${row.key}`} className={`rounded-2xl border ${row.borderClass} ${row.bgClass} overflow-hidden shadow-sm transition-colors duration-300`}>
+                        <AccordionRow
+                          index={i + 1}
+                          title={row.title}
+                          count={row.count}
+                          accentClass={row.accentClass}
+                        >
+                          {row.content}
+                        </AccordionRow>
+                      </div>
                     ))}
                   </div>
                 );
@@ -594,7 +603,7 @@ function AccordionRow({ index, title, count, accentClass, defaultOpen = false, c
     <div>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-lms-hover/50 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-5 py-4 transition-colors text-left"
       >
         <span className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 text-[10px] font-black ${accentClass}`}>
           {index}
