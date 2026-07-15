@@ -28,7 +28,7 @@ export function Header({ onLoginClick }: HeaderProps) {
 
         {/* Left: Logo */}
         <div className="flex items-center gap-3 cursor-pointer group">
-          <img src="/logo.png" alt="Open View Academy Logo" className="h-10 w-auto object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105" />
+          <img src="/logo.png" alt="Open View Academy Logo" className="h-10 w-auto object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105" />
           <div className="hidden sm:flex flex-col justify-center border-l-2 border-slate-200 pl-3">
             <span className="font-display text-sm font-extrabold tracking-tight text-slate-900 leading-none">
               Open View

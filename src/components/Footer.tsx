@@ -17,7 +17,7 @@ export function Footer() {
             className="col-span-1 lg:col-span-2"
           >
             <a href="/" className="flex items-center gap-3 group">
-              <img src="/logo.png" alt="Open View Academy Logo" className="h-10 w-auto object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105" />
+              <img src="/logo.png" alt="Open View Academy Logo" className="h-10 w-auto object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105" />
               <div className="flex flex-col justify-center">
                 <span className="text-3xl font-black tracking-tighter text-slate-900 leading-none">
                   OPEN<span className="text-primary group-hover:text-blue-600 transition-colors">VIEW</span>
