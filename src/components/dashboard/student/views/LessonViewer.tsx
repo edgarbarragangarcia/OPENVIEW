@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
+import { ProcessCanvas } from './ProcessCanvas';
 
 interface Props {
   courseId: string;
@@ -67,6 +68,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
+  const [showCanvas, setShowCanvas] = useState(false);
   const structuredContent = useMemo(() => parseStructuredContent(activeLesson?.content ?? null), [activeLesson?.id]);
 
   useEffect(() => {
@@ -148,6 +150,11 @@ export function LessonViewer({ courseId, onBack }: Props) {
     );
   }
 
+  // If canvas is open, render it fullscreen
+  if (showCanvas) {
+    return <ProcessCanvas onBack={() => setShowCanvas(false)} />;
+  }
+
   return (
     <div className="flex h-full bg-lms-bg overflow-hidden">
 
@@ -186,6 +193,29 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
         {/* Module / Lesson list */}
         <div className="flex-1 overflow-y-auto py-2">
+
+          {/* M1 — Canvas SPEC (always first, fixed) */}
+          <div className="mb-1">
+            <motion.button
+              onClick={() => { setShowCanvas(true); setSidebarOpen(false); }}
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl mx-2 transition-colors group hover:bg-lms-hover/50"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-[10px] font-black text-cyan-500 shrink-0">M1</span>
+                <div className="flex items-center gap-2">
+                  <Workflow size={13} className="text-sky-500 shrink-0" />
+                  <span className="text-xs font-bold text-left text-lms-text-muted group-hover:text-lms-text-primary transition-colors">
+                    Canvas de Procesos SPEC
+                  </span>
+                </div>
+              </div>
+              <ChevronRight size={14} className="shrink-0 text-lms-text-muted" />
+            </motion.button>
+          </div>
+
           {course.modules.map((mod, mIdx) => {
             const isModOpen = openModules.has(mod.id);
             return (
@@ -205,7 +235,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                       transition={{ duration: 0.2 }}
                       className="text-[10px] font-black shrink-0"
                     >
-                      M{mIdx + 1}
+                      M{mIdx + 2}
                     </motion.span>
                     <span className={`text-xs font-bold text-left transition-colors ${
                       isModOpen ? 'text-lms-text-primary' : 'text-lms-text-muted'
