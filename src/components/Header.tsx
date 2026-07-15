@@ -53,27 +53,30 @@ export function Header({ onLoginClick }: HeaderProps) {
               
               {/* Dropdown for Rutas de Aprendizaje */}
               {item === 'Rutas de Aprendizaje' && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 w-[520px]">
-                  <div className="bg-[#0f1117] rounded-2xl border border-white/5 shadow-2xl flex flex-col p-2">
+                <div 
+                  className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 w-[520px] normal-case tracking-normal cursor-default"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-xl flex flex-col p-2">
                     {[
                       { id: 1, title: 'Bloque 1 — El ecosistema Claude y sus herramientas', sessions: 5 },
                       { id: 2, title: 'Bloque 2 — Agentes, CLI y control desde el móvil', sessions: 3 }
                     ].map((path, idx, arr) => (
                       <div 
                         key={path.id} 
-                        className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer rounded-xl ${idx !== arr.length - 1 ? 'border-b border-white/5 rounded-b-none' : 'rounded-t-none'} ${idx === 0 ? 'rounded-t-xl' : ''} ${idx === arr.length - 1 ? 'rounded-b-xl' : ''}`}
+                        className={`flex items-center justify-between p-4 hover:bg-slate-50 transition-colors cursor-pointer rounded-xl ${idx !== arr.length - 1 ? 'border-b border-slate-100 rounded-b-none' : 'rounded-t-none'} ${idx === 0 ? 'rounded-t-xl' : ''} ${idx === arr.length - 1 ? 'rounded-b-xl' : ''}`}
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-7 h-7 rounded-md bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-xs font-black shrink-0">
+                          <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center text-xs font-black shrink-0">
                             {path.id}
                           </div>
-                          <span className="text-sm font-bold text-slate-200">
+                          <span className="text-[15px] font-bold text-slate-800">
                             {path.title}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 pl-4">
-                          <span className="text-[11px] text-slate-400 font-medium">{path.sessions} sesiónes</span>
-                          <ChevronDown size={14} className="text-slate-500" />
+                        <div className="flex items-center gap-3 pl-4 shrink-0">
+                          <span className="text-xs text-slate-500 font-medium whitespace-nowrap">{path.sessions} sesiones</span>
+                          <ChevronDown size={16} className="text-slate-400" />
                         </div>
                       </div>
                     ))}
