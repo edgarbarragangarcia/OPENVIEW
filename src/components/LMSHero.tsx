@@ -108,12 +108,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           >
             Explorar cursos <ArrowRight size={18} />
           </button>
-          <button
-            onClick={onCtaClick}
-            className="flex h-14 items-center gap-2 rounded-full border border-slate-200 px-8 text-base font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600 hover:-translate-y-0.5 transition-all duration-300"
-          >
-            Crear cuenta gratis
-          </button>
+
         </motion.div>
 
         {/* Stats row */}
