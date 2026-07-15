@@ -211,8 +211,17 @@ export function LessonViewer({ courseId, onBack }: Props) {
                   : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'
               }`}
             >
-              <span className={`text-[10px] font-black w-6 shrink-0 transition-colors ${showCanvas ? 'text-cyan-400' : 'text-lms-text-muted'}`}>M1</span>
-              <Workflow size={18} className={showCanvas ? 'text-cyan-400' : 'text-lms-text-muted group-hover:text-lms-text-primary transition-colors'} />
+              <span className={`text-[10px] font-black w-5 shrink-0 transition-colors ${showCanvas ? 'text-cyan-400' : 'text-lms-text-muted'}`}>M1</span>
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
+                style={{
+                  background: `linear-gradient(135deg, #0891b2${showCanvas ? '3a' : '1c'}, #0891b208)`,
+                  boxShadow: showCanvas ? '0 2px 8px #0891b230, inset 0 1px 0 #0891b230' : 'none',
+                  border: `1px solid #0891b2${showCanvas ? '30' : '18'}`,
+                }}
+              >
+                <Workflow size={15} className={showCanvas ? 'text-cyan-500' : 'text-lms-text-muted group-hover:text-cyan-500 transition-colors'} />
+              </div>
               <span className="flex-1 truncate">Canvas de Procesos SPEC</span>
               {showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
             </button>
@@ -612,9 +621,9 @@ function AccordionRow({ index, title, count, accentClass, defaultOpen = false, c
     <div>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-5 py-4 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-5 py-4 transition-colors text-left group"
       >
-        <span className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 text-[10px] font-black ${accentClass}`}>
+        <span className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 text-[10px] font-black shadow-sm transition-transform duration-300 group-hover:scale-110 ${accentClass}`}>
           {index}
         </span>
         <span className="flex-1 text-sm font-bold text-lms-text-primary">{title}</span>

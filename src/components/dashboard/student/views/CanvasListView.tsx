@@ -99,7 +99,14 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
                 className="group text-left rounded-2xl border border-slate-200 bg-white p-4 hover:border-cyan-300 hover:shadow-md transition-all"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-500 shrink-0">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-cyan-600 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                    style={{
+                      background: 'linear-gradient(135deg, #0891b235, #0891b20a)',
+                      boxShadow: '0 2px 8px #0891b225, inset 0 1px 0 #0891b225',
+                      border: '1px solid #0891b225',
+                    }}
+                  >
                     <Workflow size={16} />
                   </div>
                   <button

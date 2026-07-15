@@ -11,9 +11,9 @@ import { ProcessCanvas } from './views/ProcessCanvas';
 type StudentView = 'my-courses' | 'explore' | 'canvas' | 'profile';
 
 const NAV = [
-  { id: 'my-courses', label: 'Mi Aprendizaje', icon: BookOpen },
-  { id: 'explore',    label: 'Explorar',        icon: Compass },
-  { id: 'profile',    label: 'Mi Perfil',        icon: User },
+  { id: 'my-courses', label: 'Mi Aprendizaje', icon: BookOpen, color: '#0891b2' },
+  { id: 'explore',    label: 'Explorar',        icon: Compass,  color: '#8b5cf6' },
+  { id: 'profile',    label: 'Mi Perfil',        icon: User,     color: '#10b981' },
 ];
 
 export function StudentDashboard() {
@@ -85,7 +85,7 @@ export function StudentDashboard() {
           {/* Nav */}
           <nav className="flex-1 py-4 px-3 space-y-1">
             <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Menú</p>
-            {NAV.map(({ id, label, icon: Icon }) => {
+            {NAV.map(({ id, label, icon: Icon, color }) => {
               const isActive = view === id && !inFullscreenView;
               return (
                 <button
@@ -93,11 +93,20 @@ export function StudentDashboard() {
                   onClick={() => handleNavigate(id as StudentView)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group ${
                     isActive
-                      ? 'bg-cyan-500/15 text-cyan-400'
+                      ? 'bg-cyan-500/10 text-cyan-400'
                       : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'
                   }`}
                 >
-                  <Icon size={18} className={isActive ? 'text-cyan-400' : 'text-lms-text-muted group-hover:text-lms-text-primary transition-colors'} />
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
+                    style={{
+                      background: `linear-gradient(135deg, ${color}${isActive ? '3a' : '1c'}, ${color}08)`,
+                      boxShadow: isActive ? `0 2px 8px ${color}30, inset 0 1px 0 ${color}30` : 'none',
+                      border: `1px solid ${color}${isActive ? '30' : '18'}`,
+                    }}
+                  >
+                    <Icon size={15} style={{ color }} />
+                  </div>
                   {label}
                   {isActive && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
                 </button>
