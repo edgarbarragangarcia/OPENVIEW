@@ -31,7 +31,13 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
   const contentFade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-white text-slate-900">
+    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-slate-900 text-white">
+
+      {/* Ambient glow (matches FinalCTA dark section) */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-60 -z-10"
+        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 30%, rgba(13,89,242,0.35) 0%, transparent 70%)' }}
+      />
 
       {/* Background orbs (autoplay drift + scroll parallax) */}
       <motion.div style={{ y: parallaxY }} className="absolute inset-0 -z-10 pointer-events-none">
@@ -54,9 +60,9 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
 
       {/* Grid pattern */}
       <div
-        className="absolute inset-0 -z-10 opacity-[0.03]"
+        className="absolute inset-0 -z-10 opacity-[0.06]"
         style={{
-          backgroundImage: `linear-gradient(#0ea5e9 1px, transparent 1px), linear-gradient(to right, #0ea5e9 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(#38bdf8 1px, transparent 1px), linear-gradient(to right, #38bdf8 1px, transparent 1px)`,
           backgroundSize: '60px 60px',
         }}
       />
@@ -68,9 +74,9 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="sticker inline-flex items-center gap-1.5 sm:gap-2 bg-sky-50 border border-sky-200 text-sky-700 text-[10px] sm:text-xs font-semibold uppercase tracking-widest px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-6 sm:mb-8 shadow-sm"
+          className="sticker inline-flex items-center gap-1.5 sm:gap-2 bg-sky-500/10 border border-sky-400/30 text-sky-300 text-[10px] sm:text-xs font-semibold uppercase tracking-widest px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-6 sm:mb-8"
         >
-          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500 shrink-0" />
+          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-400 shrink-0" />
           Open View Academia · 2026
         </motion.div>
 
@@ -80,7 +86,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           animate="visible"
           variants={wordContainer}
           style={{ perspective: 800 }}
-          className="text-4xl sm:text-6xl lg:text-8xl font-serif font-black leading-[1.05] sm:leading-[1.0] tracking-tight text-slate-900 mb-6"
+          className="text-4xl sm:text-6xl lg:text-8xl font-serif font-black leading-[1.05] sm:leading-[1.0] tracking-tight text-white mb-6"
         >
           {HEADLINE_WORDS.map((word, i) => (
             <motion.span key={i} variants={wordItem} className="inline-block mr-[0.25em]">
@@ -117,7 +123,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-base sm:text-xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed mb-8 sm:mb-10 px-2 sm:px-0"
+          className="text-base sm:text-xl text-slate-300 max-w-2xl mx-auto font-light leading-relaxed mb-8 sm:mb-10 px-2 sm:px-0"
         >
           Domina IA, tecnología, liderazgo y negocios con instructores que viven la industria.
           Cursos prácticos, certificados reales, resultados desde la primera semana.
@@ -144,7 +150,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.85 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-10 border-t border-slate-100 pt-10"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-10 border-t border-white/10 pt-10"
         >
           {[
             { value: '+2,000', label: 'Estudiantes activos' },
@@ -157,7 +163,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
                 value={stat.value}
                 className="text-gradient block text-3xl sm:text-4xl font-black font-serif"
               />
-              <p className="text-xs sm:text-sm text-slate-400 uppercase tracking-widest mt-1 font-medium">{stat.label}</p>
+              <p className="text-xs sm:text-sm text-slate-400/80 uppercase tracking-widest mt-1 font-medium">{stat.label}</p>
             </div>
           ))}
         </motion.div>
