@@ -112,8 +112,8 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
   if (loading) {
     return (
-      <div className="relative min-h-full bg-[#05070f] p-6 lg:p-8 overflow-hidden">
-        <StarfieldBackground density={0.6} />
+      <div className={`relative min-h-full p-6 lg:p-8 overflow-hidden ${isEmbedded ? '' : 'bg-[#05070f]'}`}>
+        {!isEmbedded && <StarfieldBackground density={0.6} />}
         <div className="relative z-10 max-w-6xl mx-auto space-y-6">
           <div className="h-64 bg-white/5 rounded-3xl animate-pulse border border-white/10" />
           <div className="h-40 bg-white/5 rounded-3xl animate-pulse border border-white/10" />
@@ -124,7 +124,7 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
   if (!course) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#05070f] text-slate-400">
+      <div className={`flex h-full items-center justify-center text-slate-400 ${isEmbedded ? '' : 'bg-[#05070f]'}`}>
         Curso no encontrado.
       </div>
     );
@@ -134,8 +134,8 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
   const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length ?? 0), 0);
 
   return (
-    <div className="relative min-h-full bg-[#05070f] text-white overflow-hidden">
-      <StarfieldBackground density={0.9} />
+    <div className={`relative min-h-full text-white overflow-hidden ${isEmbedded ? '' : 'bg-[#05070f]'}`}>
+      {!isEmbedded && <StarfieldBackground density={0.9} />}
 
       {/* Topbar */}
       {!isEmbedded && (

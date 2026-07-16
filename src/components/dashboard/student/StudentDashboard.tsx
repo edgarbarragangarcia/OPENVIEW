@@ -7,6 +7,7 @@ import { CourseDetail } from './views/CourseDetail';
 import { Explore } from './views/Explore';
 import { Profile } from './views/Profile';
 import { ProcessCanvas } from './views/ProcessCanvas';
+import { StarfieldBackground } from '../../effects/StarfieldBackground';
 
 type StudentView = 'my-courses' | 'explore' | 'canvas' | 'profile';
 
@@ -25,6 +26,8 @@ export function StudentDashboard() {
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'ST';
   const inFullscreenView = !!(viewingCourseId || viewingDetailId);
+  // "Mi Aprendizaje" carries its own cosmic dark theme (CourseDetail) — extend it to the whole shell
+  const isDarkView = view === 'my-courses' && !inFullscreenView;
 
   const renderContent = () => {
     if (viewingCourseId) {
@@ -55,7 +58,13 @@ export function StudentDashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-lms-bg overflow-hidden font-sans">
+    <div className={`relative flex h-screen overflow-hidden font-sans ${isDarkView ? 'bg-[#05070f]' : 'bg-lms-bg'}`}>
+      {isDarkView && (
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <StarfieldBackground density={0.5} />
+        </div>
+      )}
+
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -64,27 +73,27 @@ export function StudentDashboard() {
       {/* SIDEBAR */}
       {!inFullscreenView && (
         <aside className={`
-          fixed lg:relative z-30 flex flex-col w-64 h-full bg-lms-surface border-r border-lms-border
-          transition-transform duration-300
+          fixed lg:relative z-30 flex flex-col w-64 h-full transition-transform duration-300
+          ${isDarkView ? 'bg-white/5 backdrop-blur-xl border-r border-white/10' : 'bg-lms-surface border-r border-lms-border'}
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           {/* Logo */}
-          <div className="flex items-center justify-between px-5 h-16 border-b border-lms-border shrink-0">
+          <div className={`flex items-center justify-between px-5 h-16 border-b shrink-0 ${isDarkView ? 'border-white/10' : 'border-lms-border'}`}>
             <div className="flex items-center gap-3">
               <img src="/logo.png" alt="Open View Logo" className="w-14 h-14 object-contain rounded-lg" />
               <div>
-                <p className="font-black text-sm text-lms-text-primary leading-none mb-1">OpenView</p>
-                <p className="text-[10px] text-sky-500 font-bold uppercase tracking-widest leading-none">Academia</p>
+                <p className={`font-black text-sm leading-none mb-1 ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>OpenView</p>
+                <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
               </div>
             </div>
-            <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-lms-text-muted">
+            <button onClick={() => setSidebarOpen(false)} className={isDarkView ? 'lg:hidden text-slate-400' : 'lg:hidden text-lms-text-muted'}>
               <X size={20} />
             </button>
           </div>
 
           {/* Nav */}
           <nav className="flex-1 py-4 px-3 space-y-1">
-            <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-lms-text-muted">Menú</p>
+            <p className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest ${isDarkView ? 'text-slate-500' : 'text-lms-text-muted'}`}>Menú</p>
             {NAV.map(({ id, label, icon: Icon, color }) => {
               const isActive = view === id && !inFullscreenView;
               return (
@@ -94,7 +103,9 @@ export function StudentDashboard() {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group ${
                     isActive
                       ? 'bg-cyan-500/10 text-cyan-400'
-                      : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'
+                      : isDarkView
+                        ? 'text-slate-400 hover:bg-white/5 hover:text-white'
+                        : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'
                   }`}
                 >
                   <div
@@ -115,16 +126,16 @@ export function StudentDashboard() {
           </nav>
 
           {/* User footer */}
-          <div className="shrink-0 px-4 py-4 border-t border-lms-border">
+          <div className={`shrink-0 px-4 py-4 border-t ${isDarkView ? 'border-white/10' : 'border-lms-border'}`}>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-lms-text-primary truncate">{user?.email}</p>
+                <p className={`text-xs font-bold truncate ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>{user?.email}</p>
                 <p className="text-[10px] text-cyan-400 font-semibold">Estudiante</p>
               </div>
-              <button onClick={signOut} title="Cerrar sesión" className="text-lms-text-muted hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-400/10">
+              <button onClick={signOut} title="Cerrar sesión" className={`transition-colors p-1 rounded-lg hover:bg-red-400/10 ${isDarkView ? 'text-slate-400 hover:text-red-400' : 'text-lms-text-muted hover:text-red-400'}`}>
                 <LogOut size={16} />
               </button>
             </div>
@@ -133,19 +144,19 @@ export function StudentDashboard() {
       )}
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
         {!inFullscreenView && (
-          <header className="flex items-center justify-between px-6 h-16 bg-lms-surface border-b border-lms-border shrink-0">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-lms-text-muted hover:text-lms-text-primary">
+          <header className={`flex items-center justify-between px-6 h-16 shrink-0 ${isDarkView ? 'bg-white/5 backdrop-blur-xl border-b border-white/10' : 'bg-lms-surface border-b border-lms-border'}`}>
+            <button onClick={() => setSidebarOpen(true)} className={isDarkView ? 'lg:hidden text-slate-400 hover:text-white' : 'lg:hidden text-lms-text-muted hover:text-lms-text-primary'}>
               <Menu size={22} />
             </button>
             <div className="hidden lg:block">
-              <h2 className="text-sm font-bold text-lms-text-primary">
+              <h2 className={`text-sm font-bold ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>
                 {NAV.find(n => n.id === view)?.label}
               </h2>
             </div>
             <div className="ml-auto flex items-center gap-3">
-              <button className="relative p-2 rounded-xl text-lms-text-muted hover:text-lms-text-primary hover:bg-lms-hover transition-colors">
+              <button className={`relative p-2 rounded-xl transition-colors ${isDarkView ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-lms-text-muted hover:text-lms-text-primary hover:bg-lms-hover'}`}>
                 <Bell size={18} />
               </button>
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm">
