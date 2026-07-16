@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
@@ -53,6 +53,8 @@ interface QuizQuestion {
   options: string[];
   correct: number;
 }
+
+const MODULE_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ec4899', '#0ea5e9', '#ef4444'];
 
 const parseStructuredContent = (content?: string | null): { description?: string; temas: string[]; alcances: string[]; quiz: QuizQuestion[] } | null => {
   if (!content) return null;
@@ -187,22 +189,37 @@ export function LessonViewer({ courseId, onBack }: Props) {
           </div>
 
           {/* Course header */}
-          <div className="px-5 py-4 border-b border-lms-border">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-lms-text-muted mb-1">Curso actual</p>
-            <h2 className="text-sm font-sans font-black text-lms-text-primary line-clamp-2 leading-snug">{course.title}</h2>
-            {/* Progress */}
-            <div className="mt-3 space-y-1.5">
-              <div className="flex justify-between text-[11px]">
-                <span className="text-lms-text-muted font-semibold">Tu progreso</span>
-                <span className="text-cyan-400 font-black">{progressPct}%</span>
+          <div className="p-4 border-b border-lms-border">
+            <div className="rounded-2xl border border-cyan-500/15 p-4 relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(14,165,233,0.02))' }}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #06b6d440, #06b6d410)', boxShadow: '0 2px 6px #06b6d425' }}>
+                  <BookOpen size={12} className="text-cyan-500" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-lms-text-muted">Curso actual</p>
               </div>
-              <div className="h-1.5 bg-lms-hover rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full transition-all duration-500"
-                  style={{ width: `${progressPct}%` }}
-                />
+              <h2 className="text-sm font-sans font-black text-lms-text-primary line-clamp-2 leading-snug">{course.title}</h2>
+              {/* Progress */}
+              <div className="mt-3 space-y-1.5">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-lms-text-muted font-semibold">Tu progreso</span>
+                  <motion.span key={progressPct} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-cyan-500 font-black">
+                    {progressPct}%
+                  </motion.span>
+                </div>
+                <div className="h-2 bg-lms-hover rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full relative"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                  >
+                    <div className="absolute inset-0 bg-white/30 animate-pulse" />
+                  </motion.div>
+                </div>
+                <p className="text-[10px] text-lms-text-muted">{completed.size} de {totalLessons} lecciones completadas</p>
               </div>
-              <p className="text-[10px] text-lms-text-muted">{completed.size} de {totalLessons} lecciones completadas</p>
             </div>
           </div>
 
@@ -235,23 +252,41 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
             {course.modules.map((mod, mIdx) => {
               const isModOpen = openModules.has(mod.id);
+              const modColor = MODULE_COLORS[mIdx % MODULE_COLORS.length];
+              const modDone = mod.lessons.filter(l => completed.has(l.id)).length;
+              const isModActive = isModOpen && !showCanvas;
               return (
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
-                      isModOpen && !showCanvas
-                        ? 'bg-cyan-500/15 text-cyan-400'
+                      isModActive
+                        ? 'bg-cyan-500/10 text-lms-text-primary'
                         : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'
                     }`}
                   >
-                    <span className={`text-[10px] font-black w-6 shrink-0 transition-colors ${isModOpen && !showCanvas ? 'text-cyan-400' : 'text-lms-text-muted'}`}>
+                    <span className={`text-[10px] font-black w-5 shrink-0 transition-colors ${isModActive ? 'text-cyan-400' : 'text-lms-text-muted'}`}>
                       M{mIdx + 2}
                     </span>
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
+                      style={{
+                        background: `linear-gradient(135deg, ${modColor}${isModActive ? '3a' : '1c'}, ${modColor}08)`,
+                        boxShadow: isModActive ? `0 2px 8px ${modColor}30, inset 0 1px 0 ${modColor}30` : 'none',
+                        border: `1px solid ${modColor}${isModActive ? '30' : '18'}`,
+                      }}
+                    >
+                      <Layers size={15} style={{ color: modColor }} />
+                    </div>
                     <span className="flex-1 truncate">
                       {mod.title}
                     </span>
-                    {isModOpen && !showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
+                    {mod.lessons.length > 0 && (
+                      <span className="text-[9px] font-bold text-lms-text-muted shrink-0">{modDone}/{mod.lessons.length}</span>
+                    )}
+                    <motion.div animate={{ rotate: isModActive ? 90 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }} className="shrink-0">
+                      <ChevronRight size={14} className={isModActive ? 'text-cyan-400' : 'text-lms-text-muted/50'} />
+                    </motion.div>
                   </button>
 
                   <AnimatePresence initial={false}>
