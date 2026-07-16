@@ -36,7 +36,7 @@ export function Sidebar({ items, activeId, onNavigate, isOpen, onClose }: Sideba
         {/* Header */}
         <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Open View Logo" className="w-10 h-10 object-contain rounded-lg bg-white" />
+            <img src="/logo.png" alt="Open View Logo" className="w-14 h-14 object-contain rounded-lg bg-white" />
             <div>
               <h2 className="text-white font-black leading-none">Open View</h2>
               <span className="text-[10px] uppercase tracking-widest text-sky-500 font-bold">
