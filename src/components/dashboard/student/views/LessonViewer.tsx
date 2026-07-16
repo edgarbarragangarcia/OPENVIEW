@@ -425,16 +425,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     accentClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
                     bgClass: 'bg-cyan-500/5 hover:bg-cyan-500/10',
                     borderClass: 'border-cyan-500/20',
-                    content: (
-                      <ul className="space-y-3 m-0 p-0 list-none">
-                        {structuredContent.temas.map((tema, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-primary leading-relaxed">
-                            <span className="text-cyan-400 mt-0.5 font-bold">•</span>
-                            <span>{tema}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ),
+                    content: <TopicPath temas={structuredContent.temas} color="#06b6d4" />,
                   });
                 }
 
@@ -600,6 +591,44 @@ export function LessonViewer({ courseId, onBack }: Props) {
         </div>
         </>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** Duolingo-style zigzag progress path: numbered nodes on a dashed spine, alternating sides. */
+function TopicPath({ temas, color }: { temas: string[]; color: string }) {
+  return (
+    <div className="relative py-2">
+      <div className="absolute left-1/2 top-6 bottom-6 -translate-x-1/2 border-l-2 border-dashed pointer-events-none"
+        style={{ borderColor: `${color}35` }} />
+      <div className="space-y-5">
+        {temas.map((tema, i) => {
+          const isLeft = i % 2 === 0;
+          const card = (
+            <div className={`max-w-xs rounded-2xl border bg-white px-4 py-3 shadow-sm ${isLeft ? 'text-right' : 'text-left'}`}
+              style={{ borderColor: `${color}25` }}>
+              <p className="text-xs sm:text-sm text-lms-text-primary leading-relaxed">{tema}</p>
+            </div>
+          );
+          return (
+            <motion.div key={i}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ delay: i * 0.06, type: 'spring', stiffness: 320, damping: 26 }}
+              className="grid grid-cols-[1fr_auto_1fr] items-center gap-3"
+            >
+              <div className={isLeft ? 'flex justify-end' : ''}>{isLeft && card}</div>
+              <motion.div whileHover={{ scale: 1.15 }}
+                className="relative z-10 w-11 h-11 rounded-full flex items-center justify-center font-black text-sm text-white shrink-0 shadow-lg"
+                style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, boxShadow: `0 4px 14px ${color}50` }}>
+                {i + 1}
+              </motion.div>
+              <div className={!isLeft ? 'flex justify-start' : ''}>{!isLeft && card}</div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
