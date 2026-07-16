@@ -11,7 +11,7 @@ interface LMSHeroProps {
 
 export function LMSHero({ onCtaClick }: LMSHeroProps) {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 z-10 overflow-hidden bg-white text-slate-900">
+    <section className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-white text-slate-900">
 
       {/* Background orbs */}
       <motion.div
@@ -46,9 +46,9 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 bg-sky-50 border border-sky-200 text-sky-700 text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-8 shadow-sm"
+          className="inline-flex items-center gap-1.5 sm:gap-2 bg-sky-50 border border-sky-200 text-sky-700 text-[10px] sm:text-xs font-semibold uppercase tracking-widest px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-6 sm:mb-8 shadow-sm"
         >
-          <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500 shrink-0" />
           Open View Academia · 2026
         </motion.div>
 
@@ -57,7 +57,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.15 }}
-          className="text-6xl sm:text-7xl lg:text-8xl font-serif font-black leading-[1.0] tracking-tight text-slate-900 mb-6"
+          className="text-4xl sm:text-6xl lg:text-8xl font-serif font-black leading-[1.05] sm:leading-[1.0] tracking-tight text-slate-900 mb-6"
         >
           Aprende las habilidades{' '}
           <span
@@ -89,7 +89,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed mb-10"
+          className="text-base sm:text-xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed mb-8 sm:mb-10 px-2 sm:px-0"
         >
           Domina IA, tecnología, liderazgo y negocios con instructores que viven la industria.
           Cursos prácticos, certificados reales, resultados desde la primera semana.
@@ -100,11 +100,11 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.65 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 sm:mb-16"
         >
           <button
             onClick={() => scrollToId('cursos')}
-            className="flex h-14 items-center gap-2 rounded-full bg-slate-900 px-8 text-base font-bold text-white shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(14,165,233,0.35)] hover:-translate-y-0.5 transition-all duration-300"
+            className="flex h-12 sm:h-14 items-center gap-2 rounded-full bg-slate-900 px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(14,165,233,0.35)] hover:-translate-y-0.5 transition-all duration-300"
           >
             Explorar cursos <ArrowRight size={18} />
           </button>

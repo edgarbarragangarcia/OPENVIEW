@@ -27,8 +27,8 @@ export function Header({ onLoginClick }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between">
 
         {/* Left: Logo */}
-        <div className="flex items-center gap-3 cursor-pointer group">
-          <img src="/logo.png" alt="Open View Academy Logo" className="h-16 w-auto object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105" />
+        <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0">
+          <img src="/logo.png" alt="Open View Academy Logo" className="h-10 sm:h-16 w-auto object-contain shrink-0 transition-transform duration-300 group-hover:scale-105" />
           <div className="hidden sm:flex flex-col justify-center border-l-2 border-slate-200 pl-4 py-1">
             <span className="font-display text-xl font-black tracking-tight text-slate-900 leading-none">
               Open View
@@ -60,14 +60,14 @@ export function Header({ onLoginClick }: HeaderProps) {
         </nav>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
           <button className="hidden md:flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:text-sky-500 hover:bg-sky-50 transition-all">
             <Search size={18} />
           </button>
 
           {!isLoading && (
             user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div className="hidden sm:flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
                     <User size={16} />
@@ -87,17 +87,17 @@ export function Header({ onLoginClick }: HeaderProps) {
             ) : (
               <button
                 onClick={onLoginClick}
-                className="group relative inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden"
+                className="group relative inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden whitespace-nowrap"
               >
                 <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <span className="relative z-10">Ingresar</span>
-                <ArrowRight size={16} className="relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
+                <ArrowRight size={14} className="relative z-10 hidden sm:inline transition-transform duration-300 group-hover:translate-x-1" />
               </button>
             )
           )}
 
           {/* Mobile Menu Button */}
-          <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-slate-600 hover:bg-slate-100 transition-colors">
+          <button className="lg:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full text-slate-600 hover:bg-slate-100 transition-colors">
             <Menu size={20} />
           </button>
         </div>
