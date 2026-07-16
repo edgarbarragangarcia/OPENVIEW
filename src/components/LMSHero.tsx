@@ -3,6 +3,7 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import { useRef } from 'react';
 import { MagneticButton } from './effects/MagneticButton';
 import { AnimatedCounter } from './effects/AnimatedCounter';
+import { StarfieldBackground } from './effects/StarfieldBackground';
 
 const scrollToId = (id: string) => {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -33,38 +34,15 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
   return (
     <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-slate-900 text-white">
 
-      {/* Ambient glow (matches FinalCTA dark section) */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-60 -z-10"
-        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 30%, rgba(13,89,242,0.35) 0%, transparent 70%)' }}
-      />
-
-      {/* Background orbs (autoplay drift + scroll parallax) */}
+      {/* Milky Way starfield (with scroll parallax) */}
       <motion.div style={{ y: parallaxY }} className="absolute inset-0 -z-10 pointer-events-none">
-        <motion.div
-          animate={{ x: [0, 50, -50, 0], y: [0, -30, 30, 0], scale: [1, 1.1, 0.9, 1] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10%] left-1/4 w-[800px] h-[800px] bg-sky-400/20 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{ x: [0, -60, 40, 0], y: [0, 50, -40, 0], scale: [1, 0.8, 1.2, 1] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-[-10%] right-1/4 w-[600px] h-[600px] bg-indigo-400/20 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{ x: [0, 70, -30, 0], y: [0, 40, -60, 0], scale: [1, 1.2, 0.9, 1] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/3 left-[-10%] w-[500px] h-[500px] bg-cyan-400/20 rounded-full blur-[120px]"
-        />
+        <StarfieldBackground density={1.1} />
       </motion.div>
 
-      {/* Grid pattern */}
+      {/* Ambient glow (matches FinalCTA dark section) */}
       <div
-        className="absolute inset-0 -z-10 opacity-[0.06]"
-        style={{
-          backgroundImage: `linear-gradient(#38bdf8 1px, transparent 1px), linear-gradient(to right, #38bdf8 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
+        className="absolute inset-0 pointer-events-none opacity-50 -z-10"
+        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 30%, rgba(13,89,242,0.35) 0%, transparent 70%)' }}
       />
 
       <motion.div style={{ opacity: contentFade }} className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 w-full text-center">
