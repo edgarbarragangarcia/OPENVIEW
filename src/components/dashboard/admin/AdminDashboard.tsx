@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   LayoutDashboard, BookOpen, Users, ListChecks, AlertTriangle,
-  Settings, LogOut, Menu, X, ChevronRight, Bell
+  Settings, LogOut, Menu, X, ChevronRight, Bell, Trophy
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Overview } from './views/Overview';
@@ -10,11 +10,12 @@ import { CoursesManager } from './views/CoursesManager';
 import { StudentsView } from './views/StudentsView';
 import { EnrollmentsView } from './views/EnrollmentsView';
 import { StudentFeedbackView } from './views/StudentFeedbackView';
+import { GradesView } from './views/GradesView';
 import { CourseForm } from './views/CourseForm';
 
-type AdminView = 'overview' | 'courses' | 'students' | 'enrollments' | 'feedback' | 'settings';
+type AdminView = 'overview' | 'courses' | 'students' | 'enrollments' | 'feedback' | 'grades' | 'settings';
 
-const PRINCIPAL_COUNT = 5;
+const PRINCIPAL_COUNT = 6;
 
 const NAV = [
   { id: 'overview',     label: 'Dashboard',   icon: LayoutDashboard },
@@ -22,6 +23,7 @@ const NAV = [
   { id: 'students',     label: 'Estudiantes',  icon: Users },
   { id: 'enrollments',  label: 'Matrículas',   icon: ListChecks },
   { id: 'feedback',     label: 'Dudas',        icon: AlertTriangle },
+  { id: 'grades',       label: 'Calificaciones', icon: Trophy },
   { id: 'settings',     label: 'Configuración',icon: Settings },
 ];
 
@@ -44,6 +46,7 @@ export function AdminDashboard() {
       case 'students':    return <StudentsView />;
       case 'enrollments': return <EnrollmentsView />;
       case 'feedback':    return <StudentFeedbackView />;
+      case 'grades':      return <GradesView />;
       case 'settings':    return <div className="p-8 text-lms-text-muted">Configuración próximamente.</div>;
     }
   };

@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
+import { saveQuizResult } from '../../../../lib/quizResults';
 import { ProcessCanvas } from './ProcessCanvas';
 import { CanvasListView } from './CanvasListView';
 
@@ -533,7 +534,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     count: `${structuredContent.quiz.length} preguntas`,
                     icon: Trophy,
                     color: '#f59e0b',
-                    content: <QuizGame key={activeLesson.id} questions={structuredContent.quiz} />,
+                    content: <QuizGame key={activeLesson.id} lessonId={activeLesson.id} questions={structuredContent.quiz} />,
                   });
                 }
 
@@ -614,7 +615,7 @@ const AREA_STYLES: Record<string, { icon: React.ElementType; color: string }> = 
 
 /** Splits the "Aplicación por área" paragraph into a grid of colorful area cards instead of one dense block of text. */
 /** Kahoot/trivia-style quiz: one question at a time, streak counter, and a celebratory results screen. */
-function QuizGame({ questions }: { questions: QuizQuestion[] }) {
+function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQuestion[] }) {
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
@@ -622,6 +623,7 @@ function QuizGame({ questions }: { questions: QuizQuestion[] }) {
   const [streak, setStreak] = useState(0);
   const [finished, setFinished] = useState(false);
   const [answers, setAnswers] = useState<boolean[]>([]);
+  const savedRef = useRef(false);
 
   const q = questions[step];
 
@@ -630,7 +632,8 @@ function QuizGame({ questions }: { questions: QuizQuestion[] }) {
     setSelected(idx);
     setLocked(true);
     const isCorrect = idx === q.correct;
-    setScore(s => s + (isCorrect ? 1 : 0));
+    const finalScore = score + (isCorrect ? 1 : 0);
+    setScore(finalScore);
     setStreak(s => (isCorrect ? s + 1 : 0));
     setAnswers(prev => [...prev, isCorrect]);
     setTimeout(() => {
@@ -640,11 +643,19 @@ function QuizGame({ questions }: { questions: QuizQuestion[] }) {
         setLocked(false);
       } else {
         setFinished(true);
+        if (!savedRef.current) {
+          savedRef.current = true;
+          saveQuizResult(lessonId, finalScore, questions.length).catch(err => {
+            console.error('No se pudo guardar el resultado del quiz:', err);
+            toast.error('No se pudo guardar tu calificación');
+          });
+        }
       }
     }, 1100);
   };
 
   const restart = () => {
+    savedRef.current = false;
     setStep(0); setSelected(null); setLocked(false); setScore(0); setStreak(0); setFinished(false); setAnswers([]);
   };
 
