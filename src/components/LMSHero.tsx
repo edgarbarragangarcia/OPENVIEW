@@ -132,7 +132,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
         >
           <MagneticButton
             onClick={() => scrollToId('cursos')}
-            className="flex h-12 sm:h-14 items-center gap-2 rounded-full bg-slate-900 px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(14,165,233,0.35)] transition-shadow duration-300"
+            className="flex h-12 sm:h-14 items-center gap-2 rounded-full bg-primary px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_0_30px_rgba(14,165,233,0.4)] hover:shadow-[0_0_45px_rgba(14,165,233,0.6)] transition-shadow duration-300"
           >
             Explorar cursos <ArrowRight size={18} />
           </MagneticButton>
