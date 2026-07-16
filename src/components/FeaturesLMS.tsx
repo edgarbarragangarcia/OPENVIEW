@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { RevealHeading } from './effects/RevealHeading';
 
 const FEATURES = [
   {
@@ -36,10 +37,10 @@ export function FeaturesLMS() {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="flex flex-col md:flex-row gap-16 mb-24">
           <div className="md:w-1/2">
-            <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 mb-6 leading-tight">
+            <RevealHeading className="text-4xl sm:text-6xl font-serif text-slate-900 mb-6 leading-tight">
               Nuestra <br />
               <span className="text-gradient italic font-black">Metodología</span>
-            </h2>
+            </RevealHeading>
           </div>
           <div className="md:w-1/2 flex items-center">
             <p className="text-slate-600 text-lg leading-relaxed font-light">

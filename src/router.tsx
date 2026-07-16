@@ -9,6 +9,8 @@ import { CourseGrid } from './components/CourseGrid';
 import { FeaturesLMS } from './components/FeaturesLMS';
 import { CategoriesSection, ProcessSection, TestimonialsSection, FinalCTA } from './components/AcademiaSections';
 import { AuthModal } from './components/AuthModal';
+import { ScrollProgressBar } from './components/effects/ScrollProgressBar';
+import { CursorSpotlight } from './components/effects/CursorSpotlight';
 
 function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -22,6 +24,8 @@ function LandingPage() {
 
   return (
     <div className="relative w-full overflow-x-hidden bg-white text-slate-900 font-body antialiased selection:bg-primary/20 bg-grain">
+      <ScrollProgressBar />
+      <CursorSpotlight />
       <Header onLoginClick={openAuth} />
       <main className="relative">
         <LMSHero onCtaClick={openAuth} />

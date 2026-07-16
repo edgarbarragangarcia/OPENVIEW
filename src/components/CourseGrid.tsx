@@ -1,8 +1,9 @@
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'motion/react';
 import { ArrowRight, Calendar, Clock, BookOpen, ChevronDown, Play, FileText } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { getCourses, Course } from '../lib/courses';
+import { RevealHeading } from './effects/RevealHeading';
 
 interface LessonPreview { id: string; title: string; position: number; duration_min: number; video_url: string | null; pdf_url: string | null; }
 interface ModulePreview { id: string; title: string; position: number; lessons: LessonPreview[]; }
@@ -12,14 +13,36 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
   const [expanded, setExpanded] = useState(false);
   const modules = course.modules?.sort((a, b) => a.position - b.position) ?? [];
 
+  const cardRef = useRef<HTMLDivElement>(null);
+  const rotateX = useSpring(useMotionValue(0), { stiffness: 300, damping: 25 });
+  const rotateY = useSpring(useMotionValue(0), { stiffness: 300, damping: 25 });
+
+  const handleTiltMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    rotateY.set(px * 6);
+    rotateX.set(-py * 6);
+  };
+
+  const handleTiltLeave = () => {
+    rotateX.set(0);
+    rotateY.set(0);
+  };
+
   return (
     <motion.div
+      ref={cardRef}
       key={course.id}
       layout
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      whileHover={{ y: -6, rotate: idx % 2 === 0 ? -0.75 : 0.75 }}
+      whileHover={{ y: -6 }}
+      onMouseMove={handleTiltMove}
+      onMouseLeave={handleTiltLeave}
+      style={{ rotateX, rotateY, transformPerspective: 1000 }}
       transition={{ duration: 0.6, delay: idx * 0.12 }}
       className="group flex flex-col bg-slate-50 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] card-glow card-glow-brand transition-all duration-500"
     >
@@ -198,10 +221,10 @@ export function CourseGrid({ selectedCategoryId = null, onClearFilter }: CourseG
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-end mb-20 gap-8">
           <div>
-            <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 mb-4 leading-tight">
+            <RevealHeading className="text-4xl sm:text-6xl font-serif text-slate-900 mb-4 leading-tight">
               {filteredCategoryName ?? 'Programas'} <br />
               <span className="text-gradient italic font-black">{filteredCategoryName ? 'Cursos' : 'Ejecutivos'}</span>
-            </h2>
+            </RevealHeading>
           </div>
           {selectedCategoryId ? (
             <button

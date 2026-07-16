@@ -1,8 +1,23 @@
-import { motion } from 'motion/react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { useRef } from 'react';
+import { MagneticButton } from './effects/MagneticButton';
+import { AnimatedCounter } from './effects/AnimatedCounter';
 
 const scrollToId = (id: string) => {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+};
+
+const HEADLINE_WORDS = ['Aprende', 'las', 'habilidades'];
+
+const wordContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
+};
+
+const wordItem = {
+  hidden: { opacity: 0, y: 40, rotateX: 40 },
+  visible: { opacity: 1, y: 0, rotateX: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
 
 interface LMSHeroProps {
@@ -10,25 +25,32 @@ interface LMSHeroProps {
 }
 
 export function LMSHero({ onCtaClick }: LMSHeroProps) {
-  return (
-    <section className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-white text-slate-900">
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const contentFade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
-      {/* Background orbs */}
-      <motion.div
-        animate={{ x: [0, 50, -50, 0], y: [0, -30, 30, 0], scale: [1, 1.1, 0.9, 1] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-10%] left-1/4 w-[800px] h-[800px] bg-sky-400/20 rounded-full blur-[120px] pointer-events-none -z-10"
-      />
-      <motion.div
-        animate={{ x: [0, -60, 40, 0], y: [0, 50, -40, 0], scale: [1, 0.8, 1.2, 1] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-[-10%] right-1/4 w-[600px] h-[600px] bg-indigo-400/20 rounded-full blur-[120px] pointer-events-none -z-10"
-      />
-      <motion.div
-        animate={{ x: [0, 70, -30, 0], y: [0, 40, -60, 0], scale: [1, 1.2, 0.9, 1] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/3 left-[-10%] w-[500px] h-[500px] bg-cyan-400/20 rounded-full blur-[120px] pointer-events-none -z-10"
-      />
+  return (
+    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-white text-slate-900">
+
+      {/* Background orbs (autoplay drift + scroll parallax) */}
+      <motion.div style={{ y: parallaxY }} className="absolute inset-0 -z-10 pointer-events-none">
+        <motion.div
+          animate={{ x: [0, 50, -50, 0], y: [0, -30, 30, 0], scale: [1, 1.1, 0.9, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10%] left-1/4 w-[800px] h-[800px] bg-sky-400/20 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{ x: [0, -60, 40, 0], y: [0, 50, -40, 0], scale: [1, 0.8, 1.2, 1] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-[-10%] right-1/4 w-[600px] h-[600px] bg-indigo-400/20 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{ x: [0, 70, -30, 0], y: [0, 40, -60, 0], scale: [1, 1.2, 0.9, 1] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/3 left-[-10%] w-[500px] h-[500px] bg-cyan-400/20 rounded-full blur-[120px]"
+        />
+      </motion.div>
 
       {/* Grid pattern */}
       <div
@@ -39,7 +61,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
         }}
       />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 w-full text-center">
+      <motion.div style={{ opacity: contentFade }} className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 w-full text-center">
 
         {/* Badge */}
         <motion.div
@@ -54,14 +76,20 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
 
         {/* Headline */}
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.15 }}
+          initial="hidden"
+          animate="visible"
+          variants={wordContainer}
+          style={{ perspective: 800 }}
           className="text-4xl sm:text-6xl lg:text-8xl font-serif font-black leading-[1.05] sm:leading-[1.0] tracking-tight text-slate-900 mb-6"
         >
-          Aprende las habilidades{' '}
-          <span
-            className="italic"
+          {HEADLINE_WORDS.map((word, i) => (
+            <motion.span key={i} variants={wordItem} className="inline-block mr-[0.25em]">
+              {word}
+            </motion.span>
+          ))}
+          <motion.span
+            variants={wordItem}
+            className="italic inline-block"
             style={{
               background: 'var(--gradient-brand)',
               backgroundSize: '200% auto',
@@ -72,7 +100,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
             }}
           >
             que transforman carreras.
-          </span>
+          </motion.span>
         </motion.h1>
 
         {/* Divider line */}
@@ -102,12 +130,12 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           transition={{ duration: 0.8, delay: 0.65 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 sm:mb-16"
         >
-          <button
+          <MagneticButton
             onClick={() => scrollToId('cursos')}
-            className="tilt-hover flex h-12 sm:h-14 items-center gap-2 rounded-full bg-slate-900 px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(14,165,233,0.35)]"
+            className="flex h-12 sm:h-14 items-center gap-2 rounded-full bg-slate-900 px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(14,165,233,0.35)] transition-shadow duration-300"
           >
             Explorar cursos <ArrowRight size={18} />
-          </button>
+          </MagneticButton>
 
         </motion.div>
 
@@ -125,23 +153,16 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
             { value: '+50', label: 'Empresas certificadas' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <p
-                className="text-3xl sm:text-4xl font-black font-serif"
-                style={{
-                  background: 'var(--gradient-brand)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                {stat.value}
-              </p>
+              <AnimatedCounter
+                value={stat.value}
+                className="text-gradient block text-3xl sm:text-4xl font-black font-serif"
+              />
               <p className="text-xs sm:text-sm text-slate-400 uppercase tracking-widest mt-1 font-medium">{stat.label}</p>
             </div>
           ))}
         </motion.div>
 
-      </div>
+      </motion.div>
 
       <style>{`
         @keyframes shimmer {

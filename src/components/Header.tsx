@@ -1,4 +1,5 @@
 import { BookOpen, Menu, X, ArrowRight, User, ChevronDown, Search, LogOut } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -32,14 +33,21 @@ export function Header({ onLoginClick }: HeaderProps) {
   };
 
   return (
-    <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
-        isScrolled
-          ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-3'
-          : 'bg-transparent border-b border-transparent py-5'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between">
+    <header className="fixed top-0 inset-x-0 z-50 px-3 sm:px-6 pt-3 sm:pt-4">
+      <motion.div
+        animate={{
+          maxWidth: isScrolled ? 1100 : 1280,
+          boxShadow: isScrolled
+            ? '0 8px 30px -8px rgba(13,89,242,0.18), 0 1px 0 rgba(255,255,255,0.6) inset'
+            : '0 0px 0px rgba(0,0,0,0)',
+        }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className={`mx-auto flex items-center justify-between transition-colors duration-500 ${
+          isScrolled
+            ? 'bg-white/70 backdrop-blur-2xl border border-white/60 rounded-full py-2.5 px-4 sm:px-6'
+            : 'bg-transparent border border-transparent rounded-full py-3 px-2'
+        }`}
+      >
 
         {/* Left: Logo */}
         <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0">
@@ -98,7 +106,7 @@ export function Header({ onLoginClick }: HeaderProps) {
             ) : (
               <button
                 onClick={onLoginClick}
-                className="hidden lg:inline-flex group relative items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden whitespace-nowrap"
+                className="pulse-glow hidden lg:inline-flex group relative items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden whitespace-nowrap"
               >
                 <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <span className="relative z-10">Ingresar</span>
@@ -117,15 +125,15 @@ export function Header({ onLoginClick }: HeaderProps) {
             {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Mobile Menu Panel */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out bg-white/95 backdrop-blur-xl border-b border-slate-200/50 ${
-          isMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
+        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out mx-1 mt-2 rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_-8px_rgba(13,89,242,0.18)] ${
+          isMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0 border-transparent'
         }`}
       >
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-1">
+        <nav className="px-6 py-4 flex flex-col gap-1">
           {NAV_ITEMS.map((item) => (
             <button
               key={item}

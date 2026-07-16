@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Compass, ClipboardCheck, PlayCircle, Users, Award, ArrowRight } from 'lucide-react';
 import { getCategoriesWithCounts, type Category } from '../lib/courses';
+import { MagneticButton } from './effects/MagneticButton';
+import { RevealHeading } from './effects/RevealHeading';
 
 // ─── Escuelas / Categorías (estilo grid de "schools" de Platzi) ─────────────
 
@@ -32,13 +34,17 @@ export function CategoriesSection({ onSelectCategory }: CategoriesSectionProps) 
   if (!loading && categories.length === 0) return null;
 
   return (
-    <section className="py-32 px-6 sm:px-10 bg-white">
-      <div className="max-w-7xl mx-auto">
+    <section className="relative py-32 px-6 sm:px-10 bg-white overflow-hidden">
+      <div
+        className="absolute top-0 left-0 w-1/2 h-[600px] pointer-events-none opacity-60"
+        style={{ background: 'radial-gradient(circle at 0% 0%, rgba(99,102,241,0.06), transparent 70%)' }}
+      />
+      <div className="max-w-7xl mx-auto relative z-10">
         <div className="max-w-2xl mb-16">
-          <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 leading-tight mb-4">
+          <RevealHeading className="text-4xl sm:text-6xl font-serif text-slate-900 leading-tight mb-4">
             Escuelas de <br />
             <span className="text-gradient italic font-black">Open View</span>
-          </h2>
+          </RevealHeading>
           <p className="text-slate-500 text-lg font-light">
             Elige la escuela que impulsa tu carrera y explora todos sus cursos.
           </p>
@@ -99,12 +105,16 @@ const steps = [
 
 export function ProcessSection() {
   return (
-    <section className="py-32 px-6 sm:px-10 bg-slate-50">
-      <div className="max-w-7xl mx-auto">
+    <section className="relative py-32 px-6 sm:px-10 bg-slate-50 overflow-hidden">
+      <div
+        className="absolute top-0 right-0 w-1/2 h-[500px] pointer-events-none opacity-60"
+        style={{ background: 'radial-gradient(circle at 100% 0%, rgba(236,72,153,0.05), transparent 70%)' }}
+      />
+      <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-20">
-          <h2 className="text-4xl sm:text-6xl font-serif text-slate-900 leading-tight mb-4">
+          <RevealHeading className="text-4xl sm:text-6xl font-serif text-slate-900 leading-tight mb-4">
             Tu camino <span className="text-gradient italic font-black">como estudiante</span>
-          </h2>
+          </RevealHeading>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
@@ -151,9 +161,9 @@ export function TestimonialsSection() {
   return (
     <section className="py-32 px-6 sm:px-10 bg-white">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-center text-4xl sm:text-6xl font-serif text-slate-900 leading-tight mb-20">
+        <RevealHeading className="text-center text-4xl sm:text-6xl font-serif text-slate-900 leading-tight mb-20">
           Lo que dicen <span className="text-gradient italic font-black">nuestros estudiantes</span>
-        </h2>
+        </RevealHeading>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
@@ -210,12 +220,12 @@ export function FinalCTA({ onCtaClick }: FinalCTAProps) {
         <p className="text-lg text-slate-300 font-light leading-relaxed mb-10 max-w-xl mx-auto">
           Únete a miles de estudiantes que ya están construyendo su futuro profesional con nosotros.
         </p>
-        <button
+        <MagneticButton
           onClick={onCtaClick}
-          className="tilt-hover inline-flex h-14 items-center gap-2 rounded-full bg-primary px-10 text-base font-bold text-white shadow-[0_0_40px_rgba(13,89,242,0.4)] hover:shadow-[0_0_60px_rgba(13,89,242,0.6)]"
+          className="inline-flex h-14 items-center gap-2 rounded-full bg-primary px-10 text-base font-bold text-white shadow-[0_0_40px_rgba(13,89,242,0.4)] hover:shadow-[0_0_60px_rgba(13,89,242,0.6)] transition-shadow duration-300"
         >
           Crear cuenta gratis <ArrowRight size={18} />
-        </button>
+        </MagneticButton>
       </motion.div>
     </section>
   );
