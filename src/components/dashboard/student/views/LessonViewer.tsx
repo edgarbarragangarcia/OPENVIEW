@@ -719,10 +719,10 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
   }
 
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-xl">
+    <div className="rounded-3xl bg-gradient-to-br from-violet-50 via-white to-sky-50 border border-violet-100 p-6 shadow-lg">
       {/* Level label + lives */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[10px] font-black uppercase tracking-widest text-violet-300">Nivel {step + 1} de {questions.length}</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-violet-500">Nivel {step + 1} de {questions.length}</p>
         <div className="flex gap-1">
           {Array.from({ length: QUIZ_LIVES }).map((_, i) => (
             <motion.span key={i}
@@ -736,7 +736,7 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
 
       {/* Board path */}
       <div className="relative flex items-center justify-between mb-6 px-1">
-        <div className="absolute left-3 right-3 top-3.5 h-0.5 bg-white/10" />
+        <div className="absolute left-3 right-3 top-3.5 h-0.5 bg-slate-200" />
         {questions.map((_, i) => {
           const status = tileStatus[i];
           const isCurrent = i === step;
@@ -750,10 +750,10 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
                 )}
               </div>
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black border-2 transition-colors duration-300 ${
-                status === 'correct' ? 'bg-emerald-500 border-emerald-300'
-                  : status === 'wrong' ? 'bg-rose-500 border-rose-300'
-                  : isCurrent ? 'bg-violet-500 border-violet-300 shadow-lg shadow-violet-500/40'
-                  : 'bg-white/10 border-white/15 text-white/40'
+                status === 'correct' ? 'bg-emerald-500 border-emerald-300 text-white'
+                  : status === 'wrong' ? 'bg-rose-500 border-rose-300 text-white'
+                  : isCurrent ? 'bg-violet-500 border-violet-300 text-white shadow-lg shadow-violet-500/30'
+                  : 'bg-white border-slate-200 text-slate-400'
               }`}>
                 {status === 'correct' ? '✓' : status === 'wrong' ? '✗' : i + 1}
               </div>
@@ -765,7 +765,7 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
 
       <AnimatePresence mode="wait">
         <motion.p key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
-          className="text-base font-bold leading-snug mb-5">
+          className="text-base font-bold leading-snug mb-5 text-slate-800">
           {q.question}
         </motion.p>
       </AnimatePresence>
@@ -774,23 +774,23 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
         {q.options.map((opt, i) => {
           const isSelected = selected === i;
           const isCorrectOpt = i === q.correct;
-          let style = 'bg-white/5 border-white/10 hover:bg-white/10';
-          if (locked && isCorrectOpt) style = 'bg-emerald-500/20 border-emerald-400';
-          else if (locked && isSelected && !isCorrectOpt) style = 'bg-red-500/20 border-red-400';
+          let style = 'bg-white border-slate-200 text-slate-700 hover:border-violet-200 hover:bg-violet-50/50';
+          if (locked && isCorrectOpt) style = 'bg-emerald-50 border-emerald-400 text-emerald-700';
+          else if (locked && isSelected && !isCorrectOpt) style = 'bg-rose-50 border-rose-400 text-rose-700';
           return (
             <motion.button key={`${step}-${i}`}
               onClick={() => handleSelect(i)}
               whileHover={!locked ? { scale: 1.01 } : {}}
               whileTap={!locked ? { scale: 0.98 } : {}}
               animate={locked && isSelected && !isCorrectOpt ? { x: [0, -6, 6, -4, 4, 0] } : {}}
-              className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-semibold transition-colors flex items-center gap-3 ${style}`}
+              className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-semibold transition-colors flex items-center gap-3 shadow-sm ${style}`}
             >
-              <span className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-black shrink-0">
+              <span className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0">
                 {String.fromCharCode(65 + i)}
               </span>
               <span className="flex-1">{opt}</span>
-              {locked && isCorrectOpt && <CheckCircle size={16} className="text-emerald-400 shrink-0" />}
-              {locked && isSelected && !isCorrectOpt && <X size={16} className="text-red-400 shrink-0" />}
+              {locked && isCorrectOpt && <CheckCircle size={16} className="text-emerald-500 shrink-0" />}
+              {locked && isSelected && !isCorrectOpt && <X size={16} className="text-rose-500 shrink-0" />}
             </motion.button>
           );
         })}
