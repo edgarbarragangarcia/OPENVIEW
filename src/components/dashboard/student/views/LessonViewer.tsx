@@ -235,7 +235,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
                   : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'
               }`}
             >
-              <span className={`text-[10px] font-black w-5 shrink-0 transition-colors ${showCanvas ? 'text-cyan-400' : 'text-lms-text-muted'}`}>M1</span>
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
                 style={{
@@ -265,9 +264,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
                         : 'text-lms-text-muted hover:bg-lms-hover hover:text-lms-text-primary'
                     }`}
                   >
-                    <span className={`text-[10px] font-black w-5 shrink-0 transition-colors ${isModActive ? 'text-cyan-400' : 'text-lms-text-muted'}`}>
-                      M{mIdx + 2}
-                    </span>
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
                       style={{
