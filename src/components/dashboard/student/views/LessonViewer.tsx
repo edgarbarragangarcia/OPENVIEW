@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
@@ -47,13 +47,19 @@ const getFileMeta = (url?: string | null) => {
   return { type: 'other', icon: FileDown, label: 'Archivo Adjunto' };
 };
 
-const parseStructuredContent = (content?: string | null): { description?: string; temas: string[]; alcances: string[] } | null => {
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct: number;
+}
+
+const parseStructuredContent = (content?: string | null): { description?: string; temas: string[]; alcances: string[]; quiz: QuizQuestion[] } | null => {
   if (!content) return null;
   try {
     if (content.trim().startsWith('{')) {
       const parsed = JSON.parse(content);
       if (parsed.type === 'structured') {
-        return { description: parsed.description, temas: parsed.temas ?? [], alcances: parsed.alcances ?? [] };
+        return { description: parsed.description, temas: parsed.temas ?? [], alcances: parsed.alcances ?? [], quiz: parsed.quiz ?? [] };
       }
     }
   } catch (e) {}
@@ -520,6 +526,17 @@ export function LessonViewer({ courseId, onBack }: Props) {
                   });
                 }
 
+                if (structuredContent && structuredContent.quiz.length > 0) {
+                  rows.push({
+                    key: 'quiz',
+                    title: 'Evaluación',
+                    count: `${structuredContent.quiz.length} preguntas`,
+                    icon: Trophy,
+                    color: '#f59e0b',
+                    content: <QuizGame key={activeLesson.id} questions={structuredContent.quiz} />,
+                  });
+                }
+
                 if (rows.length === 0) return null;
 
                 return (
@@ -596,6 +613,129 @@ const AREA_STYLES: Record<string, { icon: React.ElementType; color: string }> = 
 };
 
 /** Splits the "Aplicación por área" paragraph into a grid of colorful area cards instead of one dense block of text. */
+/** Kahoot/trivia-style quiz: one question at a time, streak counter, and a celebratory results screen. */
+function QuizGame({ questions }: { questions: QuizQuestion[] }) {
+  const [step, setStep] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [locked, setLocked] = useState(false);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [answers, setAnswers] = useState<boolean[]>([]);
+
+  const q = questions[step];
+
+  const handleSelect = (idx: number) => {
+    if (locked) return;
+    setSelected(idx);
+    setLocked(true);
+    const isCorrect = idx === q.correct;
+    setScore(s => s + (isCorrect ? 1 : 0));
+    setStreak(s => (isCorrect ? s + 1 : 0));
+    setAnswers(prev => [...prev, isCorrect]);
+    setTimeout(() => {
+      if (step < questions.length - 1) {
+        setStep(s => s + 1);
+        setSelected(null);
+        setLocked(false);
+      } else {
+        setFinished(true);
+      }
+    }, 1100);
+  };
+
+  const restart = () => {
+    setStep(0); setSelected(null); setLocked(false); setScore(0); setStreak(0); setFinished(false); setAnswers([]);
+  };
+
+  if (questions.length === 0) return null;
+
+  if (finished) {
+    const pct = Math.round((score / questions.length) * 100);
+    const emoji = pct === 100 ? '🏆' : pct >= 60 ? '🎉' : '📚';
+    const msg = pct === 100 ? '¡Perfecto!' : pct >= 80 ? '¡Excelente!' : pct >= 60 ? '¡Bien hecho!' : 'Sigue practicando';
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+        className="rounded-3xl bg-gradient-to-br from-violet-600 via-fuchsia-600 to-violet-700 p-8 text-center text-white shadow-xl">
+        <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 220, delay: 0.1 }} className="text-5xl mb-2">
+          {emoji}
+        </motion.div>
+        <p className="text-2xl font-black mb-1">{msg}</p>
+        <p className="text-sm opacity-90 mb-5">Obtuviste {score} de {questions.length} respuestas correctas</p>
+        <div className="flex justify-center gap-1.5 mb-6">
+          {answers.map((a, i) => (
+            <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15 + i * 0.05 }}
+              className={`w-3 h-3 rounded-full ${a ? 'bg-emerald-300' : 'bg-white/30'}`} />
+          ))}
+        </div>
+        <button onClick={restart}
+          className="px-6 py-2.5 rounded-xl bg-white text-violet-700 text-sm font-black hover:bg-violet-50 transition-colors shadow-lg">
+          Volver a intentar
+        </button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-xl">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex gap-1.5">
+          {questions.map((_, i) => (
+            <div key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i < step ? 'w-6 bg-emerald-400' : i === step ? 'w-8 bg-violet-400' : 'w-6 bg-white/15'
+              }`} />
+          ))}
+        </div>
+        <AnimatePresence>
+          {streak >= 2 && (
+            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
+              className="flex items-center gap-1 text-amber-300 text-xs font-black shrink-0">
+              🔥 {streak}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <p className="text-[10px] font-black uppercase tracking-widest text-violet-300 mb-2">Pregunta {step + 1} de {questions.length}</p>
+      <AnimatePresence mode="wait">
+        <motion.p key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
+          className="text-base font-bold leading-snug mb-5">
+          {q.question}
+        </motion.p>
+      </AnimatePresence>
+
+      <div className="space-y-2.5">
+        {q.options.map((opt, i) => {
+          const isSelected = selected === i;
+          const isCorrectOpt = i === q.correct;
+          let style = 'bg-white/5 border-white/10 hover:bg-white/10';
+          if (locked && isCorrectOpt) style = 'bg-emerald-500/20 border-emerald-400';
+          else if (locked && isSelected && !isCorrectOpt) style = 'bg-red-500/20 border-red-400';
+          return (
+            <motion.button key={`${step}-${i}`}
+              onClick={() => handleSelect(i)}
+              whileHover={!locked ? { scale: 1.01 } : {}}
+              whileTap={!locked ? { scale: 0.98 } : {}}
+              animate={locked && isSelected && !isCorrectOpt ? { x: [0, -6, 6, -4, 4, 0] } : {}}
+              className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-semibold transition-colors flex items-center gap-3 ${style}`}
+            >
+              <span className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-black shrink-0">
+                {String.fromCharCode(65 + i)}
+              </span>
+              <span className="flex-1">{opt}</span>
+              {locked && isCorrectOpt && <CheckCircle size={16} className="text-emerald-400 shrink-0" />}
+              {locked && isSelected && !isCorrectOpt && <X size={16} className="text-red-400 shrink-0" />}
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AreaCards({ description }: { description: string }) {
   const items = description
     .split('\n')
