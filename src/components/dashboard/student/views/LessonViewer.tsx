@@ -615,56 +615,90 @@ const AREA_STYLES: Record<string, { icon: React.ElementType; color: string }> = 
 
 /** Splits the "Aplicación por área" paragraph into a grid of colorful area cards instead of one dense block of text. */
 /** Kahoot/trivia-style quiz: one question at a time, streak counter, and a celebratory results screen. */
+type TileStatus = 'pending' | 'correct' | 'wrong';
+const QUIZ_LIVES = 3;
+
+/** Board-game style quiz: 5 level tiles on a path, a bear token that advances, and 3 lives — miss too many and it's game over. */
 function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQuestion[] }) {
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
+  const [lives, setLives] = useState(QUIZ_LIVES);
+  const [tileStatus, setTileStatus] = useState<TileStatus[]>(() => questions.map(() => 'pending'));
+  const [gameOver, setGameOver] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [answers, setAnswers] = useState<boolean[]>([]);
   const savedRef = useRef(false);
 
   const q = questions[step];
+
+  const finalize = (finalTiles: TileStatus[]) => {
+    if (savedRef.current) return;
+    savedRef.current = true;
+    const finalScore = finalTiles.filter(s => s === 'correct').length;
+    saveQuizResult(lessonId, finalScore, questions.length).catch(err => {
+      console.error('No se pudo guardar el resultado del quiz:', err);
+      toast.error('No se pudo guardar tu calificación');
+    });
+  };
 
   const handleSelect = (idx: number) => {
     if (locked) return;
     setSelected(idx);
     setLocked(true);
     const isCorrect = idx === q.correct;
-    const finalScore = score + (isCorrect ? 1 : 0);
-    setScore(finalScore);
-    setStreak(s => (isCorrect ? s + 1 : 0));
-    setAnswers(prev => [...prev, isCorrect]);
+    const nextTiles = tileStatus.map((s, i) => (i === step ? (isCorrect ? 'correct' : 'wrong') as TileStatus : s));
+    setTileStatus(nextTiles);
+    const nextLives = isCorrect ? lives : lives - 1;
+    if (!isCorrect) setLives(nextLives);
+
     setTimeout(() => {
+      if (!isCorrect && nextLives <= 0) {
+        setGameOver(true);
+        finalize(nextTiles);
+        return;
+      }
       if (step < questions.length - 1) {
         setStep(s => s + 1);
         setSelected(null);
         setLocked(false);
       } else {
         setFinished(true);
-        if (!savedRef.current) {
-          savedRef.current = true;
-          saveQuizResult(lessonId, finalScore, questions.length).catch(err => {
-            console.error('No se pudo guardar el resultado del quiz:', err);
-            toast.error('No se pudo guardar tu calificación');
-          });
-        }
+        finalize(nextTiles);
       }
     }, 1100);
   };
 
   const restart = () => {
     savedRef.current = false;
-    setStep(0); setSelected(null); setLocked(false); setScore(0); setStreak(0); setFinished(false); setAnswers([]);
+    setStep(0); setSelected(null); setLocked(false);
+    setLives(QUIZ_LIVES);
+    setTileStatus(questions.map(() => 'pending'));
+    setGameOver(false); setFinished(false);
   };
 
   if (questions.length === 0) return null;
 
+  if (gameOver) {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+        className="rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 text-center text-white shadow-xl">
+        <motion.div initial={{ scale: 0, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 220 }} className="text-5xl mb-2">💀</motion.div>
+        <p className="text-2xl font-black mb-1">Te quedaste sin vidas</p>
+        <p className="text-sm opacity-80 mb-5">Llegaste hasta la pregunta {step + 1} de {questions.length}</p>
+        <button onClick={restart}
+          className="px-6 py-2.5 rounded-xl bg-white text-slate-800 text-sm font-black hover:bg-slate-100 transition-colors shadow-lg">
+          Intentar de nuevo
+        </button>
+      </motion.div>
+    );
+  }
+
   if (finished) {
-    const pct = Math.round((score / questions.length) * 100);
-    const emoji = pct === 100 ? '🏆' : pct >= 60 ? '🎉' : '📚';
-    const msg = pct === 100 ? '¡Perfecto!' : pct >= 80 ? '¡Excelente!' : pct >= 60 ? '¡Bien hecho!' : 'Sigue practicando';
+    const emoji = lives === QUIZ_LIVES ? '🏆' : lives >= 2 ? '🎉' : '😅';
+    const msg = lives === QUIZ_LIVES ? '¡Perfecto, sin errores!' : lives >= 2 ? '¡Completaste el nivel!' : '¡Justo a tiempo!';
+    const score = tileStatus.filter(s => s === 'correct').length;
     return (
       <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 280, damping: 24 }}
@@ -674,16 +708,11 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
           {emoji}
         </motion.div>
         <p className="text-2xl font-black mb-1">{msg}</p>
-        <p className="text-sm opacity-90 mb-5">Obtuviste {score} de {questions.length} respuestas correctas</p>
-        <div className="flex justify-center gap-1.5 mb-6">
-          {answers.map((a, i) => (
-            <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15 + i * 0.05 }}
-              className={`w-3 h-3 rounded-full ${a ? 'bg-emerald-300' : 'bg-white/30'}`} />
-          ))}
-        </div>
+        <p className="text-sm opacity-90 mb-1">Terminaste con {lives} de {QUIZ_LIVES} vidas</p>
+        <p className="text-xs opacity-75 mb-5">{score} de {questions.length} respuestas correctas</p>
         <button onClick={restart}
           className="px-6 py-2.5 rounded-xl bg-white text-violet-700 text-sm font-black hover:bg-violet-50 transition-colors shadow-lg">
-          Volver a intentar
+          Jugar de nuevo
         </button>
       </motion.div>
     );
@@ -691,26 +720,49 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
 
   return (
     <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-xl">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex gap-1.5">
-          {questions.map((_, i) => (
-            <div key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i < step ? 'w-6 bg-emerald-400' : i === step ? 'w-8 bg-violet-400' : 'w-6 bg-white/15'
-              }`} />
+      {/* Level label + lives */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[10px] font-black uppercase tracking-widest text-violet-300">Nivel {step + 1} de {questions.length}</p>
+        <div className="flex gap-1">
+          {Array.from({ length: QUIZ_LIVES }).map((_, i) => (
+            <motion.span key={i}
+              animate={i >= lives ? { scale: [1, 1.3, 0.9], opacity: [1, 1, 0.35] } : { scale: 1, opacity: 1 }}
+              className="text-base">
+              {i < lives ? '❤️' : '🤍'}
+            </motion.span>
           ))}
         </div>
-        <AnimatePresence>
-          {streak >= 2 && (
-            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
-              className="flex items-center gap-1 text-amber-300 text-xs font-black shrink-0">
-              🔥 {streak}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      <p className="text-[10px] font-black uppercase tracking-widest text-violet-300 mb-2">Pregunta {step + 1} de {questions.length}</p>
+      {/* Board path */}
+      <div className="relative flex items-center justify-between mb-6 px-1">
+        <div className="absolute left-3 right-3 top-3.5 h-0.5 bg-white/10" />
+        {questions.map((_, i) => {
+          const status = tileStatus[i];
+          const isCurrent = i === step;
+          return (
+            <div key={i} className="relative z-10 flex flex-col items-center gap-1">
+              <div className="h-4 flex items-end">
+                {isCurrent && (
+                  <motion.span animate={{ y: [0, -3, 0] }} transition={{ duration: 1, repeat: Infinity }} className="text-sm">
+                    🐻
+                  </motion.span>
+                )}
+              </div>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black border-2 transition-colors duration-300 ${
+                status === 'correct' ? 'bg-emerald-500 border-emerald-300'
+                  : status === 'wrong' ? 'bg-rose-500 border-rose-300'
+                  : isCurrent ? 'bg-violet-500 border-violet-300 shadow-lg shadow-violet-500/40'
+                  : 'bg-white/10 border-white/15 text-white/40'
+              }`}>
+                {status === 'correct' ? '✓' : status === 'wrong' ? '✗' : i + 1}
+              </div>
+            </div>
+          );
+        })}
+        <span className="relative z-10 text-lg">🏁</span>
+      </div>
+
       <AnimatePresence mode="wait">
         <motion.p key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
           className="text-base font-bold leading-snug mb-5">
