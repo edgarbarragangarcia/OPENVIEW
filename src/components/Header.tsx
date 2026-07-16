@@ -98,7 +98,7 @@ export function Header({ onLoginClick }: HeaderProps) {
             ) : (
               <button
                 onClick={onLoginClick}
-                className="group relative inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden whitespace-nowrap"
+                className="hidden lg:inline-flex group relative items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-white transition-all duration-300 bg-slate-900 rounded-full hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5 overflow-hidden whitespace-nowrap"
               >
                 <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <span className="relative z-10">Ingresar</span>
