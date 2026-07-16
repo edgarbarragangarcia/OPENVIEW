@@ -57,9 +57,8 @@ export function FeaturesLMS() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              whileHover={{ rotate: idx % 2 === 0 ? -1 : 1, scale: 1.02 }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className={`blob-hover group relative bg-white rounded-3xl p-10 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] card-glow card-glow-brand gradient-border transition-all duration-500 overflow-hidden ${feature.colSpan}`}
+              className={`group relative bg-white rounded-3xl p-10 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] card-glow card-glow-brand gradient-border transition-all duration-500 overflow-hidden ${feature.colSpan}`}
             >
               {/* Subtle hover gradient background */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary-light/0 to-primary-light/0 group-hover:from-primary-light/5 group-hover:to-transparent transition-colors duration-500" />

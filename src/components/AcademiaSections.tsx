@@ -61,7 +61,7 @@ export function CategoriesSection({ onSelectCategory }: CategoriesSectionProps) 
                   viewport={{ once: true, amount: 0.3 }}
                   whileHover={{ rotate: i % 2 === 0 ? -1 : 1, scale: 1.02 }}
                   transition={{ duration: 0.5, delay: i * 0.06 }}
-                  className="blob-hover group text-left relative overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 p-8 card-glow card-glow-brand"
+                  className="group text-left relative overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 p-8 card-glow card-glow-brand"
                 >
                   <div
                     className="absolute -top-1/3 -right-1/4 w-[300px] h-[300px] rounded-full pointer-events-none opacity-[0.08] group-hover:opacity-[0.14] transition-opacity duration-500"
@@ -164,7 +164,7 @@ export function TestimonialsSection() {
               viewport={{ once: true, amount: 0.4 }}
               whileHover={{ y: -4, rotate: i % 2 === 0 ? -0.75 : 0.75 }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="blob-hover rounded-3xl border border-slate-100 bg-slate-50 p-8 flex flex-col card-glow"
+              className="rounded-3xl border border-slate-100 bg-slate-50 p-8 flex flex-col card-glow"
             >
               <p className="text-slate-700 font-light italic leading-relaxed mb-8 flex-1">
                 "{t.quote}"
