@@ -590,18 +590,25 @@ function TextModal({ title, subtitle, icon: Icon, accentClass, text, downloadFil
 // Same nodes/setNodes state as the flow map — this is just an alternate lens
 // over that state, so anything done here or in the flow view stays in sync.
 
-function BoardView({ nodes, onEdit, onDelete, onAddNode, onMoveToColumn }: {
+function BoardView({ nodes, connections, connectingFrom, onEdit, onDelete, onAddNode, onMoveToColumn, onStartConnect, onCompleteConnect, onCancelConnect, onRemoveConnection }: {
   nodes: CanvasNode[];
+  connections: Connection[];
+  connectingFrom: string | null;
   onEdit: (node: CanvasNode) => void;
   onDelete: (id: string) => void;
   onAddNode: (type: SpecNodeType) => void;
   onMoveToColumn: (nodeId: string, type: SpecNodeType) => void;
+  onStartConnect: (nodeId: string) => void;
+  onCompleteConnect: (nodeId: string) => void;
+  onCancelConnect: () => void;
+  onRemoveConnection: (connId: string) => void;
 }) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverType, setDragOverType] = useState<SpecNodeType | null>(null);
+  const nodeLabel = (id: string) => nodes.find(n => n.id === id)?.title || '?';
 
   return (
-    <div className="flex-1 overflow-x-auto overflow-y-hidden bg-[#f8f9fc]">
+    <div className="flex-1 relative overflow-x-auto overflow-y-hidden bg-[#f8f9fc]">
       <div className="flex gap-4 h-full p-5 min-w-max">
         {SPEC_SECTIONS.map(sec => {
           const items = nodes.filter(n => n.type === sec.key);
@@ -640,23 +647,38 @@ function BoardView({ nodes, onEdit, onDelete, onAddNode, onMoveToColumn }: {
                 )}
                 {items.map(n => {
                   const complete = isNodeComplete(n);
+                  const isConnecting = connectingFrom === n.id;
+                  const outgoing = connections.filter(c => c.fromId === n.id);
                   return (
                     <div key={n.id}
                       draggable
                       onDragStart={() => setDraggedId(n.id)}
                       onDragEnd={() => setDraggedId(null)}
-                      onClick={() => onEdit(n)}
-                      className={`group rounded-xl border bg-white p-3 cursor-grab active:cursor-grabbing shadow-sm hover:border-cyan-300 hover:shadow-md transition-all ${
+                      onClick={() => {
+                        if (connectingFrom && connectingFrom !== n.id) onCompleteConnect(n.id);
+                        else if (isConnecting) onCancelConnect();
+                        else onEdit(n);
+                      }}
+                      className={`group rounded-xl border bg-white p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all ${
                         draggedId === n.id ? 'opacity-40' : ''
-                      }`}
-                      style={{ borderColor: complete ? '#e2e8f0' : '#fbbf2480' }}
+                      } ${isConnecting ? 'ring-2 ring-sky-400' : 'hover:border-cyan-300'}`}
+                      style={{ borderColor: isConnecting ? undefined : complete ? '#e2e8f0' : '#fbbf2480' }}
                     >
                       <div className="flex items-start justify-between gap-1">
                         <p className="text-xs font-bold text-slate-800 leading-snug flex-1">{n.title || sec.label}</p>
-                        <button onClick={e => { e.stopPropagation(); onDelete(n.id); }}
-                          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0">
-                          <Trash2 size={10} />
-                        </button>
+                        <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={e => { e.stopPropagation(); onStartConnect(n.id); }}
+                            title="Conectar con otro bloque"
+                            className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${
+                              isConnecting ? 'text-sky-500 bg-sky-50' : 'text-slate-300 hover:text-sky-500 hover:bg-sky-50'
+                            }`}>
+                            <ArrowRight size={10} />
+                          </button>
+                          <button onClick={e => { e.stopPropagation(); onDelete(n.id); }}
+                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
+                            <Trash2 size={10} />
+                          </button>
+                        </div>
                       </div>
                       {n.content ? (
                         <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed line-clamp-3">{n.content}</p>
@@ -669,6 +691,19 @@ function BoardView({ nodes, onEdit, onDelete, onAddNode, onMoveToColumn }: {
                           <span className="text-[9px] font-bold">Incompleto</span>
                         </div>
                       )}
+                      {outgoing.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-slate-100">
+                          {outgoing.map(c => (
+                            <span key={c.id} className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold">
+                              <ArrowRight size={8} /> {nodeLabel(c.toId)}
+                              <button onClick={e => { e.stopPropagation(); onRemoveConnection(c.id); }}
+                                className="hover:text-red-500 transition-colors">
+                                <X size={8} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -677,6 +712,17 @@ function BoardView({ nodes, onEdit, onDelete, onAddNode, onMoveToColumn }: {
           );
         })}
       </div>
+
+      {/* Connecting hint */}
+      <AnimatePresence>
+        {connectingFrom && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-xl flex items-center gap-2 pointer-events-none">
+            <ArrowRight size={13} />
+            Haz clic en otra tarjeta para conectar · clic de nuevo en ésta para cancelar
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1075,6 +1121,8 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
         {viewMode === 'board' ? (
           <BoardView
             nodes={nodes}
+            connections={connections}
+            connectingFrom={connectingFrom}
             onEdit={setEditingNode}
             onDelete={id => {
               setNodes(prev => prev.filter(n => n.id !== id));
@@ -1087,6 +1135,15 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
               const pos = getAutoPositionForType(type, prev.filter(n => n.type === type));
               return prev.map(n => n.id === nodeId ? { ...n, type, ...pos } : n);
             })}
+            onStartConnect={nodeId => setConnectingFrom(prev => (prev === nodeId ? null : nodeId))}
+            onCompleteConnect={targetId => {
+              if (connectingFrom && connectingFrom !== targetId) {
+                setConnections(prev => [...prev, { id: getId(), fromId: connectingFrom, toId: targetId }]);
+              }
+              setConnectingFrom(null);
+            }}
+            onCancelConnect={() => setConnectingFrom(null)}
+            onRemoveConnection={connId => setConnections(prev => prev.filter(c => c.id !== connId))}
           />
         ) : (
         <div className="flex-1 relative overflow-hidden">
