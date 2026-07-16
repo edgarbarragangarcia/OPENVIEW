@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
@@ -400,11 +400,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
               {activeLesson.content && (
                 structuredContent ? (
                   structuredContent.description && (
-                    <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
-                      <div className="text-xs md:text-sm text-lms-text-primary leading-relaxed">
-                        {structuredContent.description}
-                      </div>
-                    </div>
+                    <AreaCards description={structuredContent.description} />
                   )
                 ) : (
                   <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-white border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
@@ -415,16 +411,15 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
               {/* Contenido de la sesión: temas, alcances, material y feedback en un solo acordeón tipo Platzi */}
               {(() => {
-                const rows: { key: string; title: string; count: string; accentClass: string; bgClass: string; borderClass: string; content: ReactNode }[] = [];
+                const rows: { key: string; title: string; count: string; icon: React.ElementType; color: string; content: ReactNode }[] = [];
 
                 if (structuredContent && structuredContent.temas.length > 0) {
                   rows.push({
                     key: 'temas',
                     title: 'Temas a cubrir',
                     count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
-                    accentClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
-                    bgClass: 'bg-cyan-500/5 hover:bg-cyan-500/10',
-                    borderClass: 'border-cyan-500/20',
+                    icon: Target,
+                    color: '#06b6d4',
                     content: <TopicPath temas={structuredContent.temas} color="#06b6d4" />,
                   });
                 }
@@ -434,9 +429,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     key: 'alcances',
                     title: 'Alcances',
                     count: `${structuredContent.alcances.length} alcance${structuredContent.alcances.length !== 1 ? 's' : ''}`,
-                    accentClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-                    bgClass: 'bg-emerald-500/5 hover:bg-emerald-500/10',
-                    borderClass: 'border-emerald-500/20',
+                    icon: Flag,
+                    color: '#10b981',
                     content: (
                       <ul className="space-y-3 m-0 p-0 list-none">
                         {structuredContent.alcances.map((alcance, i) => (
@@ -456,9 +450,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     key: 'material',
                     title: 'Material Descargable',
                     count: `${urls.length} archivo${urls.length !== 1 ? 's' : ''}`,
-                    accentClass: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
-                    bgClass: 'bg-indigo-500/5 hover:bg-indigo-500/10',
-                    borderClass: 'border-indigo-500/20',
+                    icon: Package,
+                    color: '#6366f1',
                     content: (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {urls.map((url, idx) => {
@@ -521,9 +514,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     key: 'kanban',
                     title: 'Feedback de aprendizaje',
                     count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
-                    accentClass: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
-                    bgClass: 'bg-violet-500/5 hover:bg-violet-500/10',
-                    borderClass: 'border-violet-500/20',
+                    icon: MessageSquare,
+                    color: '#8b5cf6',
                     content: <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structuredContent.temas} />,
                   });
                 }
@@ -533,16 +525,16 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 return (
                   <div className="space-y-4">
                     {rows.map((row, i) => (
-                      <div key={`${activeLesson.id}-${row.key}`} className={`rounded-2xl border ${row.borderClass} ${row.bgClass} overflow-hidden shadow-sm transition-colors duration-300`}>
-                        <AccordionRow
-                          index={i + 1}
-                          title={row.title}
-                          count={row.count}
-                          accentClass={row.accentClass}
-                        >
-                          {row.content}
-                        </AccordionRow>
-                      </div>
+                      <AccordionRow
+                        key={`${activeLesson.id}-${row.key}`}
+                        index={i + 1}
+                        title={row.title}
+                        count={row.count}
+                        icon={row.icon}
+                        color={row.color}
+                      >
+                        {row.content}
+                      </AccordionRow>
                     ))}
                   </div>
                 );
@@ -596,6 +588,60 @@ export function LessonViewer({ courseId, onBack }: Props) {
   );
 }
 
+const AREA_STYLES: Record<string, { icon: React.ElementType; color: string }> = {
+  'Finanzas': { icon: DollarSign, color: '#10b981' },
+  'Recursos Humanos': { icon: Users, color: '#8b5cf6' },
+  'Administrativa': { icon: ClipboardList, color: '#0ea5e9' },
+  'Compras': { icon: ShoppingCart, color: '#f59e0b' },
+};
+
+/** Splits the "Aplicación por área" paragraph into a grid of colorful area cards instead of one dense block of text. */
+function AreaCards({ description }: { description: string }) {
+  const items = description
+    .split('\n')
+    .map(line => {
+      const m = line.match(/^([^:]+):\s*(.*)$/);
+      return m ? { label: m[1].trim(), text: m[2].trim() } : null;
+    })
+    .filter((v): v is { label: string; text: string } => v !== null && v.text.length > 0);
+
+  if (items.length === 0) {
+    return (
+      <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
+        <p className="text-xs md:text-sm text-lms-text-primary leading-relaxed">{description}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {items.map((item, i) => {
+        const style = AREA_STYLES[item.label] ?? { icon: Sparkles, color: '#64748b' };
+        const Icon = style.icon;
+        return (
+          <motion.div key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05, type: 'spring', stiffness: 320, damping: 26 }}
+            whileHover={{ y: -2 }}
+            className="rounded-2xl border p-4 shadow-sm transition-shadow"
+            style={{ borderColor: `${style.color}30`, background: `linear-gradient(135deg, ${style.color}0d, transparent)` }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `linear-gradient(135deg, ${style.color}40, ${style.color}15)`, boxShadow: `0 2px 6px ${style.color}30` }}>
+                <Icon size={15} style={{ color: style.color }} />
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: style.color }}>{item.label}</p>
+            </div>
+            <p className="text-xs sm:text-sm text-lms-text-primary leading-relaxed">{item.text}</p>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Duolingo-style zigzag progress path: numbered nodes on a dashed spine, alternating sides. */
 function TopicPath({ temas, color }: { temas: string[]; color: string }) {
   return (
@@ -638,25 +684,43 @@ interface AccordionRowProps {
   index: number;
   title: string;
   count: string;
-  accentClass: string;
+  icon: React.ElementType;
+  color: string;
   defaultOpen?: boolean;
   children: ReactNode;
 }
 
-function AccordionRow({ index, title, count, accentClass, defaultOpen = false, children }: AccordionRowProps) {
+/** "Level card" style accordion row: gradient icon badge with a level-number chip, glow on open. */
+function AccordionRow({ index, title, count, icon: Icon, color, defaultOpen = false, children }: AccordionRowProps) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div>
+    <div className="rounded-2xl border overflow-hidden transition-all duration-300"
+      style={{
+        borderColor: open ? `${color}55` : `${color}20`,
+        boxShadow: open ? `0 10px 28px ${color}18` : `0 1px 3px rgba(0,0,0,0.04)`,
+      }}
+    >
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 px-5 py-4 transition-colors text-left group"
+        style={{ background: `linear-gradient(135deg, ${color}12, transparent 70%)` }}
       >
-        <span className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 text-[10px] font-black shadow-sm transition-transform duration-300 group-hover:scale-110 ${accentClass}`}>
-          {index}
-        </span>
-        <span className="flex-1 text-sm font-bold text-lms-text-primary">{title}</span>
-        <span className="text-[10px] text-lms-text-muted shrink-0">{count}</span>
+        <motion.div whileHover={{ scale: 1.1, rotate: -4 }}
+          className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white shadow-lg"
+          style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, boxShadow: `0 4px 14px ${color}45` }}
+        >
+          <Icon size={17} />
+          <span className="absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border-2 flex items-center justify-center text-[9px] font-black"
+            style={{ borderColor: color, color }}>
+            {index}
+          </span>
+        </motion.div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-widest" style={{ color }}>Nivel {index}</p>
+          <span className="text-sm font-black text-lms-text-primary truncate block">{title}</span>
+        </div>
+        <span className="text-[10px] font-bold text-lms-text-muted shrink-0">{count}</span>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="shrink-0 text-lms-text-muted">
           <ChevronDown size={16} />
         </motion.div>
