@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from 'motion/react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useRef } from 'react';
 import { MagneticButton } from './effects/MagneticButton';
 import { AnimatedCounter } from './effects/AnimatedCounter';
@@ -46,17 +46,6 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
       />
 
       <motion.div style={{ opacity: contentFade }} className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 w-full text-center">
-
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="sticker inline-flex items-center gap-1.5 sm:gap-2 bg-sky-500/10 border border-sky-400/30 text-sky-300 text-[10px] sm:text-xs font-semibold uppercase tracking-widest px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-6 sm:mb-8"
-        >
-          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-400 shrink-0" />
-          Open View Academia · 2026
-        </motion.div>
 
         {/* Headline */}
         <motion.h1
