@@ -104,6 +104,20 @@ function isNodeComplete(node: CanvasNode): boolean {
   return node.content.trim().length > 0;
 }
 
+/**
+ * When a card is dragged to a different column in the board view, its `type`
+ * changes but x/y don't — so the flow map would show the same node in the
+ * same spot, just re-colored, which reads as "nothing happened". Give it a
+ * position in that section's lane instead, so the move is visible there too.
+ */
+function getAutoPositionForType(type: SpecNodeType, othersOfSameType: CanvasNode[]) {
+  const sectionIdx = SPEC_SECTIONS.findIndex(s => s.key === type);
+  return {
+    x: 320 + sectionIdx * 260,
+    y: 60 + othersOfSameType.length * 190,
+  };
+}
+
 // ─── Consultant Prompt Generator ──────────────────────────────────────────────
 
 function groupNodesBySection(nodes: CanvasNode[]) {
@@ -1067,7 +1081,12 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
               setConnections(prev => prev.filter(c => c.fromId !== id && c.toId !== id));
             }}
             onAddNode={addNode}
-            onMoveToColumn={(nodeId, type) => setNodes(prev => prev.map(n => n.id === nodeId ? { ...n, type } : n))}
+            onMoveToColumn={(nodeId, type) => setNodes(prev => {
+              const moved = prev.find(n => n.id === nodeId);
+              if (!moved || moved.type === type) return prev;
+              const pos = getAutoPositionForType(type, prev.filter(n => n.type === type));
+              return prev.map(n => n.id === nodeId ? { ...n, type, ...pos } : n);
+            })}
           />
         ) : (
         <div className="flex-1 relative overflow-hidden">
@@ -1157,7 +1176,13 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
           <NodeEditModal
             node={editingNode}
             onSave={updates => {
-              setNodes(prev => prev.map(n => n.id === editingNode.id ? { ...n, ...updates } : n));
+              setNodes(prev => {
+                const typeChanged = updates.type && updates.type !== editingNode.type && !isTerminalType(updates.type);
+                const pos = typeChanged
+                  ? getAutoPositionForType(updates.type as SpecNodeType, prev.filter(n => n.type === updates.type && n.id !== editingNode.id))
+                  : null;
+                return prev.map(n => n.id === editingNode.id ? { ...n, ...updates, ...(pos ?? {}) } : n);
+              });
             }}
             onClose={() => setEditingNode(null)}
           />
