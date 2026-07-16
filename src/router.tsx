@@ -21,7 +21,7 @@ function LandingPage() {
   };
 
   return (
-    <div className="relative w-full overflow-x-hidden bg-white text-slate-900 font-body antialiased selection:bg-primary/20">
+    <div className="relative w-full overflow-x-hidden bg-white text-slate-900 font-body antialiased selection:bg-primary/20 bg-grain">
       <Header onLoginClick={openAuth} />
       <main className="relative">
         <LMSHero onCtaClick={openAuth} />

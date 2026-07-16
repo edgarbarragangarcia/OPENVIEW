@@ -19,6 +19,7 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
+      whileHover={{ y: -6, rotate: idx % 2 === 0 ? -0.75 : 0.75 }}
       transition={{ duration: 0.6, delay: idx * 0.12 }}
       className="group flex flex-col bg-slate-50 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] card-glow card-glow-brand transition-all duration-500"
     >
@@ -32,7 +33,7 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
           </div>
         )}
         {course.categories?.name && (
-          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-primary-dark text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full shadow-sm">
+          <div className="sticker absolute top-4 left-4 bg-white/90 backdrop-blur-md text-primary-dark text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full shadow-sm">
             {course.categories.name}
           </div>
         )}

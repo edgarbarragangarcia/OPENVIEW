@@ -46,7 +46,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-1.5 sm:gap-2 bg-sky-50 border border-sky-200 text-sky-700 text-[10px] sm:text-xs font-semibold uppercase tracking-widest px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-6 sm:mb-8 shadow-sm"
+          className="sticker inline-flex items-center gap-1.5 sm:gap-2 bg-sky-50 border border-sky-200 text-sky-700 text-[10px] sm:text-xs font-semibold uppercase tracking-widest px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-6 sm:mb-8 shadow-sm"
         >
           <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500 shrink-0" />
           Open View Academia · 2026
@@ -104,7 +104,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
         >
           <button
             onClick={() => scrollToId('cursos')}
-            className="flex h-12 sm:h-14 items-center gap-2 rounded-full bg-slate-900 px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(14,165,233,0.35)] hover:-translate-y-0.5 transition-all duration-300"
+            className="tilt-hover flex h-12 sm:h-14 items-center gap-2 rounded-full bg-slate-900 px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(14,165,233,0.35)]"
           >
             Explorar cursos <ArrowRight size={18} />
           </button>
