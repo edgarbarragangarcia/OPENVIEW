@@ -6,9 +6,10 @@ interface MagneticButtonProps {
   className?: string;
   onClick?: () => void;
   strength?: number;
+  disabled?: boolean;
 }
 
-export function MagneticButton({ children, className, onClick, strength = 0.35 }: MagneticButtonProps) {
+export function MagneticButton({ children, className, onClick, strength = 0.35, disabled }: MagneticButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -31,6 +32,7 @@ export function MagneticButton({ children, className, onClick, strength = 0.35 }
     <motion.button
       ref={ref}
       onClick={onClick}
+      disabled={disabled}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ x: springX, y: springY }}

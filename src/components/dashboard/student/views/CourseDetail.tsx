@@ -5,6 +5,8 @@ import { getCourseById, type Module } from '../../../../lib/courses';
 import { enrollInCourse, isEnrolled } from '../../../../lib/enrollments';
 import { supabase } from '../../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { MagneticButton } from '../../../effects/MagneticButton';
+import { RevealHeading } from '../../../effects/RevealHeading';
 
 interface Props {
   courseId: string;
@@ -134,7 +136,7 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
         <div className="flex items-center gap-4 px-4 lg:px-8 h-14 bg-white border-b border-slate-200 sticky top-0 z-10">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-xs text-slate-500 hover:text-cyan-600 font-semibold transition-colors"
+            className="flex items-center gap-2 text-xs text-slate-500 hover:text-primary font-semibold transition-colors"
           >
             <ArrowLeft size={14} /> Volver
           </button>
@@ -152,11 +154,11 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
             className="lg:col-span-7 space-y-5"
           >
             {course.categories?.name && (
-              <span className="inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <span className="sticker inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full text-white" style={{ background: 'var(--gradient-brand)' }}>
                 {course.categories.name}
               </span>
             )}
-            <h1 className="text-3xl sm:text-4xl font-black text-lms-text-primary leading-tight">
+            <h1 className="text-3xl sm:text-4xl font-serif font-black text-lms-text-primary leading-tight">
               {course.title}
             </h1>
             <p className="text-lms-text-muted leading-relaxed">
@@ -165,15 +167,15 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
             <div className="flex flex-wrap items-center gap-5 pt-2 text-sm text-lms-text-muted">
               <div className="flex items-center gap-2">
-                <BarChart3 size={15} className="text-cyan-400" />
+                <BarChart3 size={15} className="text-primary" />
                 <span className="capitalize">{LEVEL_LABELS[course.level] ?? course.level}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock size={15} className="text-cyan-400" />
+                <Clock size={15} className="text-primary" />
                 <span>{course.duration_hrs}h de contenido</span>
               </div>
               <div className="flex items-center gap-2">
-                <BookOpen size={15} className="text-cyan-400" />
+                <BookOpen size={15} className="text-primary" />
                 <span>{totalLessons} lecciones · {modules.length} módulos</span>
               </div>
             </div>
@@ -199,15 +201,16 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
                 {course.price > 0 && (
                   <p className="text-2xl font-black text-lms-text-primary">${course.price}</p>
                 )}
-                <button
+                <MagneticButton
                   onClick={handlePrimaryAction}
                   disabled={enrolling}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-sky-600 text-white text-sm font-bold shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-shadow disabled:opacity-60"
+                  className="pulse-glow bg-gradient-primary w-full py-3 rounded-xl text-white text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow disabled:opacity-60"
+                  strength={0.15}
                 >
                   {enrolling ? 'Inscribiendo...' : enrolled ? 'Continuar curso' : 'Inscribirme'}
-                </button>
+                </MagneticButton>
                 {enrolled && (
-                  <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-400">
+                  <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-500">
                     <CheckCircle2 size={13} /> Ya estás inscrito
                   </p>
                 )}
@@ -218,7 +221,7 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
         {/* Curriculum */}
         <div>
-          <h2 className="text-lg font-black text-lms-text-primary mb-4">Contenido del curso</h2>
+          <RevealHeading as="div" className="text-lg font-black text-lms-text-primary mb-4">Contenido del curso</RevealHeading>
           <div className="rounded-3xl border border-lms-border bg-lms-surface overflow-hidden divide-y divide-lms-border">
             {modules.map((mod, mIdx) => {
               const isOpen = openModules.has(mod.id);
@@ -229,7 +232,7 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
                     onClick={() => toggleModule(mod.id)}
                     className="w-full flex items-center gap-3 px-5 py-4 hover:bg-lms-hover/50 transition-colors text-left"
                   >
-                    <span className="w-6 h-6 rounded-md bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 text-[10px] font-black text-cyan-400">
+                    <span className="w-6 h-6 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-[10px] font-black text-primary">
                       {mIdx + 1}
                     </span>
                     <span className="flex-1 text-sm font-bold text-lms-text-primary">{mod.title}</span>
@@ -273,13 +276,13 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
         {/* Instructor */}
         {instructor && (instructor.full_name || instructor.bio) && (
           <div>
-            <h2 className="text-lg font-black text-lms-text-primary mb-4">Tu instructor</h2>
+            <RevealHeading as="div" className="text-lg font-black text-lms-text-primary mb-4">Tu instructor</RevealHeading>
             <div className="rounded-3xl border border-lms-border bg-lms-surface p-6 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
                 {instructor.avatar_url ? (
                   <img src={instructor.avatar_url} alt={instructor.full_name ?? ''} className="w-full h-full object-cover" />
                 ) : (
-                  <UserIcon size={22} className="text-cyan-400" />
+                  <UserIcon size={22} className="text-primary" />
                 )}
               </div>
               <div>
@@ -293,13 +296,13 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
         {/* Related courses */}
         {related.length > 0 && (
           <div>
-            <h2 className="text-lg font-black text-lms-text-primary mb-4">Cursos relacionados</h2>
+            <RevealHeading as="div" className="text-lg font-black text-lms-text-primary mb-4">Cursos relacionados</RevealHeading>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {related.map(r => (
                 <button
                   key={r.id}
                   onClick={() => onSelectRelated(r.id)}
-                  className="text-left rounded-2xl border border-lms-border bg-lms-surface overflow-hidden card-glow card-glow-cyan"
+                  className="text-left rounded-2xl border border-lms-border bg-lms-surface overflow-hidden card-glow card-glow-brand"
                 >
                   <div className="h-24 bg-lms-hover overflow-hidden">
                     {r.cover_url ? (
