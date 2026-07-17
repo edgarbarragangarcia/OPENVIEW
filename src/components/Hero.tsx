@@ -7,7 +7,7 @@ export function Hero() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    setImageUrl("/hero-bg.png");
+    setImageUrl("/hero-bg.webp");
   }, []);
 
   return (

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
-import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds } from '../../../../lib/enrollments';
+import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { saveQuizResult } from '../../../../lib/quizResults';
 import { ProcessCanvas } from './ProcessCanvas';
@@ -80,6 +80,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
   const [canvasView, setCanvasView] = useState<'list' | { canvasId: string } | null>(null);
+  const [accessEnabled, setAccessEnabled] = useState(true);
   const showCanvas = canvasView !== null;
   const structuredContent = useMemo(() => parseStructuredContent(activeLesson?.content ?? null), [activeLesson?.id]);
 
@@ -111,6 +112,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
         const completedIds = await getCompletedLessonIds(courseId);
         setCompleted(completedIds);
+
+        const access = await getEnrollmentAccess(courseId);
+        setAccessEnabled(access);
       } catch (e) {
         console.error(e);
       } finally {
@@ -169,9 +173,31 @@ export function LessonViewer({ courseId, onBack }: Props) {
         <StarfieldBackground density={0.6} />
       </div>
 
+      {!accessEnabled && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+          <div className="max-w-sm w-full bg-white/10 backdrop-blur-xl border border-white/15 rounded-3xl p-8 text-center shadow-2xl">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
+              <Lock size={24} className="text-red-400" />
+            </div>
+            <h3 className="text-lg font-black text-white mb-2">Acceso restringido</h3>
+            <p className="text-sm text-slate-300">
+              Tu acceso a este curso fue bloqueado por el administrador. Contáctalo para más información.
+            </p>
+            <button
+              onClick={onBack}
+              className="mt-6 w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-sm font-bold transition-colors"
+            >
+              Volver
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className={`relative flex h-full w-full ${!accessEnabled ? 'blur-md pointer-events-none select-none' : ''}`}>
+
       {/* ── Sidebar: Course Index ── */}
       <aside className={`
-        relative z-30 flex flex-col shrink-0 h-full bg-white/5 backdrop-blur-xl border-r border-white/10 overflow-hidden
+        z-30 flex flex-col shrink-0 h-full bg-white/5 backdrop-blur-xl border-r border-white/10 overflow-hidden
         fixed lg:relative transition-transform duration-300
         ${sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 lg:translate-x-0'}
         ${desktopSidebarOpen ? 'lg:w-72' : 'lg:w-0 lg:border-transparent'}
@@ -636,6 +662,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
         </div>
         </>
         )}
+      </div>
       </div>
     </div>
   );

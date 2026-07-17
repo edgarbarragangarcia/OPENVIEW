@@ -6,6 +6,7 @@ export interface Enrollment {
   course_id: string;
   enrolled_at: string;
   completed_at: string | null;
+  access_enabled: boolean;
   // Joined
   profiles?: { full_name: string; email: string; avatar_url: string | null };
   courses?: { title: string; cover_url: string | null };
@@ -59,7 +60,7 @@ export async function getAllEnrollments() {
     .from('enrollments')
     .select(`
       *,
-      profiles(full_name, avatar_url),
+      profiles(full_name, email, avatar_url),
       courses(title, cover_url)
     `)
     .order('enrolled_at', { ascending: false });
@@ -85,6 +86,38 @@ export async function adminRemoveEnrollment(enrollmentId: string) {
     .delete()
     .eq('id', enrollmentId);
   if (error) throw error;
+}
+
+/** [ADMIN] Habilitar/deshabilitar el acceso de una matrícula individual */
+export async function adminSetEnrollmentAccess(enrollmentId: string, accessEnabled: boolean) {
+  const { error } = await supabase
+    .from('enrollments')
+    .update({ access_enabled: accessEnabled })
+    .eq('id', enrollmentId);
+  if (error) throw error;
+}
+
+/** [ADMIN] Habilitar/deshabilitar el acceso de todas las matrículas de un curso */
+export async function adminSetCourseAccess(courseId: string, accessEnabled: boolean) {
+  const { error } = await supabase
+    .from('enrollments')
+    .update({ access_enabled: accessEnabled })
+    .eq('course_id', courseId);
+  if (error) throw error;
+}
+
+/** Verificar si el usuario actual tiene acceso habilitado a un curso (matrícula activa) */
+export async function getEnrollmentAccess(courseId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return true;
+
+  const { data } = await supabase
+    .from('enrollments')
+    .select('access_enabled')
+    .eq('user_id', user.id)
+    .eq('course_id', courseId)
+    .single();
+  return data?.access_enabled ?? true;
 }
 
 export async function getCourseProgress(userId: string, courseId: string): Promise<number> {

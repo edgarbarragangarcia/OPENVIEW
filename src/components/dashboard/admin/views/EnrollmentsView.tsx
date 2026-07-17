@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, X, BookOpen, UserCheck, Trash2, ChevronDown } from 'lucide-react';
+import { Search, Plus, X, BookOpen, UserCheck, Trash2, ChevronDown, Lock, Unlock } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
-import { getAllEnrollments, adminEnrollStudent, adminRemoveEnrollment } from '../../../../lib/enrollments';
+import {
+  getAllEnrollments,
+  adminEnrollStudent,
+  adminRemoveEnrollment,
+  adminSetEnrollmentAccess,
+  adminSetCourseAccess,
+} from '../../../../lib/enrollments';
 import { ConfirmModal } from '../../shared/Modals';
 
 interface Course { id: string; title: string }
@@ -19,10 +25,11 @@ export function EnrollmentsView() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
-  const [collapsedCourses, setCollapsedCourses] = useState<Set<string>>(new Set());
+  // Groups start collapsed; a course key is added here only once the admin expands it.
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
 
   const toggleCourse = (courseKey: string) => {
-    setCollapsedCourses(prev => {
+    setExpandedCourses(prev => {
       const next = new Set(prev);
       if (next.has(courseKey)) next.delete(courseKey);
       else next.add(courseKey);
@@ -73,6 +80,28 @@ export function EnrollmentsView() {
       showToast(e.message.includes('unique') ? 'Este estudiante ya está matriculado en ese curso' : e.message, false);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleToggleAccess = async (enrollmentId: string, current: boolean) => {
+    // Optimistic update so the switch feels instant
+    setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, access_enabled: !current } : e));
+    try {
+      await adminSetEnrollmentAccess(enrollmentId, !current);
+    } catch (e: any) {
+      showToast(e.message, false);
+      setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, access_enabled: current } : e));
+    }
+  };
+
+  const handleToggleCourseAccess = async (courseId: string, nextEnabled: boolean) => {
+    setEnrollments(prev => prev.map(e => e.course_id === courseId ? { ...e, access_enabled: nextEnabled } : e));
+    try {
+      await adminSetCourseAccess(courseId, nextEnabled);
+      showToast(nextEnabled ? 'Acceso habilitado para todo el curso ✓' : 'Acceso bloqueado para todo el curso');
+    } catch (e: any) {
+      showToast(e.message, false);
+      load();
     }
   };
 
@@ -169,27 +198,39 @@ export function EnrollmentsView() {
       ) : (
         <div className="space-y-4">
           {courseGroups.map(([courseKey, group]) => {
-            const isCollapsed = collapsedCourses.has(courseKey);
+            const isCollapsed = !expandedCourses.has(courseKey);
+            const allBlocked = group.items.every(e => !e.access_enabled);
             return (
               <div key={courseKey} className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden">
-                <button
-                  onClick={() => toggleCourse(courseKey)}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-4 hover:bg-lms-hover transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
+                <div className="w-full flex items-center justify-between gap-3 px-5 py-4 hover:bg-lms-hover transition-colors">
+                  <button onClick={() => toggleCourse(courseKey)} className="flex items-center gap-3 flex-1 text-left min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
                       <BookOpen size={16} className="text-violet-400" />
                     </div>
-                    <div>
-                      <p className="text-sm font-black text-lms-text-primary">{group.title}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-lms-text-primary truncate">{group.title}</p>
                       <p className="text-xs text-lms-text-muted">{group.items.length} estudiante{group.items.length !== 1 ? 's' : ''} matriculado{group.items.length !== 1 ? 's' : ''}</p>
                     </div>
-                  </div>
-                  <ChevronDown
-                    size={18}
-                    className={`text-lms-text-muted shrink-0 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`}
-                  />
-                </button>
+                  </button>
+                  <button
+                    onClick={() => handleToggleCourseAccess(courseKey, allBlocked)}
+                    title={allBlocked ? 'Habilitar acceso para todo el curso' : 'Bloquear acceso para todo el curso'}
+                    className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      allBlocked
+                        ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                        : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                    }`}
+                  >
+                    {allBlocked ? <Lock size={13} /> : <Unlock size={13} />}
+                    {allBlocked ? 'Bloqueado' : 'Habilitado'}
+                  </button>
+                  <button onClick={() => toggleCourse(courseKey)} className="shrink-0 p-1">
+                    <ChevronDown
+                      size={18}
+                      className={`text-lms-text-muted transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`}
+                    />
+                  </button>
+                </div>
 
                 {!isCollapsed && (
                   <div className="overflow-x-auto border-t border-lms-border">
@@ -199,6 +240,7 @@ export function EnrollmentsView() {
                           <th className="px-5 py-3 font-bold w-12">#</th>
                           <th className="px-5 py-3 font-bold">Estudiante</th>
                           <th className="px-5 py-3 font-bold">Matriculado</th>
+                          <th className="px-5 py-3 font-bold">Acceso</th>
                           <th className="px-5 py-3 font-bold text-right">Acciones</th>
                         </tr>
                       </thead>
@@ -219,6 +261,17 @@ export function EnrollmentsView() {
                             </td>
                             <td className="px-5 py-3 text-sm text-lms-text-muted">
                               {new Date(e.enrolled_at).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="px-5 py-3">
+                              <button
+                                onClick={() => handleToggleAccess(e.id, e.access_enabled)}
+                                title={e.access_enabled ? 'Clic para bloquear el acceso' : 'Clic para habilitar el acceso'}
+                                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${e.access_enabled ? 'bg-emerald-500' : 'bg-lms-border'}`}
+                              >
+                                <span
+                                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${e.access_enabled ? 'translate-x-5' : 'translate-x-0'}`}
+                                />
+                              </button>
                             </td>
                             <td className="px-5 py-3 text-right">
                               <button

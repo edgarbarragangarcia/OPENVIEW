@@ -17,15 +17,16 @@ export interface AdminQuizResult {
   total: number;
   created_at: string;
   lesson_id: string;
+  user_id: string;
   profiles: { full_name: string | null; email: string | null } | null;
-  lessons: { title: string; modules: { title: string; courses: { title: string } | null } | null } | null;
+  lessons: { title: string; modules: { title: string; courses: { id: string; title: string } | null } | null } | null;
 }
 
 /** [ADMIN] Todos los intentos de evaluación de todos los estudiantes, más recientes primero */
 export async function getAllQuizResults(): Promise<AdminQuizResult[]> {
   const { data, error } = await supabase
     .from('quiz_results')
-    .select('id, score, total, created_at, lesson_id, profiles(full_name, email), lessons(title, modules(title, courses(title)))')
+    .select('id, score, total, created_at, lesson_id, user_id, profiles(full_name, email), lessons(title, modules(title, courses(id, title)))')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data as unknown as AdminQuizResult[]) ?? [];
