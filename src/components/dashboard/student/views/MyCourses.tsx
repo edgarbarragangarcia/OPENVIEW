@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { BookOpen, Clock } from 'lucide-react';
 import { getMyEnrollments, getCourseProgress } from '../../../../lib/enrollments';
 import { supabase } from '../../../../lib/supabase';
+import { cached } from '../../../../lib/queryCache';
 
 interface Props {
   onEnter: (courseId: string) => void;
@@ -39,7 +40,7 @@ export function MyCourses({ onEnter, onCourseSelect }: Props) {
     async function load() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        const data = await getMyEnrollments();
+        const data = await cached('enrollments:mine-full', 60_000, () => getMyEnrollments());
         const withProgress = await Promise.all(
           (data || [])
             .filter((e: any) => e.courses)

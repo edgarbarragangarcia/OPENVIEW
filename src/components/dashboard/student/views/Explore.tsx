@@ -3,6 +3,9 @@ import { motion } from 'motion/react';
 import { BookOpen, Clock, Search, Filter } from 'lucide-react';
 import { getCourses, Course } from '../../../../lib/courses';
 import { enrollInCourse, getMyEnrollmentStatuses } from '../../../../lib/enrollments';
+import { cached, invalidateCache } from '../../../../lib/queryCache';
+
+const CACHE_TTL = 60_000;
 
 interface Props {
   onEnroll: () => void;
@@ -38,7 +41,10 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
   useEffect(() => {
     async function load() {
       try {
-        const [data, statuses] = await Promise.all([getCourses(true), getMyEnrollmentStatuses()]);
+        const [data, statuses] = await Promise.all([
+          cached('courses:published', CACHE_TTL, () => getCourses(true)),
+          cached('enrollments:my-statuses', CACHE_TTL, () => getMyEnrollmentStatuses()),
+        ]);
         setCourses(data);
         setEnrolledIds(new Set(statuses.keys()));
         setPendingIds(new Set([...statuses.entries()].filter(([, hasAccess]) => !hasAccess).map(([id]) => id)));
@@ -55,6 +61,7 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
     setEnrolling(courseId);
     try {
       await enrollInCourse(courseId);
+      invalidateCache('enrollments:');
       setEnrolledIds(prev => new Set([...prev, courseId]));
       setPendingIds(prev => new Set([...prev, courseId]));
       showToast(`Solicitud enviada para "${title}" — un administrador debe aprobarla antes de que puedas entrar ✓`);
