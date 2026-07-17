@@ -37,6 +37,7 @@ interface CourseData {
   id: string;
   title: string;
   cover_url: string | null;
+  started: boolean;
   modules: Module[];
 }
 
@@ -89,7 +90,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
       try {
         const { data } = await supabase
           .from('courses')
-          .select('id, title, cover_url, modules(id, title, position, lessons(id, title, content, video_url, pdf_url, duration_min, position, is_free))')
+          .select('id, title, cover_url, started, modules(id, title, position, lessons(id, title, content, video_url, pdf_url, duration_min, position, is_free))')
           .eq('id', courseId)
           .single();
 
@@ -167,21 +168,28 @@ export function LessonViewer({ courseId, onBack }: Props) {
     );
   }
 
+  const notStarted = !course.started;
+  const locked = !accessEnabled || notStarted;
+
   return (
     <div className="relative flex h-full bg-[#05070f] overflow-hidden">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <StarfieldBackground density={0.6} />
       </div>
 
-      {!accessEnabled && (
+      {locked && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
           <div className="max-w-sm w-full bg-white/10 backdrop-blur-xl border border-white/15 rounded-3xl p-8 text-center shadow-2xl">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
-              <Lock size={24} className="text-red-400" />
+            <div className={`w-14 h-14 mx-auto rounded-2xl border flex items-center justify-center mb-5 ${!accessEnabled ? 'bg-red-500/10 border-red-500/20' : 'bg-cyan-500/10 border-cyan-500/20'}`}>
+              <Lock size={24} className={!accessEnabled ? 'text-red-400' : 'text-cyan-400'} />
             </div>
-            <h3 className="text-lg font-black text-white mb-2">Acceso restringido</h3>
+            <h3 className="text-lg font-black text-white mb-2">
+              {!accessEnabled ? 'Acceso restringido' : 'Curso aún no iniciado'}
+            </h3>
             <p className="text-sm text-slate-300">
-              Tu acceso a este curso fue bloqueado por el administrador. Contáctalo para más información.
+              {!accessEnabled
+                ? 'Tu acceso a este curso fue bloqueado por el administrador. Contáctalo para más información.'
+                : 'El administrador todavía no ha iniciado este curso. El contenido se habilitará en cuanto lo haga.'}
             </p>
             <button
               onClick={onBack}
@@ -193,7 +201,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
         </div>
       )}
 
-      <div className={`relative flex h-full w-full ${!accessEnabled ? 'blur-md pointer-events-none select-none' : ''}`}>
+      <div className={`relative flex h-full w-full ${locked ? 'blur-md pointer-events-none select-none' : ''}`}>
 
       {/* ── Sidebar: Course Index ── */}
       <aside className={`

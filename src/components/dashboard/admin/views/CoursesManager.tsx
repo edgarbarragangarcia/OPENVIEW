@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users } from 'lucide-react';
+import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users, PlayCircle, PauseCircle } from 'lucide-react';
 import { Course, getCourses, updateCourse, deleteCourse } from '../../../../lib/courses';
 import { ConfirmModal } from '../../shared/Modals';
 
@@ -50,6 +50,16 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
     try {
       await updateCourse(course.id, { published: !course.published });
       showToast(course.published ? 'Curso despublicado' : 'Curso publicado ✓');
+      load();
+    } catch (e: any) {
+      showToast(e.message, false);
+    }
+  };
+
+  const toggleStarted = async (course: Course) => {
+    try {
+      await updateCourse(course.id, { started: !course.started });
+      showToast(course.started ? 'Curso pausado: el contenido volverá a verse borroso para los estudiantes' : 'Curso iniciado ✓ Los estudiantes ya pueden ver el contenido');
       load();
     } catch (e: any) {
       showToast(e.message, false);
@@ -160,6 +170,15 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
                   {course.published ? <Eye size={11} /> : <EyeOff size={11} />}
                   {course.published ? 'Publicado' : 'Borrador'}
                 </div>
+                {/* Started badge */}
+                <div className={`absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border ${
+                  course.started
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                    : 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+                }`}>
+                  {course.started ? <PlayCircle size={11} /> : <PauseCircle size={11} />}
+                  {course.started ? 'Iniciado' : 'Sin iniciar'}
+                </div>
                 {/* Quick actions overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                   <button
@@ -195,16 +214,30 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
                     <Users size={12} />
                     {(course.enrollments as any)?.[0]?.count ?? 0} inscritos
                   </div>
-                  <button
-                    onClick={() => togglePublish(course)}
-                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
-                      course.published
-                        ? 'bg-lms-hover text-lms-text-muted hover:text-amber-400'
-                        : 'bg-violet-600/20 text-violet-400 hover:bg-violet-600/30'
-                    }`}
-                  >
-                    {course.published ? 'Despublicar' : 'Publicar'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleStarted(course)}
+                      title={course.started ? 'Pausar: el contenido volverá a verse borroso para los estudiantes' : 'Iniciar: los estudiantes podrán ver el contenido de las lecciones'}
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                        course.started
+                          ? 'bg-lms-hover text-lms-text-muted hover:text-slate-400'
+                          : 'bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30'
+                      }`}
+                    >
+                      {course.started ? <PauseCircle size={13} /> : <PlayCircle size={13} />}
+                      {course.started ? 'Pausar' : 'Iniciar curso'}
+                    </button>
+                    <button
+                      onClick={() => togglePublish(course)}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                        course.published
+                          ? 'bg-lms-hover text-lms-text-muted hover:text-amber-400'
+                          : 'bg-violet-600/20 text-violet-400 hover:bg-violet-600/30'
+                      }`}
+                    >
+                      {course.published ? 'Despublicar' : 'Publicar'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

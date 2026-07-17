@@ -17,6 +17,7 @@ export interface Course {
   level: 'beginner' | 'intermediate' | 'advanced';
   duration_hrs: number;
   published: boolean;
+  started: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;
