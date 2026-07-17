@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
-import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess } from '../../../../lib/enrollments';
+import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { saveQuizResult } from '../../../../lib/quizResults';
 import { ProcessCanvas } from './ProcessCanvas';
@@ -83,6 +83,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
   const [canvasView, setCanvasView] = useState<'list' | { canvasId: string } | null>(null);
   const [accessEnabled, setAccessEnabled] = useState(true);
+  const [startOverride, setStartOverride] = useState(false);
   const showCanvas = canvasView !== null;
   const structuredContent = useMemo(() => parseStructuredContent(activeLesson?.content ?? null), [activeLesson?.id]);
 
@@ -117,6 +118,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
         const access = await getEnrollmentAccess(courseId);
         setAccessEnabled(access);
+
+        const override = await getEnrollmentStartOverride(courseId);
+        setStartOverride(override);
       } catch (e) {
         console.error(e);
       } finally {
@@ -170,7 +174,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
   }
 
   const scheduledUnlockPassed = !!course.starts_at && new Date(course.starts_at).getTime() <= Date.now();
-  const notStarted = !course.started && !scheduledUnlockPassed;
+  const notStarted = !course.started && !scheduledUnlockPassed && !startOverride;
   const locked = !accessEnabled || notStarted;
   const isScheduled = notStarted && !!course.starts_at && !scheduledUnlockPassed;
 

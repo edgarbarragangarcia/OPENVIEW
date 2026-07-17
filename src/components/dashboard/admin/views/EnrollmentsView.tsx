@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, X, BookOpen, UserCheck, Trash2, ChevronDown, Lock, Unlock } from 'lucide-react';
+import { Search, Plus, X, BookOpen, UserCheck, Trash2, ChevronDown, Lock, Unlock, PlayCircle } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import {
   getAllEnrollments,
@@ -7,6 +7,7 @@ import {
   adminRemoveEnrollment,
   adminSetEnrollmentAccess,
   adminSetCourseAccess,
+  adminSetEnrollmentStartOverride,
 } from '../../../../lib/enrollments';
 import { ConfirmModal } from '../../shared/Modals';
 
@@ -91,6 +92,17 @@ export function EnrollmentsView() {
     } catch (e: any) {
       showToast(e.message, false);
       setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, access_enabled: current } : e));
+    }
+  };
+
+  const handleToggleStartOverride = async (enrollmentId: string, current: boolean) => {
+    setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, started_override: !current } : e));
+    try {
+      await adminSetEnrollmentStartOverride(enrollmentId, !current);
+      showToast(!current ? 'Curso iniciado para esta persona ✓' : 'Se quitó el inicio individual');
+    } catch (e: any) {
+      showToast(e.message, false);
+      setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, started_override: current } : e));
     }
   };
 
@@ -241,6 +253,7 @@ export function EnrollmentsView() {
                           <th className="px-5 py-3 font-bold">Estudiante</th>
                           <th className="px-5 py-3 font-bold">Matriculado</th>
                           <th className="px-5 py-3 font-bold">Acceso</th>
+                          <th className="px-5 py-3 font-bold">Inicio individual</th>
                           <th className="px-5 py-3 font-bold text-right">Acciones</th>
                         </tr>
                       </thead>
@@ -271,6 +284,20 @@ export function EnrollmentsView() {
                                 <span
                                   className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${e.access_enabled ? 'translate-x-5' : 'translate-x-0'}`}
                                 />
+                              </button>
+                            </td>
+                            <td className="px-5 py-3">
+                              <button
+                                onClick={() => handleToggleStartOverride(e.id, e.started_override)}
+                                title={e.started_override ? 'Quitar el inicio individual (dependerá del estado global del curso)' : 'Iniciar el curso solo para esta persona, sin esperar a que se inicie para todos'}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                                  e.started_override
+                                    ? 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20'
+                                    : 'bg-lms-hover text-lms-text-muted hover:text-cyan-400'
+                                }`}
+                              >
+                                <PlayCircle size={13} />
+                                {e.started_override ? 'Iniciado' : 'Iniciar'}
                               </button>
                             </td>
                             <td className="px-5 py-3 text-right">

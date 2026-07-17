@@ -7,6 +7,7 @@ export interface Enrollment {
   enrolled_at: string;
   completed_at: string | null;
   access_enabled: boolean;
+  started_override: boolean;
   // Joined
   profiles?: { full_name: string; email: string; avatar_url: string | null };
   courses?: { title: string; cover_url: string | null };
@@ -121,6 +122,16 @@ export async function adminSetCourseAccess(courseId: string, accessEnabled: bool
   if (error) throw error;
 }
 
+/** [ADMIN] Iniciar (o revertir) el curso para un estudiante puntual, sin importar si el
+ *  curso ya está iniciado globalmente. Útil para dar acceso anticipado a personas concretas. */
+export async function adminSetEnrollmentStartOverride(enrollmentId: string, started: boolean) {
+  const { error } = await supabase
+    .from('enrollments')
+    .update({ started_override: started })
+    .eq('id', enrollmentId);
+  if (error) throw error;
+}
+
 /** Verificar si el usuario actual tiene acceso habilitado a un curso (matrícula activa) */
 export async function getEnrollmentAccess(courseId: string): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -133,6 +144,21 @@ export async function getEnrollmentAccess(courseId: string): Promise<boolean> {
     .eq('course_id', courseId)
     .single();
   return data?.access_enabled ?? true;
+}
+
+/** Verificar si el curso fue iniciado individualmente para el usuario actual (anula el bloqueo
+ *  de "curso no iniciado" aunque el curso no se haya iniciado para todos). */
+export async function getEnrollmentStartOverride(courseId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from('enrollments')
+    .select('started_override')
+    .eq('user_id', user.id)
+    .eq('course_id', courseId)
+    .single();
+  return data?.started_override ?? false;
 }
 
 export async function getCourseProgress(userId: string, courseId: string): Promise<number> {
