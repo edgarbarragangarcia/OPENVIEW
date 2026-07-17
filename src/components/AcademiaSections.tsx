@@ -34,10 +34,14 @@ export function CategoriesSection({ onSelectCategory }: CategoriesSectionProps) 
   if (!loading && categories.length === 0) return null;
 
   return (
-    <section className="relative py-32 px-6 sm:px-10 bg-white overflow-hidden">
+    <section className="relative py-32 px-6 sm:px-10 overflow-hidden" style={{ background: 'linear-gradient(160deg, #eef2ff 0%, #fdf2f8 45%, #ecfeff 100%)' }}>
       <div
-        className="absolute top-0 left-0 w-1/2 h-[600px] pointer-events-none opacity-60"
-        style={{ background: 'radial-gradient(circle at 0% 0%, rgba(99,102,241,0.06), transparent 70%)' }}
+        className="absolute top-0 left-0 w-2/3 h-[700px] pointer-events-none"
+        style={{ background: 'radial-gradient(circle at 0% 0%, rgba(13,89,242,0.16), transparent 70%)' }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-2/3 h-[700px] pointer-events-none"
+        style={{ background: 'radial-gradient(circle at 100% 100%, rgba(236,72,153,0.14), transparent 70%)' }}
       />
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="max-w-2xl mb-16">
