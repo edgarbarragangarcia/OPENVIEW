@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, X, BookOpen, UserCheck, Trash2 } from 'lucide-react';
+import { Search, Plus, X, BookOpen, UserCheck, Trash2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { getAllEnrollments, adminEnrollStudent, adminRemoveEnrollment } from '../../../../lib/enrollments';
 import { ConfirmModal } from '../../shared/Modals';
@@ -19,6 +19,16 @@ export function EnrollmentsView() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [collapsedCourses, setCollapsedCourses] = useState<Set<string>>(new Set());
+
+  const toggleCourse = (courseKey: string) => {
+    setCollapsedCourses(prev => {
+      const next = new Set(prev);
+      if (next.has(courseKey)) next.delete(courseKey);
+      else next.add(courseKey);
+      return next;
+    });
+  };
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -92,6 +102,14 @@ export function EnrollmentsView() {
     );
   });
 
+  const groupedByCourse = filtered.reduce((acc: Record<string, { title: string; items: any[] }>, e) => {
+    const key = e.course_id ?? e.courses?.title ?? '-';
+    if (!acc[key]) acc[key] = { title: e.courses?.title ?? 'Sin curso', items: [] };
+    acc[key].items.push(e);
+    return acc;
+  }, {});
+  const courseGroups = Object.entries(groupedByCourse).sort((a, b) => a[1].title.localeCompare(b[1].title));
+
   return (
     <div className="p-6 lg:p-8 space-y-6">
       
@@ -139,74 +157,89 @@ export function EnrollmentsView() {
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-lms-border text-xs uppercase tracking-wider text-lms-text-muted">
-                <th className="px-5 py-4 font-bold">Estudiante</th>
-                <th className="px-5 py-4 font-bold">Curso</th>
-                <th className="px-5 py-4 font-bold">Matriculado</th>
-                <th className="px-5 py-4 font-bold text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-lms-border">
-              {loading ? (
-                [1,2,3].map(i => (
-                  <tr key={i}>
-                    <td colSpan={4} className="px-5 py-4">
-                      <div className="h-8 bg-lms-hover rounded-lg animate-pulse" />
-                    </td>
-                  </tr>
-                ))
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-5 py-14 text-center text-lms-text-muted text-sm">
-                    {search ? 'No se encontraron resultados.' : 'No hay matrículas aún. ¡Crea la primera!'}
-                  </td>
-                </tr>
-              ) : (
-                filtered.map(e => (
-                  <tr key={e.id} className="hover:bg-lms-hover transition-colors group">
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                          {(e.profiles?.full_name ?? 'U').slice(0,2).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-lms-text-primary">{e.profiles?.full_name ?? '-'}</p>
-                          <p className="text-xs text-lms-text-muted">{e.profiles?.email ?? '-'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <BookOpen size={14} className="text-violet-400 shrink-0" />
-                        <span className="text-sm text-lms-text-primary font-medium line-clamp-1">
-                          {e.courses?.title ?? '-'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-sm text-lms-text-muted">
-                      {new Date(e.enrolled_at).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <button
-                        onClick={() => confirmDelete(e.id, e.profiles?.full_name || 'Estudiante')}
-                        className="p-1.5 text-lms-text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                        title="Eliminar matrícula"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Grouped by course, collapsible */}
+      {loading ? (
+        <div className="space-y-4">
+          {[1,2,3].map(i => <div key={i} className="h-16 bg-lms-surface border border-lms-border rounded-2xl animate-pulse" />)}
         </div>
-      </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-lms-surface border border-lms-border rounded-2xl px-5 py-14 text-center text-lms-text-muted text-sm">
+          {search ? 'No se encontraron resultados.' : 'No hay matrículas aún. ¡Crea la primera!'}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {courseGroups.map(([courseKey, group]) => {
+            const isCollapsed = collapsedCourses.has(courseKey);
+            return (
+              <div key={courseKey} className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden">
+                <button
+                  onClick={() => toggleCourse(courseKey)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 hover:bg-lms-hover transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                      <BookOpen size={16} className="text-violet-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-lms-text-primary">{group.title}</p>
+                      <p className="text-xs text-lms-text-muted">{group.items.length} estudiante{group.items.length !== 1 ? 's' : ''} matriculado{group.items.length !== 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                  <ChevronDown
+                    size={18}
+                    className={`text-lms-text-muted shrink-0 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`}
+                  />
+                </button>
+
+                {!isCollapsed && (
+                  <div className="overflow-x-auto border-t border-lms-border">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-lms-border text-xs uppercase tracking-wider text-lms-text-muted">
+                          <th className="px-5 py-3 font-bold w-12">#</th>
+                          <th className="px-5 py-3 font-bold">Estudiante</th>
+                          <th className="px-5 py-3 font-bold">Matriculado</th>
+                          <th className="px-5 py-3 font-bold text-right">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-lms-border">
+                        {group.items.map((e, idx) => (
+                          <tr key={e.id} className="hover:bg-lms-hover transition-colors group">
+                            <td className="px-5 py-3 text-sm font-semibold text-lms-text-muted">{idx + 1}</td>
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                  {(e.profiles?.full_name ?? 'U').slice(0,2).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-lms-text-primary">{e.profiles?.full_name ?? '-'}</p>
+                                  <p className="text-xs text-lms-text-muted">{e.profiles?.email ?? '-'}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3 text-sm text-lms-text-muted">
+                              {new Date(e.enrolled_at).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              <button
+                                onClick={() => confirmDelete(e.id, e.profiles?.full_name || 'Estudiante')}
+                                className="p-1.5 text-lms-text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                title="Eliminar matrícula"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (

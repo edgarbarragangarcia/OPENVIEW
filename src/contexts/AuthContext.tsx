@@ -9,6 +9,8 @@ interface AuthContextType {
   session: Session | null;
   role: UserRole;
   isLoading: boolean;
+  mustChangePassword: boolean;
+  clearMustChangePassword: () => void;
   signOut: () => Promise<void>;
 }
 
@@ -17,18 +19,23 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   role: null,
   isLoading: true,
+  mustChangePassword: false,
+  clearMustChangePassword: () => {},
   signOut: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-async function fetchRole(userId: string): Promise<UserRole> {
+async function fetchProfile(userId: string): Promise<{ role: UserRole; mustChangePassword: boolean }> {
   const { data } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, must_change_password')
     .eq('id', userId)
     .single();
-  return (data?.role as UserRole) ?? 'student';
+  return {
+    role: (data?.role as UserRole) ?? 'student',
+    mustChangePassword: !!data?.must_change_password,
+  };
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -36,15 +43,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
   const handleSetRole = async (currentUser: User) => {
     // FORZAR ROL ADMIN para admin@openview.com temporalmente
     if (currentUser.email === 'admin@openview.com') {
       setRole('admin');
+      setMustChangePassword(false);
       return;
     }
-    const r = await fetchRole(currentUser.id);
+    const { role: r, mustChangePassword: mcp } = await fetchProfile(currentUser.id);
     setRole(r);
+    setMustChangePassword(mcp);
   };
 
   useEffect(() => {
@@ -71,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         handleSetRole(session.user);
       } else {
         setRole(null);
+        setMustChangePassword(false);
       }
     });
 
@@ -83,10 +94,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     await supabase.auth.signOut();
     setRole(null);
+    setMustChangePassword(false);
   };
 
+  const clearMustChangePassword = () => setMustChangePassword(false);
+
   return (
-    <AuthContext.Provider value={{ user, session, role, isLoading, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, isLoading, mustChangePassword, clearMustChangePassword, signOut }}>
       {children}
     </AuthContext.Provider>
   );

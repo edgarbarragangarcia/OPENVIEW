@@ -35,14 +35,19 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
     if (!ctx) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Coarse-pointer/small-viewport devices (phones) get a much lighter starfield —
+    // fewer stars, capped DPR, and a lower frame rate to avoid draining battery/CPU.
+    const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
     const container = canvas.parentElement!;
     let width = 0;
     let height = 0;
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
     let stars: Star[] = [];
     let raf = 0;
 
-    const STAR_COUNT_BASE = 480;
+    const STAR_COUNT_BASE = isMobile ? 160 : 480;
+    const mobileFrameInterval = 1000 / 30; // cap at ~30fps on mobile
+    let lastFrameTime = 0;
 
     // Diagonal "dust band" direction (matches the CSS gradient band below)
     const bandAngle = (115 * Math.PI) / 180;
@@ -99,7 +104,15 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
     };
 
     let t = 0;
-    const draw = () => {
+    const draw = (now?: number) => {
+      if (isMobile && now !== undefined) {
+        if (now - lastFrameTime < mobileFrameInterval) {
+          raf = requestAnimationFrame(draw);
+          return;
+        }
+        lastFrameTime = now;
+      }
+
       t += 0.008;
       ctx.clearRect(0, 0, width, height);
 
@@ -121,7 +134,8 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
         ctx.arc(px, py, s.r, 0, Math.PI * 2);
         ctx.fill();
 
-        if (s.z > 0.75) {
+        // Skip the extra glow halo on mobile — it's a second draw call per near star
+        if (!isMobile && s.z > 0.75) {
           ctx.beginPath();
           ctx.fillStyle = `rgba(${HUE_COLORS[s.hue]}, ${alpha * 0.15})`;
           ctx.arc(px, py, s.r * 3.5, 0, Math.PI * 2);
@@ -152,17 +166,17 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
 
   return (
     <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className ?? ''}`}>
-      {/* Nebula haze (brand blue/indigo/cyan) */}
+      {/* Nebula haze (brand blue/indigo/cyan) — smaller/lighter blur radius on mobile, full size on desktop */}
       <div
-        className="absolute -top-1/4 left-1/4 w-[900px] h-[900px] rounded-full blur-[140px] opacity-50"
+        className="absolute -top-1/4 left-1/4 w-[900px] h-[900px] rounded-full blur-[60px] md:blur-[140px] opacity-50"
         style={{ background: 'radial-gradient(circle, rgba(13,89,242,0.6) 0%, transparent 70%)' }}
       />
       <div
-        className="absolute top-1/3 -right-1/4 w-[700px] h-[700px] rounded-full blur-[130px] opacity-40"
+        className="absolute top-1/3 -right-1/4 w-[700px] h-[700px] rounded-full blur-[55px] md:blur-[130px] opacity-40"
         style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.6) 0%, transparent 70%)' }}
       />
       <div
-        className="absolute -bottom-1/4 left-1/3 w-[600px] h-[600px] rounded-full blur-[120px] opacity-35"
+        className="absolute -bottom-1/4 left-1/3 w-[600px] h-[600px] rounded-full blur-[50px] md:blur-[120px] opacity-35"
         style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 70%)' }}
       />
       {/* Milky Way dust band */}
