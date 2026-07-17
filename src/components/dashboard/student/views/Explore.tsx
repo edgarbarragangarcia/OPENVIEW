@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Clock, Search, Filter } from 'lucide-react';
 import { getCourses, Course } from '../../../../lib/courses';
-import { enrollInCourse, isEnrolled, getEnrollmentAccess } from '../../../../lib/enrollments';
+import { enrollInCourse, getMyEnrollmentStatuses } from '../../../../lib/enrollments';
 
 interface Props {
   onEnroll: () => void;
@@ -38,17 +38,10 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getCourses(true);
+        const [data, statuses] = await Promise.all([getCourses(true), getMyEnrollmentStatuses()]);
         setCourses(data);
-        // Check which ones we're already enrolled in
-        const checks = await Promise.all(data.map(c => isEnrolled(c.id).then(v => ({ id: c.id, enrolled: v }))));
-        const enrolledCourseIds = checks.filter(c => c.enrolled).map(c => c.id);
-        setEnrolledIds(new Set(enrolledCourseIds));
-
-        const accessChecks = await Promise.all(
-          enrolledCourseIds.map(id => getEnrollmentAccess(id).then(hasAccess => ({ id, hasAccess })))
-        );
-        setPendingIds(new Set(accessChecks.filter(c => !c.hasAccess).map(c => c.id)));
+        setEnrolledIds(new Set(statuses.keys()));
+        setPendingIds(new Set([...statuses.entries()].filter(([, hasAccess]) => !hasAccess).map(([id]) => id)));
       } catch (e) {
         console.error(e);
       } finally {

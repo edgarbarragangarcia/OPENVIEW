@@ -41,6 +41,20 @@ export async function isEnrolled(courseId: string): Promise<boolean> {
   return !!data;
 }
 
+/** Todas las matrículas (course_id + acceso) del usuario actual en una sola consulta,
+ *  para evitar hacer una llamada por curso al pintar el catálogo. */
+export async function getMyEnrollmentStatuses(): Promise<Map<string, boolean>> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return new Map();
+
+  const { data } = await supabase
+    .from('enrollments')
+    .select('course_id, access_enabled')
+    .eq('user_id', user.id);
+
+  return new Map((data ?? []).map(e => [e.course_id, e.access_enabled]));
+}
+
 /** Obtener todos los cursos del usuario actual (estudiante) */
 export async function getMyEnrollments() {
   const { data: { user } } = await supabase.auth.getUser();
