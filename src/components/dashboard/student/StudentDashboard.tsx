@@ -80,7 +80,7 @@ export function StudentDashboard() {
           {/* Logo */}
           <div className={`flex items-center justify-between px-5 h-16 border-b shrink-0 ${isDarkView ? 'border-white/10' : 'border-lms-border'}`}>
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Open View Logo" className="w-14 h-14 object-contain rounded-lg" />
+              <img src="/logo.png" alt="Open View Logo" className="h-10 sm:h-16 w-auto object-contain" />
               <div>
                 <p className={`font-black text-sm leading-none mb-1 ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>OpenView</p>
                 <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>

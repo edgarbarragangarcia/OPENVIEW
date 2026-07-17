@@ -72,7 +72,7 @@ export function AdminDashboard() {
         {/* Logo */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-lms-border shrink-0">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Open View Logo" className="w-14 h-14 object-contain rounded-lg" />
+              <img src="/logo.png" alt="Open View Logo" className="h-10 sm:h-16 w-auto object-contain" />
               <div>
                 <p className="font-black text-sm text-lms-text-primary tracking-wide leading-none mb-1">OpenView</p>
                 <p className="text-[10px] text-violet-500 font-bold uppercase tracking-widest leading-none">Admin</p>
