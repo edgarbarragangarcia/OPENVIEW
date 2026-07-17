@@ -78,27 +78,27 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
       )}
 
       <div>
-        <h1 className="text-2xl font-black text-lms-text-primary">Explorar Cursos</h1>
-        <p className="text-sm text-lms-text-muted mt-1">Descubre y únete a nuevos programas de aprendizaje</p>
+        <h1 className="text-2xl font-black text-white">Explorar Cursos</h1>
+        <p className="text-sm text-slate-400 mt-1">Descubre y únete a nuevos programas de aprendizaje</p>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lms-text-muted" />
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Buscar cursos..."
-          className="w-full pl-10 pr-4 py-3 bg-lms-surface border border-lms-border rounded-xl text-sm text-lms-text-primary placeholder-lms-text-muted focus:outline-none focus:border-cyan-500 transition-colors"
+          className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
         />
       </div>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {[1,2,3].map(i => <div key={i} className="h-72 bg-lms-surface rounded-2xl animate-pulse border border-lms-border" />)}
+          {[1,2,3].map(i => <div key={i} className="h-72 bg-white/5 rounded-2xl animate-pulse border border-white/10" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center text-lms-text-muted gap-4">
+        <div className="flex flex-col items-center justify-center py-20 text-center text-slate-400 gap-4">
           <Filter size={32} className="opacity-20" />
           <p className="text-sm">{search ? 'Sin resultados para tu búsqueda.' : 'No hay cursos publicados aún.'}</p>
         </div>
@@ -112,14 +112,14 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 28, delay: idx * 0.05 }}
-                className="bg-lms-surface border border-lms-border rounded-2xl overflow-hidden card-glow card-glow-cyan transition-all duration-200 flex flex-col group"
+                className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl overflow-hidden card-glow card-glow-cyan transition-all duration-200 flex flex-col group"
               >
-                <div className="relative h-44 bg-lms-hover overflow-hidden">
+                <div className="relative h-44 bg-white/5 overflow-hidden">
                   {course.cover_url ? (
                     <img src={course.cover_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <BookOpen size={36} className="text-lms-text-muted/30" />
+                      <BookOpen size={36} className="text-white/20" />
                     </div>
                   )}
                   {course.categories?.name && (
@@ -135,16 +135,16 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
                 </div>
                 <div className="p-4 flex flex-col flex-1">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="text-sm font-bold text-lms-text-primary line-clamp-2 flex-1">{course.title}</h3>
+                    <h3 className="text-sm font-bold text-white line-clamp-2 flex-1">{course.title}</h3>
                     {course.level && (
-                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${LEVEL_COLORS[course.level] ?? 'bg-lms-hover text-lms-text-muted'}`}>
+                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${LEVEL_COLORS[course.level] ?? 'bg-white/10 text-slate-300'}`}>
                         {LEVEL_LABELS[course.level] ?? course.level}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-lms-text-muted line-clamp-2 flex-1">{course.description || 'Sin descripción'}</p>
-                  <div className="mt-4 pt-3 border-t border-lms-border flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-xs text-lms-text-muted">
+                  <p className="text-xs text-slate-400 line-clamp-2 flex-1">{course.description || 'Sin descripción'}</p>
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-xs text-slate-400">
                       <Clock size={11} />
                       {course.duration_hrs}h
                     </div>

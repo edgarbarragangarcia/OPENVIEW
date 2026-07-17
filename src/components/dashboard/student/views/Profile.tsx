@@ -42,7 +42,7 @@ export function Profile() {
   ];
 
   return (
-    <div className="min-h-full bg-lms-bg p-6 lg:p-10">
+    <div className="min-h-full p-6 lg:p-10">
       <div className="max-w-4xl mx-auto space-y-8">
 
         {/* Hero Banner */}
@@ -107,8 +107,8 @@ export function Profile() {
               <div className={`w-10 h-10 rounded-xl ${stat.bg} border ${stat.border} flex items-center justify-center`}>
                 <stat.icon size={18} className={stat.color} />
               </div>
-              <p className="text-lg font-black text-lms-text-primary">{stat.value}</p>
-              <p className="text-[10px] font-semibold text-lms-text-muted uppercase tracking-wider">{stat.label}</p>
+              <p className="text-lg font-black text-white">{stat.value}</p>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -118,42 +118,42 @@ export function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26, delay: 0.2 }}
-          className="bg-lms-surface border border-lms-border rounded-3xl p-6 sm:p-8 shadow-sm"
+          className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/40"
         >
           <div className="flex items-center gap-3 mb-8">
             <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-              <UserIcon size={16} className="text-cyan-500" />
+              <UserIcon size={16} className="text-cyan-400" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-lms-text-primary">Información Personal</h2>
-              <p className="text-xs text-lms-text-muted">Actualiza tus datos de perfil</p>
+              <h2 className="text-sm font-black text-white">Información Personal</h2>
+              <p className="text-xs text-slate-400">Actualiza tus datos de perfil</p>
             </div>
           </div>
 
           <div className="space-y-5">
             {/* Full Name */}
             <div>
-              <label className="block text-xs font-bold text-lms-text-muted uppercase tracking-wider mb-2">Nombre Completo</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nombre Completo</label>
               <input
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
                 placeholder="Tu nombre completo"
-                className="w-full px-4 py-3 bg-lms-bg border border-lms-border rounded-xl text-sm text-lms-text-primary placeholder-lms-text-muted focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 transition-all"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 transition-all"
               />
             </div>
 
             {/* Email (disabled) */}
             <div>
-              <label className="block text-xs font-bold text-lms-text-muted uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                 Correo Electrónico
-                <span className="ml-2 text-[10px] normal-case font-normal bg-lms-hover text-lms-text-muted px-2 py-0.5 rounded-md">No modificable</span>
+                <span className="ml-2 text-[10px] normal-case font-normal bg-white/10 text-slate-400 px-2 py-0.5 rounded-md">No modificable</span>
               </label>
               <div className="relative">
-                <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-lms-text-muted" />
+                <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   value={user?.email || ''}
                   disabled
-                  className="w-full pl-10 pr-4 py-3 bg-lms-hover border border-lms-border rounded-xl text-sm text-lms-text-muted cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-400 cursor-not-allowed"
                 />
               </div>
             </div>

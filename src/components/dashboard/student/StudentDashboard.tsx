@@ -26,8 +26,8 @@ export function StudentDashboard() {
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'ST';
   const inFullscreenView = !!(viewingCourseId || viewingDetailId);
-  // "Mi Aprendizaje" carries its own cosmic dark theme (CourseDetail) — extend it to the whole shell
-  const isDarkView = view === 'my-courses' && !inFullscreenView;
+  // The whole student dashboard shell carries the cosmic dark/starfield theme
+  const isDarkView = !inFullscreenView;
 
   const renderContent = () => {
     if (viewingCourseId) {
