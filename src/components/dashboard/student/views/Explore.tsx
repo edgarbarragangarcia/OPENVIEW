@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Clock, Search, Filter } from 'lucide-react';
 import { getCourses, Course } from '../../../../lib/courses';
-import { enrollInCourse, isEnrolled } from '../../../../lib/enrollments';
+import { enrollInCourse, isEnrolled, getEnrollmentAccess } from '../../../../lib/enrollments';
 
 interface Props {
   onEnroll: () => void;
@@ -25,6 +25,7 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [enrolledIds, setEnrolledIds] = useState<Set<string>>(new Set());
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
@@ -40,7 +41,13 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
         setCourses(data);
         // Check which ones we're already enrolled in
         const checks = await Promise.all(data.map(c => isEnrolled(c.id).then(v => ({ id: c.id, enrolled: v }))));
-        setEnrolledIds(new Set(checks.filter(c => c.enrolled).map(c => c.id)));
+        const enrolledCourseIds = checks.filter(c => c.enrolled).map(c => c.id);
+        setEnrolledIds(new Set(enrolledCourseIds));
+
+        const accessChecks = await Promise.all(
+          enrolledCourseIds.map(id => getEnrollmentAccess(id).then(hasAccess => ({ id, hasAccess })))
+        );
+        setPendingIds(new Set(accessChecks.filter(c => !c.hasAccess).map(c => c.id)));
       } catch (e) {
         console.error(e);
       } finally {
@@ -55,8 +62,9 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
     try {
       await enrollInCourse(courseId);
       setEnrolledIds(prev => new Set([...prev, courseId]));
-      showToast(`¡Te has inscrito en "${title}"! ✓`);
-      setTimeout(onEnroll, 1500);
+      setPendingIds(prev => new Set([...prev, courseId]));
+      showToast(`Solicitud enviada para "${title}" — un administrador debe aprobarla antes de que puedas entrar ✓`);
+      setTimeout(onEnroll, 2000);
     } catch (e: any) {
       showToast(e.message.includes('unique') ? 'Ya estás inscrito en este curso' : e.message, false);
     } finally {
@@ -149,12 +157,18 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
                       {course.duration_hrs}h
                     </div>
                     {already ? (
-                      <button
-                        onClick={() => onCourseSelect(course.id)}
-                        className="text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 rounded-xl transition-colors shadow-lg shadow-emerald-500/5 flex items-center gap-2"
-                      >
-                        ✓ Inscrito <span className="font-normal opacity-70">· Entrar</span>
-                      </button>
+                      pendingIds.has(course.id) ? (
+                        <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-4 py-2 rounded-xl flex items-center gap-2">
+                          ⏳ Pendiente de aprobación
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => onCourseSelect(course.id)}
+                          className="text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 rounded-xl transition-colors shadow-lg shadow-emerald-500/5 flex items-center gap-2"
+                        >
+                          ✓ Inscrito <span className="font-normal opacity-70">· Entrar</span>
+                        </button>
+                      )
                     ) : (
                       <button
                         onClick={() => handleEnroll(course.id, course.title)}

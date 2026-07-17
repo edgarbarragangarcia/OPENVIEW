@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Clock, BarChart3, BookOpen, ChevronDown, Play, FileText, User as UserIcon, CheckCircle2 } from 'lucide-react';
 import { getCourseById, type Module } from '../../../../lib/courses';
-import { enrollInCourse, isEnrolled } from '../../../../lib/enrollments';
+import { enrollInCourse, isEnrolled, getEnrollmentAccess } from '../../../../lib/enrollments';
 import { supabase } from '../../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { MagneticButton } from '../../../effects/MagneticButton';
@@ -42,6 +42,7 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
   const [instructor, setInstructor] = useState<Instructor | null>(null);
   const [related, setRelated] = useState<RelatedCourse[]>([]);
   const [enrolled, setEnrolled] = useState(false);
+  const [accessPending, setAccessPending] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [loading, setLoading] = useState(true);
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
@@ -77,6 +78,10 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
         const already = await isEnrolled(courseId);
         if (!cancelled) setEnrolled(already);
+        if (already) {
+          const hasAccess = await getEnrollmentAccess(courseId);
+          if (!cancelled) setAccessPending(!hasAccess);
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -96,13 +101,20 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
   };
 
   const handlePrimaryAction = async () => {
-    if (enrolled) { onEnter(courseId); return; }
+    if (enrolled) {
+      if (accessPending) {
+        toast('Tu inscripción sigue pendiente de aprobación por un administrador.', { icon: '⏳' });
+        return;
+      }
+      onEnter(courseId);
+      return;
+    }
     setEnrolling(true);
     try {
       await enrollInCourse(courseId);
       setEnrolled(true);
-      toast.success('¡Inscripción exitosa!');
-      onEnter(courseId);
+      setAccessPending(true);
+      toast.success('Solicitud enviada. Un administrador debe aprobar tu acceso antes de que puedas ver el contenido.');
     } catch (e: any) {
       toast.error(e.message?.includes('unique') ? 'Ya estás inscrito en este curso' : 'No se pudo completar la inscripción');
     } finally {
@@ -213,12 +225,18 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
                   className="pulse-glow bg-gradient-primary w-full py-3 rounded-xl text-white text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow disabled:opacity-60"
                   strength={0.15}
                 >
-                  {enrolling ? 'Inscribiendo...' : enrolled ? 'Continuar curso' : 'Inscribirme'}
+                  {enrolling ? 'Inscribiendo...' : enrolled ? (accessPending ? 'Pendiente de aprobación' : 'Continuar curso') : 'Inscribirme'}
                 </MagneticButton>
                 {enrolled && (
-                  <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-400">
-                    <CheckCircle2 size={13} /> Ya estás inscrito
-                  </p>
+                  accessPending ? (
+                    <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-400">
+                      <Clock size={13} /> Esperando aprobación del administrador
+                    </p>
+                  ) : (
+                    <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-400">
+                      <CheckCircle2 size={13} /> Ya estás inscrito
+                    </p>
+                  )
                 )}
               </div>
             </div>

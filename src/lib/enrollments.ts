@@ -12,14 +12,15 @@ export interface Enrollment {
   courses?: { title: string; cover_url: string | null };
 }
 
-/** Matricular al usuario actual en un curso */
+/** Matricular al usuario actual en un curso. Queda pendiente de aprobación del administrador
+ *  (access_enabled=false) hasta que lo habilite manualmente en Matrículas. */
 export async function enrollInCourse(courseId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No autenticado');
 
   const { data, error } = await supabase
     .from('enrollments')
-    .insert({ user_id: user.id, course_id: courseId })
+    .insert({ user_id: user.id, course_id: courseId, access_enabled: false })
     .select()
     .single();
   if (error) throw error;
