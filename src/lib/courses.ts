@@ -18,6 +18,7 @@ export interface Course {
   duration_hrs: number;
   published: boolean;
   started: boolean;
+  starts_at: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;

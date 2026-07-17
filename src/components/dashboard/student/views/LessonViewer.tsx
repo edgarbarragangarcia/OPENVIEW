@@ -38,6 +38,7 @@ interface CourseData {
   title: string;
   cover_url: string | null;
   started: boolean;
+  starts_at: string | null;
   modules: Module[];
 }
 
@@ -90,7 +91,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
       try {
         const { data } = await supabase
           .from('courses')
-          .select('id, title, cover_url, started, modules(id, title, position, lessons(id, title, content, video_url, pdf_url, duration_min, position, is_free))')
+          .select('id, title, cover_url, started, starts_at, modules(id, title, position, lessons(id, title, content, video_url, pdf_url, duration_min, position, is_free))')
           .eq('id', courseId)
           .single();
 
@@ -168,8 +169,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
     );
   }
 
-  const notStarted = !course.started;
+  const scheduledUnlockPassed = !!course.starts_at && new Date(course.starts_at).getTime() <= Date.now();
+  const notStarted = !course.started && !scheduledUnlockPassed;
   const locked = !accessEnabled || notStarted;
+  const isScheduled = notStarted && !!course.starts_at && !scheduledUnlockPassed;
 
   return (
     <div className="relative flex h-full bg-[#05070f] overflow-hidden">
@@ -189,7 +192,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
             <p className="text-sm text-slate-300">
               {!accessEnabled
                 ? 'Tu acceso a este curso fue bloqueado por el administrador. Contáctalo para más información.'
-                : 'El administrador todavía no ha iniciado este curso. El contenido se habilitará en cuanto lo haga.'}
+                : isScheduled
+                  ? `Este curso se desbloqueará automáticamente el ${new Date(course.starts_at!).toLocaleString('es', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}.`
+                  : 'El administrador todavía no ha iniciado este curso. El contenido se habilitará en cuanto lo haga.'}
             </p>
             <button
               onClick={onBack}

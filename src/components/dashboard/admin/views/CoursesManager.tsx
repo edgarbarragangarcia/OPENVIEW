@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users, PlayCircle, PauseCircle } from 'lucide-react';
+import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users, PlayCircle, PauseCircle, CalendarClock } from 'lucide-react';
 import { Course, getCourses, updateCourse, deleteCourse } from '../../../../lib/courses';
 import { ConfirmModal } from '../../shared/Modals';
 
@@ -19,6 +19,14 @@ const LEVEL_COLORS: Record<string, string> = {
   intermediate: 'bg-amber-500/10 text-amber-400',
   advanced: 'bg-red-500/10 text-red-400',
 };
+
+/** ISO timestamp -> value for <input type="datetime-local"> (local time, no seconds) */
+function toLocalInputValue(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 export function CoursesManager({ onEdit }: CoursesManagerProps) {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -58,8 +66,20 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
 
   const toggleStarted = async (course: Course) => {
     try {
-      await updateCourse(course.id, { started: !course.started });
+      // Manually starting/pausing a course clears any pending scheduled unlock.
+      await updateCourse(course.id, { started: !course.started, starts_at: null });
       showToast(course.started ? 'Curso pausado: el contenido volverá a verse borroso para los estudiantes' : 'Curso iniciado ✓ Los estudiantes ya pueden ver el contenido');
+      load();
+    } catch (e: any) {
+      showToast(e.message, false);
+    }
+  };
+
+  const scheduleStart = async (course: Course, localValue: string) => {
+    try {
+      const iso = localValue ? new Date(localValue).toISOString() : null;
+      await updateCourse(course.id, { starts_at: iso, started: false });
+      showToast(iso ? 'Desbloqueo programado ✓' : 'Programación eliminada');
       load();
     } catch (e: any) {
       showToast(e.message, false);
@@ -174,10 +194,12 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
                 <div className={`absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border ${
                   course.started
                     ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-                    : 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+                    : course.starts_at
+                      ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
+                      : 'bg-slate-500/20 text-slate-300 border-slate-500/30'
                 }`}>
-                  {course.started ? <PlayCircle size={11} /> : <PauseCircle size={11} />}
-                  {course.started ? 'Iniciado' : 'Sin iniciar'}
+                  {course.started ? <PlayCircle size={11} /> : course.starts_at ? <CalendarClock size={11} /> : <PauseCircle size={11} />}
+                  {course.started ? 'Iniciado' : course.starts_at ? 'Programado' : 'Sin iniciar'}
                 </div>
                 {/* Quick actions overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
@@ -239,6 +261,37 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
                     </button>
                   </div>
                 </div>
+
+                {/* Scheduled unlock */}
+                {!course.started && (
+                  <div className="mt-3 pt-3 border-t border-lms-border">
+                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-lms-text-muted mb-2">
+                      <CalendarClock size={12} /> Desbloqueo programado
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="datetime-local"
+                        defaultValue={toLocalInputValue(course.starts_at)}
+                        onChange={e => scheduleStart(course, e.target.value)}
+                        className="flex-1 min-w-0 px-3 py-2 bg-lms-bg border border-lms-border rounded-lg text-xs text-lms-text-primary focus:outline-none focus:border-cyan-500 transition-colors"
+                      />
+                      {course.starts_at && (
+                        <button
+                          onClick={() => scheduleStart(course, '')}
+                          title="Quitar programación"
+                          className="shrink-0 text-xs font-bold px-2.5 py-2 rounded-lg bg-lms-hover text-lms-text-muted hover:text-red-400 transition-colors"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                    {course.starts_at && (
+                      <p className="mt-1.5 text-[10px] text-lms-text-muted">
+                        Se desbloqueará automáticamente el {new Date(course.starts_at).toLocaleString('es', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
