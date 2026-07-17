@@ -24,6 +24,7 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [enrolledIds, setEnrolledIds] = useState<Set<string>>(new Set());
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [enrolling, setEnrolling] = useState<string | null>(null);
@@ -72,10 +73,21 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
     }
   };
 
-  const filtered = courses.filter(c =>
-    c.title?.toLowerCase().includes(search.toLowerCase()) ||
-    c.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  const categories = Array.from(
+    new Map(
+      courses
+        .filter(c => c.categories)
+        .map(c => [c.categories!.id, c.categories!])
+    ).values()
+  ).sort((a, b) => a.name.localeCompare(b.name));
+
+  const filtered = courses.filter(c => {
+    const matchesSearch =
+      c.title?.toLowerCase().includes(search.toLowerCase()) ||
+      c.description?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === null || c.category_id === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -101,6 +113,35 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
         />
       </div>
 
+      {/* Category filter */}
+      {!loading && categories.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors border ${
+              selectedCategory === null
+                ? 'bg-cyan-600 border-cyan-500 text-white'
+                : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            Todos
+          </button>
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors border ${
+                selectedCategory === cat.id
+                  ? 'bg-cyan-600 border-cyan-500 text-white'
+                  : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {[1,2,3].map(i => <div key={i} className="h-72 bg-white/5 rounded-2xl animate-pulse border border-white/10" />)}
@@ -108,7 +149,7 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center text-slate-400 gap-4">
           <Filter size={32} className="opacity-20" />
-          <p className="text-sm">{search ? 'Sin resultados para tu búsqueda.' : 'No hay cursos publicados aún.'}</p>
+          <p className="text-sm">{search || selectedCategory !== null ? 'Sin resultados para este filtro.' : 'No hay cursos publicados aún.'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
