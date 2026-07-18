@@ -7,6 +7,7 @@ import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnr
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { saveQuizResult } from '../../../../lib/quizResults';
 import { getFileNotes, saveFileNotes } from '../../../../lib/fileNotes';
+import { useIsMobile } from '../../../../lib/useIsMobile';
 import { ProcessCanvas } from './ProcessCanvas';
 import { CanvasListView } from './CanvasListView';
 import { StarfieldBackground } from '../../../effects/StarfieldBackground';
@@ -80,7 +81,12 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  // En PC el índice queda colapsado (riel de iconos) y se expande al pasar el
+  // mouse; "pinned" (botón PanelLeft) lo deja fijo abierto. En móvil es un drawer.
+  const [pinned, setPinned] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const isBelowLg = useIsMobile('(max-width: 1023px)');
+  const railExpanded = isBelowLg ? true : (pinned || hovered);
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
   const [canvasView, setCanvasView] = useState<'list' | { canvasId: string } | null>(null);
   const [accessEnabled, setAccessEnabled] = useState(true);
@@ -214,62 +220,80 @@ export function LessonViewer({ courseId, onBack }: Props) {
       <div className={`relative flex h-full w-full ${locked ? 'blur-md pointer-events-none select-none' : ''}`}>
 
       {/* ── Sidebar: Course Index ── */}
-      <aside className={`
-        z-30 flex flex-col shrink-0 h-full bg-white/5 backdrop-blur-xl border-r border-white/10 overflow-hidden
-        fixed lg:relative transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 lg:translate-x-0'}
-        ${desktopSidebarOpen ? 'lg:w-72' : 'lg:w-0 lg:border-transparent'}
-      `}>
-        <div className="w-72 h-full flex flex-col">
+      <aside
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className={`
+          z-30 flex flex-col shrink-0 h-full overflow-hidden
+          bg-[#0a0f1e]/80 lg:bg-white/5 lg:backdrop-blur-xl border-r border-white/10
+          fixed lg:absolute lg:top-0 lg:left-0 transition-[width,transform] duration-300 ease-out
+          ${sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 lg:translate-x-0'}
+          ${railExpanded ? 'lg:w-72 lg:shadow-2xl lg:shadow-black/40' : 'lg:w-20'}
+        `}
+      >
+        <div className={`h-full flex flex-col ${railExpanded ? 'w-72' : 'w-20'}`}>
 
           {/* Logo header — same as StudentDashboard */}
-          <div className="flex items-center justify-between px-5 h-16 border-b border-white/10 shrink-0">
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Open View Logo" className="h-10 sm:h-16 w-auto object-contain" />
-              <div>
-                <p className="font-black text-sm text-white leading-none mb-1">OpenView</p>
-                <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
-              </div>
+          <div className={`flex items-center h-16 border-b border-white/10 shrink-0 ${railExpanded ? 'justify-between px-5' : 'justify-center px-2'}`}>
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/logo.png" alt="Open View Logo" className="h-10 w-auto object-contain shrink-0" />
+              {railExpanded && (
+                <div className="min-w-0">
+                  <p className="font-black text-sm text-white leading-none mb-1">OpenView</p>
+                  <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
+                </div>
+              )}
             </div>
-            <button onClick={onBack} className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-cyan-400 transition-colors">
-              <ArrowLeft size={12} /> Salir
-            </button>
+            {railExpanded && (
+              <button onClick={onBack} className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-cyan-400 transition-colors shrink-0">
+                <ArrowLeft size={12} /> Salir
+              </button>
+            )}
           </div>
 
-          {/* Course header */}
-          <div className="p-4 border-b border-white/10">
-            <div className="rounded-2xl border border-cyan-500/15 p-4 relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(14,165,233,0.02))' }}>
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #06b6d440, #06b6d410)', boxShadow: '0 2px 6px #06b6d425' }}>
-                  <BookOpen size={12} className="text-cyan-400" />
+          {/* Course header (solo expandido) */}
+          {railExpanded ? (
+            <div className="p-4 border-b border-white/10">
+              <div className="rounded-2xl border border-cyan-500/15 p-4 relative overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(14,165,233,0.02))' }}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #06b6d440, #06b6d410)', boxShadow: '0 2px 6px #06b6d425' }}>
+                    <BookOpen size={12} className="text-cyan-400" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Curso actual</p>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Curso actual</p>
-              </div>
-              <h2 className="text-sm font-sans font-black text-white line-clamp-2 leading-snug">{course.title}</h2>
-              {/* Progress */}
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-slate-400 font-semibold">Tu progreso</span>
-                  <motion.span key={progressPct} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-cyan-400 font-black">
-                    {progressPct}%
-                  </motion.span>
+                <h2 className="text-sm font-sans font-black text-white line-clamp-2 leading-snug">{course.title}</h2>
+                {/* Progress */}
+                <div className="mt-3 space-y-1.5">
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-slate-400 font-semibold">Tu progreso</span>
+                    <motion.span key={progressPct} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-cyan-400 font-black">
+                      {progressPct}%
+                    </motion.span>
+                  </div>
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full relative"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPct}%` }}
+                      transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                    >
+                      <div className="absolute inset-0 bg-white/30 animate-pulse" />
+                    </motion.div>
+                  </div>
+                  <p className="text-[10px] text-slate-400">{completed.size} de {totalLessons} lecciones completadas</p>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full relative"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPct}%` }}
-                    transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                  >
-                    <div className="absolute inset-0 bg-white/30 animate-pulse" />
-                  </motion.div>
-                </div>
-                <p className="text-[10px] text-slate-400">{completed.size} de {totalLessons} lecciones completadas</p>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Colapsado: barrita de progreso mínima */
+            <div className="px-3 py-3 border-b border-white/10 flex justify-center">
+              <div className="w-8 h-1.5 bg-white/10 rounded-full overflow-hidden" title={`${progressPct}% completado`}>
+                <div className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full" style={{ width: `${progressPct}%` }} />
+              </div>
+            </div>
+          )}
 
           {/* Module / Lesson list */}
           <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -277,7 +301,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
             {/* M1 — Canvas SPEC (always first, fixed) */}
             <button
               onClick={() => { setCanvasView('list'); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
+              title="Canvas de Procesos SPEC"
+              className={`w-full flex items-center gap-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${railExpanded ? 'px-3' : 'px-0 justify-center'} ${
                 showCanvas
                   ? 'bg-cyan-500/15 text-cyan-400'
                   : 'text-slate-400 hover:bg-white/5 hover:text-white'
@@ -293,8 +318,12 @@ export function LessonViewer({ courseId, onBack }: Props) {
               >
                 <Workflow size={15} className={showCanvas ? 'text-cyan-400' : 'text-slate-400 group-hover:text-cyan-400 transition-colors'} />
               </div>
-              <span className="flex-1 truncate">Canvas de Procesos SPEC</span>
-              {showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
+              {railExpanded && (
+                <>
+                  <span className="flex-1 truncate">Canvas de Procesos SPEC</span>
+                  {showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
+                </>
+              )}
             </button>
 
             {course.modules.map((mod, mIdx) => {
@@ -305,8 +334,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
               return (
                 <div key={mod.id}>
                   <button
-                    onClick={() => toggleModule(mod.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
+                    onClick={() => railExpanded ? toggleModule(mod.id) : setHovered(true)}
+                    title={mod.title}
+                    className={`w-full flex items-center gap-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${railExpanded ? 'px-3' : 'px-0 justify-center'} ${
                       isModActive
                         ? 'bg-cyan-500/10 text-white'
                         : 'text-slate-400 hover:bg-white/5 hover:text-white'
@@ -322,19 +352,23 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     >
                       <Layers size={15} style={{ color: modColor }} />
                     </div>
-                    <span className="flex-1 truncate">
-                      {mod.title}
-                    </span>
-                    {mod.lessons.length > 0 && (
-                      <span className="text-[9px] font-bold text-slate-500 shrink-0">{modDone}/{mod.lessons.length}</span>
+                    {railExpanded && (
+                      <>
+                        <span className="flex-1 truncate">
+                          {mod.title}
+                        </span>
+                        {mod.lessons.length > 0 && (
+                          <span className="text-[9px] font-bold text-slate-500 shrink-0">{modDone}/{mod.lessons.length}</span>
+                        )}
+                        <motion.div animate={{ rotate: isModActive ? 90 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }} className="shrink-0">
+                          <ChevronRight size={14} className={isModActive ? 'text-cyan-400' : 'text-slate-500'} />
+                        </motion.div>
+                      </>
                     )}
-                    <motion.div animate={{ rotate: isModActive ? 90 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }} className="shrink-0">
-                      <ChevronRight size={14} className={isModActive ? 'text-cyan-400' : 'text-slate-500'} />
-                    </motion.div>
                   </button>
 
                   <AnimatePresence initial={false}>
-                    {isModOpen && (
+                    {isModOpen && railExpanded && (
                       <motion.div
                         key="content"
                         initial={{ height: 0, opacity: 0 }}
@@ -406,11 +440,11 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* ── Main Content ── */}
-      <div className="relative z-10 flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className={`relative z-10 flex-1 flex flex-col overflow-hidden min-w-0 transition-[filter] duration-300 lg:pl-20 ${sidebarOpen ? 'blur-sm lg:blur-none' : ''}`}>
         {canvasView === 'list' ? (
           <CanvasListView
             courseId={courseId}
@@ -433,9 +467,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
           </button>
 
           <button
-            onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)}
-            className="hidden lg:flex items-center text-slate-400 hover:text-white transition-colors shrink-0"
-            title={desktopSidebarOpen ? "Ocultar Índice" : "Mostrar Índice"}
+            onClick={() => setPinned(p => !p)}
+            className={`hidden lg:flex items-center transition-colors shrink-0 ${pinned ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}
+            title={pinned ? "Desfijar índice" : "Fijar índice abierto"}
           >
             <PanelLeft size={20} />
           </button>

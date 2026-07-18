@@ -44,7 +44,7 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
       onMouseLeave={handleTiltLeave}
       style={{ rotateX, rotateY, transformPerspective: 1000 }}
       transition={{ duration: 0.6, delay: Math.min(idx, 5) * 0.08 }}
-      className="group flex flex-col bg-slate-50 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] card-glow card-glow-brand transition-all duration-500"
+      className="group flex flex-col bg-slate-50 rounded-3xl overflow-hidden border border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.03)] card-glow card-glow-brand transition-all duration-500"
     >
       {/* Image */}
       <div className="relative h-64 overflow-hidden bg-slate-200 cursor-pointer" onClick={() => setExpanded(!expanded)}>
