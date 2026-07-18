@@ -36,7 +36,7 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
   const contentFade = useTransform(scrollYProgress, [0, 0.7], [1, isMobile ? 1 : 0]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-slate-900 text-white">
+    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center pt-36 pb-12 sm:pt-32 sm:pb-0 lg:pt-28 z-10 overflow-hidden bg-slate-900 text-white">
 
       {/* Milky Way starfield (with scroll parallax) */}
       <motion.div style={{ y: parallaxY }} className="absolute inset-0 -z-10 pointer-events-none">
