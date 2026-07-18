@@ -71,9 +71,9 @@ export function StudentDashboard() {
         </div>
       )}
 
-      {/* Mobile overlay */}
+      {/* Mobile overlay (oscurece la página detrás del drawer) */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* SIDEBAR */}
@@ -84,7 +84,7 @@ export function StudentDashboard() {
           className={`
             fixed lg:absolute lg:top-0 lg:left-0 z-30 flex flex-col h-full w-64 overflow-hidden
             transition-[width,transform] duration-300 ease-out
-            ${isDarkView ? 'bg-white/5 backdrop-blur-xl border-r border-white/10' : 'bg-lms-surface border-r border-lms-border'}
+            ${isDarkView ? 'bg-[#0a0f1e]/80 lg:bg-white/5 lg:backdrop-blur-xl border-r border-white/10' : 'bg-lms-surface border-r border-lms-border'}
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             ${expanded ? 'lg:w-64 lg:shadow-2xl lg:shadow-black/40' : 'lg:w-20'}
           `}
@@ -168,8 +168,8 @@ export function StudentDashboard() {
         </aside>
       )}
 
-      {/* MAIN */}
-      <div className={`relative z-10 flex-1 flex flex-col overflow-hidden ${!inFullscreenView ? 'lg:pl-20' : ''}`}>
+      {/* MAIN — se desenfoca detrás del drawer abierto en móvil */}
+      <div className={`relative z-10 flex-1 flex flex-col overflow-hidden transition-[filter] duration-300 ${!inFullscreenView ? 'lg:pl-20' : ''} ${sidebarOpen ? 'blur-sm lg:blur-none' : ''}`}>
         {!inFullscreenView && (
           <header className={`flex items-center justify-between px-6 h-16 shrink-0 ${isDarkView ? 'bg-white/5 backdrop-blur-xl border-b border-white/10' : 'bg-lms-surface border-b border-lms-border'}`}>
             <button onClick={() => setSidebarOpen(true)} className={isDarkView ? 'lg:hidden text-slate-400 hover:text-white' : 'lg:hidden text-lms-text-muted hover:text-lms-text-primary'}>
