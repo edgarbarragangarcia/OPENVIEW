@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { BookOpen, Compass, User, LogOut, Menu, X, Bell, ChevronRight, Workflow } from 'lucide-react';
+import { BookOpen, Compass, User, LogOut, Menu, X, Bell, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useIsMobile } from '../../../lib/useIsMobile';
 import { MyCourses } from './views/MyCourses';
 import { LessonViewer } from './views/LessonViewer';
 import { CourseDetail } from './views/CourseDetail';
@@ -23,6 +24,11 @@ export function StudentDashboard() {
   const [viewingCourseId, setViewingCourseId] = useState<string | null>(null);
   const [viewingDetailId, setViewingDetailId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [desktopExpanded, setDesktopExpanded] = useState(false);
+  // En PC el sidebar queda colapsado (solo iconos) y se expande al pasar el mouse.
+  // En móvil/tablet (<lg) es un drawer que siempre muestra el contenido completo.
+  const isBelowLg = useIsMobile('(max-width: 1023px)');
+  const expanded = isBelowLg ? true : desktopExpanded;
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'ST';
   const inFullscreenView = !!(viewingCourseId || viewingDetailId);
@@ -72,35 +78,46 @@ export function StudentDashboard() {
 
       {/* SIDEBAR */}
       {!inFullscreenView && (
-        <aside className={`
-          fixed lg:relative z-30 flex flex-col w-64 h-full transition-transform duration-300
-          ${isDarkView ? 'bg-white/5 backdrop-blur-xl border-r border-white/10' : 'bg-lms-surface border-r border-lms-border'}
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}>
+        <aside
+          onMouseEnter={() => setDesktopExpanded(true)}
+          onMouseLeave={() => setDesktopExpanded(false)}
+          className={`
+            fixed lg:absolute lg:top-0 lg:left-0 z-30 flex flex-col h-full w-64 overflow-hidden
+            transition-[width,transform] duration-300 ease-out
+            ${isDarkView ? 'bg-white/5 backdrop-blur-xl border-r border-white/10' : 'bg-lms-surface border-r border-lms-border'}
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            ${expanded ? 'lg:w-64 lg:shadow-2xl lg:shadow-black/40' : 'lg:w-20'}
+          `}
+        >
           {/* Logo */}
-          <div className={`flex items-center justify-between px-5 h-16 border-b shrink-0 ${isDarkView ? 'border-white/10' : 'border-lms-border'}`}>
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Open View Logo" className="h-10 sm:h-16 w-auto object-contain" />
-              <div>
-                <p className={`font-black text-sm leading-none mb-1 ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>OpenView</p>
-                <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
-              </div>
+          <div className={`flex items-center h-16 border-b shrink-0 ${expanded ? 'justify-between px-5' : 'justify-center px-2'} ${isDarkView ? 'border-white/10' : 'border-lms-border'}`}>
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/logo.png" alt="Open View Logo" className="h-10 w-auto object-contain shrink-0" />
+              {expanded && (
+                <div className="min-w-0">
+                  <p className={`font-black text-sm leading-none mb-1 ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>OpenView</p>
+                  <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
+                </div>
+              )}
             </div>
-            <button onClick={() => setSidebarOpen(false)} className={isDarkView ? 'lg:hidden text-slate-400' : 'lg:hidden text-lms-text-muted'}>
-              <X size={20} />
-            </button>
+            {expanded && (
+              <button onClick={() => setSidebarOpen(false)} className={isDarkView ? 'lg:hidden text-slate-400' : 'lg:hidden text-lms-text-muted'}>
+                <X size={20} />
+              </button>
+            )}
           </div>
 
           {/* Nav */}
           <nav className="flex-1 py-4 px-3 space-y-1">
-            <p className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest ${isDarkView ? 'text-slate-500' : 'text-lms-text-muted'}`}>Menú</p>
+            <p className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest ${expanded ? '' : 'lg:opacity-0'} ${isDarkView ? 'text-slate-500' : 'text-lms-text-muted'}`}>Menú</p>
             {NAV.map(({ id, label, icon: Icon, color }) => {
               const isActive = view === id && !inFullscreenView;
               return (
                 <button
                   key={id}
                   onClick={() => handleNavigate(id as StudentView)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group ${
+                  title={label}
+                  className={`w-full flex items-center gap-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group ${expanded ? 'px-3' : 'px-0 justify-center'} ${
                     isActive
                       ? 'bg-cyan-500/10 text-cyan-400'
                       : isDarkView
@@ -118,33 +135,41 @@ export function StudentDashboard() {
                   >
                     <Icon size={15} style={{ color }} />
                   </div>
-                  {label}
-                  {isActive && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
+                  {expanded && (
+                    <>
+                      <span className="truncate">{label}</span>
+                      {isActive && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
+                    </>
+                  )}
                 </button>
               );
             })}
           </nav>
 
           {/* User footer */}
-          <div className={`shrink-0 px-4 py-4 border-t ${isDarkView ? 'border-white/10' : 'border-lms-border'}`}>
-            <div className="flex items-center gap-3">
+          <div className={`shrink-0 py-4 border-t ${expanded ? 'px-4' : 'px-2'} ${isDarkView ? 'border-white/10' : 'border-lms-border'}`}>
+            <div className={`flex items-center gap-3 ${expanded ? '' : 'justify-center'}`}>
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">
                 {initials}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-xs font-bold truncate ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>{user?.email}</p>
-                <p className="text-[10px] text-cyan-400 font-semibold">Estudiante</p>
-              </div>
-              <button onClick={signOut} title="Cerrar sesión" className={`transition-colors p-1 rounded-lg hover:bg-red-400/10 ${isDarkView ? 'text-slate-400 hover:text-red-400' : 'text-lms-text-muted hover:text-red-400'}`}>
-                <LogOut size={16} />
-              </button>
+              {expanded && (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-bold truncate ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>{user?.email}</p>
+                    <p className="text-[10px] text-cyan-400 font-semibold">Estudiante</p>
+                  </div>
+                  <button onClick={signOut} title="Cerrar sesión" className={`transition-colors p-1 rounded-lg hover:bg-red-400/10 ${isDarkView ? 'text-slate-400 hover:text-red-400' : 'text-lms-text-muted hover:text-red-400'}`}>
+                    <LogOut size={16} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </aside>
       )}
 
       {/* MAIN */}
-      <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+      <div className={`relative z-10 flex-1 flex flex-col overflow-hidden ${!inFullscreenView ? 'lg:pl-20' : ''}`}>
         {!inFullscreenView && (
           <header className={`flex items-center justify-between px-6 h-16 shrink-0 ${isDarkView ? 'bg-white/5 backdrop-blur-xl border-b border-white/10' : 'bg-lms-surface border-b border-lms-border'}`}>
             <button onClick={() => setSidebarOpen(true)} className={isDarkView ? 'lg:hidden text-slate-400 hover:text-white' : 'lg:hidden text-lms-text-muted hover:text-lms-text-primary'}>
