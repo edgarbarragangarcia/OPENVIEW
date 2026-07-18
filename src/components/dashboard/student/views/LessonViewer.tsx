@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
@@ -1032,15 +1032,37 @@ interface FileNotesPageProps {
 function FileNotesPage({ file, onBack }: FileNotesPageProps) {
   const storageKey = `openview:file-notes:${file.url}`;
   const [notes, setNotes] = useState('');
+  const [savedNotes, setSavedNotes] = useState('');
+  const [viewerLoading, setViewerLoading] = useState(true);
 
+  const isDirty = notes !== savedNotes;
+
+  // Cargar notas guardadas al abrir el archivo
   useEffect(() => {
-    setNotes(localStorage.getItem(storageKey) ?? '');
+    const stored = localStorage.getItem(storageKey) ?? '';
+    setNotes(stored);
+    setSavedNotes(stored);
   }, [storageKey]);
 
+  // El visor de Office/Google recarga el archivo remoto: mostramos "cargando"
+  // hasta que el iframe termine, para que no se vea congelado.
+  useEffect(() => { setViewerLoading(true); }, [file.viewerUrl]);
+
+  // Autoguardado de respaldo (por si el usuario no pulsa "Guardar")
   useEffect(() => {
-    const id = setTimeout(() => localStorage.setItem(storageKey, notes), 400);
+    if (notes === savedNotes) return;
+    const id = setTimeout(() => {
+      localStorage.setItem(storageKey, notes);
+      setSavedNotes(notes);
+    }, 1200);
     return () => clearTimeout(id);
-  }, [storageKey, notes]);
+  }, [storageKey, notes, savedNotes]);
+
+  const saveNotes = () => {
+    localStorage.setItem(storageKey, notes);
+    setSavedNotes(notes);
+    toast.success('Notas guardadas');
+  };
 
   const copyNotes = async () => {
     if (!notes.trim()) {
@@ -1067,6 +1089,14 @@ function FileNotesPage({ file, onBack }: FileNotesPageProps) {
         </button>
         <h3 className="text-sm font-bold text-lms-text-primary truncate flex-1">{file.name}</h3>
         <a
+          href={file.viewerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-lms-text-muted hover:text-lms-text-primary transition-colors"
+        >
+          <ExternalLink size={14} /> Abrir en pestaña
+        </a>
+        <a
           href={file.url}
           target="_blank"
           rel="noopener noreferrer"
@@ -1078,8 +1108,22 @@ function FileNotesPage({ file, onBack }: FileNotesPageProps) {
 
       {/* Body: viewer + notes */}
       <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-        <div className="lg:col-span-8 h-full min-h-[50vh] bg-slate-100 border-b lg:border-b-0 lg:border-r border-lms-border">
-          <iframe src={file.viewerUrl} title={file.name} className="w-full h-full border-0" />
+        <div className="relative lg:col-span-8 h-full min-h-[50vh] bg-slate-100 border-b lg:border-b-0 lg:border-r border-lms-border">
+          {viewerLoading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-100 text-lms-text-muted">
+              <Loader2 size={26} className="animate-spin text-cyan-500" />
+              <p className="text-xs font-semibold">Cargando visor…</p>
+              <p className="text-[10px] text-lms-text-muted/70 max-w-[220px] text-center">
+                Si tarda demasiado, usa “Abrir en pestaña” o “Descargar”.
+              </p>
+            </div>
+          )}
+          <iframe
+            src={file.viewerUrl}
+            title={file.name}
+            className="w-full h-full border-0"
+            onLoad={() => setViewerLoading(false)}
+          />
         </div>
 
         <div className="lg:col-span-4 h-full flex flex-col p-4 gap-3 bg-lms-surface">
@@ -1100,7 +1144,18 @@ function FileNotesPage({ file, onBack }: FileNotesPageProps) {
             placeholder="Escribe aquí tus notas mientras revisas el archivo..."
             className="flex-1 w-full resize-none rounded-xl border border-lms-border bg-lms-bg p-3 text-sm text-lms-text-primary placeholder:text-lms-text-muted/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
           />
-          <p className="text-[10px] text-lms-text-muted">Tus notas se guardan automáticamente en este dispositivo.</p>
+          <button
+            onClick={saveNotes}
+            disabled={!isDirty}
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors shrink-0 ${
+              isDirty
+                ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
+                : 'bg-lms-hover text-lms-text-muted cursor-default'
+            }`}
+          >
+            {isDirty ? <><Save size={15} /> Guardar notas</> : <><CheckCircle size={15} /> Guardado</>}
+          </button>
+          <p className="text-[10px] text-lms-text-muted text-center">Tus notas se guardan en este dispositivo.</p>
         </div>
       </div>
     </div>
