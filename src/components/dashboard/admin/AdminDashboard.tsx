@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   LayoutDashboard, BookOpen, Users, ListChecks, AlertTriangle,
-  Settings, LogOut, Menu, X, ChevronRight, Bell, Trophy
+  Settings, LogOut, Menu, X, ChevronRight, Bell, Trophy, Clock
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Overview } from './views/Overview';
@@ -11,11 +11,12 @@ import { StudentsView } from './views/StudentsView';
 import { EnrollmentsView } from './views/EnrollmentsView';
 import { StudentFeedbackView } from './views/StudentFeedbackView';
 import { GradesView } from './views/GradesView';
+import { ConnectionsView } from './views/ConnectionsView';
 import { CourseForm } from './views/CourseForm';
 
-type AdminView = 'overview' | 'courses' | 'students' | 'enrollments' | 'feedback' | 'grades' | 'settings';
+type AdminView = 'overview' | 'courses' | 'students' | 'enrollments' | 'feedback' | 'grades' | 'connections' | 'settings';
 
-const PRINCIPAL_COUNT = 6;
+const PRINCIPAL_COUNT = 7;
 
 const NAV = [
   { id: 'overview',     label: 'Dashboard',   icon: LayoutDashboard },
@@ -24,6 +25,7 @@ const NAV = [
   { id: 'enrollments',  label: 'Matrículas',   icon: ListChecks },
   { id: 'feedback',     label: 'Dudas',        icon: AlertTriangle },
   { id: 'grades',       label: 'Calificaciones', icon: Trophy },
+  { id: 'connections',  label: 'Conexiones',   icon: Clock },
   { id: 'settings',     label: 'Configuración',icon: Settings },
 ];
 
@@ -47,6 +49,7 @@ export function AdminDashboard() {
       case 'enrollments': return <EnrollmentsView />;
       case 'feedback':    return <StudentFeedbackView />;
       case 'grades':      return <GradesView />;
+      case 'connections': return <ConnectionsView />;
       case 'settings':    return <div className="p-8 text-lms-text-muted">Configuración próximamente.</div>;
     }
   };

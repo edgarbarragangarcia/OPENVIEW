@@ -79,6 +79,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       if (session?.user) {
         handleSetRole(session.user);
+        if (_event === 'SIGNED_IN') {
+          supabase.from('login_events').insert({ user_id: session.user.id });
+        }
       } else {
         setRole(null);
         setMustChangePassword(false);
