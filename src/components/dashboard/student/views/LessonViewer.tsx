@@ -6,6 +6,7 @@ import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { saveQuizResult } from '../../../../lib/quizResults';
+import { getFileNotes, saveFileNotes } from '../../../../lib/fileNotes';
 import { ProcessCanvas } from './ProcessCanvas';
 import { CanvasListView } from './CanvasListView';
 import { StarfieldBackground } from '../../../effects/StarfieldBackground';
@@ -1034,34 +1035,48 @@ function FileNotesPage({ file, onBack }: FileNotesPageProps) {
   const [notes, setNotes] = useState('');
   const [savedNotes, setSavedNotes] = useState('');
   const [viewerLoading, setViewerLoading] = useState(true);
+  const [loadingNotes, setLoadingNotes] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const isDirty = notes !== savedNotes;
 
-  // Cargar notas guardadas al abrir el archivo
+  // Cargar notas: primero el respaldo local (instantáneo), luego Supabase (fuente
+  // de verdad, sigue al usuario entre dispositivos).
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey) ?? '';
-    setNotes(stored);
-    setSavedNotes(stored);
-  }, [storageKey]);
+    let cancelled = false;
+    const local = localStorage.getItem(storageKey) ?? '';
+    setNotes(local);
+    setSavedNotes(local);
+    setLoadingNotes(true);
+    getFileNotes(file.url)
+      .then(remote => {
+        if (cancelled) return;
+        localStorage.setItem(storageKey, remote);
+        setNotes(remote);
+        setSavedNotes(remote);
+      })
+      .catch(() => { /* nos quedamos con el respaldo local */ })
+      .finally(() => { if (!cancelled) setLoadingNotes(false); });
+    return () => { cancelled = true; };
+  }, [file.url, storageKey]);
 
   // El visor de Office/Google recarga el archivo remoto: mostramos "cargando"
   // hasta que el iframe termine, para que no se vea congelado.
   useEffect(() => { setViewerLoading(true); }, [file.viewerUrl]);
 
-  // Autoguardado de respaldo (por si el usuario no pulsa "Guardar")
-  useEffect(() => {
-    if (notes === savedNotes) return;
-    const id = setTimeout(() => {
-      localStorage.setItem(storageKey, notes);
+  const saveNotes = async () => {
+    if (saving) return;
+    setSaving(true);
+    localStorage.setItem(storageKey, notes); // respaldo local inmediato
+    try {
+      await saveFileNotes(file.url, notes);
       setSavedNotes(notes);
-    }, 1200);
-    return () => clearTimeout(id);
-  }, [storageKey, notes, savedNotes]);
-
-  const saveNotes = () => {
-    localStorage.setItem(storageKey, notes);
-    setSavedNotes(notes);
-    toast.success('Notas guardadas');
+      toast.success('Notas guardadas');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudieron guardar las notas');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const copyNotes = async () => {
@@ -1141,21 +1156,26 @@ function FileNotesPage({ file, onBack }: FileNotesPageProps) {
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Escribe aquí tus notas mientras revisas el archivo..."
-            className="flex-1 w-full resize-none rounded-xl border border-lms-border bg-lms-bg p-3 text-sm text-lms-text-primary placeholder:text-lms-text-muted/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+            disabled={loadingNotes}
+            placeholder={loadingNotes ? 'Cargando tus notas…' : 'Escribe aquí tus notas mientras revisas el archivo...'}
+            className="flex-1 w-full resize-none rounded-xl border border-lms-border bg-lms-bg p-3 text-sm text-lms-text-primary placeholder:text-lms-text-muted/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 disabled:opacity-60"
           />
           <button
             onClick={saveNotes}
-            disabled={!isDirty}
+            disabled={!isDirty || saving || loadingNotes}
             className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors shrink-0 ${
-              isDirty
+              isDirty && !saving
                 ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
                 : 'bg-lms-hover text-lms-text-muted cursor-default'
             }`}
           >
-            {isDirty ? <><Save size={15} /> Guardar notas</> : <><CheckCircle size={15} /> Guardado</>}
+            {saving
+              ? <><Loader2 size={15} className="animate-spin" /> Guardando…</>
+              : isDirty
+                ? <><Save size={15} /> Guardar notas</>
+                : <><CheckCircle size={15} /> Guardado</>}
           </button>
-          <p className="text-[10px] text-lms-text-muted text-center">Tus notas se guardan en este dispositivo.</p>
+          <p className="text-[10px] text-lms-text-muted text-center">Tus notas se guardan en tu cuenta.</p>
         </div>
       </div>
     </div>
