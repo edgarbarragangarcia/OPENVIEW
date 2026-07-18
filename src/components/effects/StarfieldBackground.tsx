@@ -175,22 +175,26 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
 
   return (
     <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className ?? ''}`}>
-      {/* Nebula haze (brand blue/indigo/cyan) — smaller/lighter blur radius on mobile, full size on desktop */}
+      {/* Nebula haze (brand blue/indigo/cyan).
+          En móvil NO aplicamos `filter: blur()`: desenfocar divs de 600-900px crea
+          búferes enormes y es de lo más caro de pintar en un teléfono. El propio
+          radial-gradient ya tiene bordes suaves, así que se ve prácticamente igual.
+          En escritorio sí mantenemos el blur grande. */}
       <div
-        className="absolute -top-1/4 left-1/4 w-[900px] h-[900px] rounded-full blur-[60px] md:blur-[140px] opacity-50"
+        className="absolute -top-1/4 left-1/4 w-[900px] h-[900px] rounded-full md:blur-[140px] opacity-50"
         style={{ background: 'radial-gradient(circle, rgba(13,89,242,0.6) 0%, transparent 70%)' }}
       />
       <div
-        className="absolute top-1/3 -right-1/4 w-[700px] h-[700px] rounded-full blur-[55px] md:blur-[130px] opacity-40"
+        className="absolute top-1/3 -right-1/4 w-[700px] h-[700px] rounded-full md:blur-[130px] opacity-40"
         style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.6) 0%, transparent 70%)' }}
       />
       <div
-        className="absolute -bottom-1/4 left-1/3 w-[600px] h-[600px] rounded-full blur-[50px] md:blur-[120px] opacity-35"
+        className="absolute -bottom-1/4 left-1/3 w-[600px] h-[600px] rounded-full md:blur-[120px] opacity-35"
         style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 70%)' }}
       />
-      {/* Milky Way dust band */}
+      {/* Milky Way dust band — sin blur en móvil (mismo motivo) */}
       <div
-        className="absolute inset-[-20%] blur-[60px] opacity-[0.18]"
+        className="absolute inset-[-20%] md:blur-[60px] opacity-[0.18]"
         style={{
           background: 'linear-gradient(115deg, transparent 35%, rgba(226,232,240,0.9) 48%, rgba(129,140,248,0.7) 52%, transparent 65%)',
         }}
