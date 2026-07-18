@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BookOpen, Compass, User, LogOut, Menu, X, Bell, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useIsMobile } from '../../../lib/useIsMobile';
+import { usePersistentState } from '../../../lib/usePersistentState';
 import { MyCourses } from './views/MyCourses';
 import { LessonViewer } from './views/LessonViewer';
 import { CourseDetail } from './views/CourseDetail';
@@ -20,9 +21,11 @@ const NAV = [
 
 export function StudentDashboard() {
   const { user, signOut } = useAuth();
-  const [view, setView] = useState<StudentView>('my-courses');
-  const [viewingCourseId, setViewingCourseId] = useState<string | null>(null);
-  const [viewingDetailId, setViewingDetailId] = useState<string | null>(null);
+  const scope = user?.id ?? 'anon';
+  // Persistimos la navegación para que al recargar se quede en la misma pantalla.
+  const [view, setView] = usePersistentState<StudentView>(`ov:student:${scope}:view`, 'my-courses');
+  const [viewingCourseId, setViewingCourseId] = usePersistentState<string | null>(`ov:student:${scope}:course`, null);
+  const [viewingDetailId, setViewingDetailId] = usePersistentState<string | null>(`ov:student:${scope}:detail`, null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopExpanded, setDesktopExpanded] = useState(false);
   // En PC el sidebar queda colapsado (solo iconos) y se expande al pasar el mouse.

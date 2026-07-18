@@ -5,6 +5,7 @@ import {
   Settings, LogOut, Menu, X, ChevronRight, Bell, Trophy, Clock
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { usePersistentState } from '../../../lib/usePersistentState';
 import { Overview } from './views/Overview';
 import { CoursesManager } from './views/CoursesManager';
 import { StudentsView } from './views/StudentsView';
@@ -31,7 +32,8 @@ const NAV = [
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
-  const [view, setView] = useState<AdminView>('overview');
+  // Persistimos la vista para que al recargar se quede en la misma sección.
+  const [view, setView] = usePersistentState<AdminView>(`ov:admin:${user?.id ?? 'anon'}:view`, 'overview');
   const [editingCourseId, setEditingCourseId] = useState<string | null | undefined>(undefined);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

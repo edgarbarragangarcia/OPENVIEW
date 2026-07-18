@@ -8,6 +8,7 @@ import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../
 import { saveQuizResult } from '../../../../lib/quizResults';
 import { getFileNotes, saveFileNotes } from '../../../../lib/fileNotes';
 import { useIsMobile } from '../../../../lib/useIsMobile';
+import { usePersistentState } from '../../../../lib/usePersistentState';
 import { ProcessCanvas } from './ProcessCanvas';
 import { CanvasListView } from './CanvasListView';
 import { StarfieldBackground } from '../../../effects/StarfieldBackground';
@@ -77,6 +78,8 @@ const parseStructuredContent = (content?: string | null): { description?: string
 export function LessonViewer({ courseId, onBack }: Props) {
   const [course, setCourse] = useState<CourseData | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+  // Recuerda la última lección abierta de este curso para restaurarla al recargar.
+  const [lastLessonId, setLastLessonId] = usePersistentState<string | null>(`ov:lesson:${courseId}`, null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -111,12 +114,15 @@ export function LessonViewer({ courseId, onBack }: Props) {
           
           setCourse({ ...data, modules: sortedModules } as unknown as CourseData);
 
-          // Initial load without opening the first module
-          const firstModule = sortedModules[0];
-          if (firstModule) {
-            if (firstModule.lessons?.[0]) {
-              setActiveLesson(firstModule.lessons[0]);
-            }
+          // Restaurar la última lección abierta (si aún existe); si no, la primera.
+          const allLessons = sortedModules.flatMap(m => m.lessons);
+          const restored = lastLessonId ? allLessons.find(l => l.id === lastLessonId) : null;
+          const initial = restored ?? sortedModules[0]?.lessons?.[0] ?? null;
+          if (initial) {
+            setActiveLesson(initial);
+            // Abrir el módulo que contiene la lección restaurada
+            const owner = sortedModules.find(m => m.lessons.some(l => l.id === initial.id));
+            if (owner) setOpenModules(prev => new Set(prev).add(owner.id));
           }
         }
 
@@ -136,6 +142,11 @@ export function LessonViewer({ courseId, onBack }: Props) {
     }
     load();
   }, [courseId]);
+
+  // Guardar la lección activa para restaurarla tras recargar
+  useEffect(() => {
+    if (activeLesson) setLastLessonId(activeLesson.id);
+  }, [activeLesson?.id]);
 
   const toggleModule = (id: string) => {
     setOpenModules(prev => {
