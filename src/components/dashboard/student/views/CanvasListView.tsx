@@ -52,19 +52,19 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-transparent text-white">
       {/* Topbar */}
-      <div className="flex items-center gap-3 px-5 h-16 bg-white border-b border-slate-200 shrink-0">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-cyan-600 font-semibold transition-colors">
+      <div className="flex items-center gap-3 px-5 h-16 bg-white/5 backdrop-blur-xl border-b border-white/10 shrink-0">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-cyan-400 font-semibold transition-colors">
           <ArrowLeft size={14} /> Volver
         </button>
-        <h2 className="flex-1 text-sm font-black text-slate-800 flex items-center gap-2 justify-center">
-          <Workflow size={16} className="text-cyan-500" /> Mis Canvas de Procesos
+        <h2 className="flex-1 text-sm font-black text-white flex items-center gap-2 justify-center">
+          <Workflow size={16} className="text-cyan-400" /> Mis Canvas de Procesos
         </h2>
         <button
           onClick={handleCreate}
           disabled={creating}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all shadow disabled:opacity-60"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-60"
         >
           {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
           Nuevo Canvas
@@ -79,12 +79,12 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
           </div>
         ) : canvases.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
-            <Workflow size={32} className="text-slate-300" />
-            <p className="text-sm text-slate-500">Todavía no tienes ningún canvas de procesos.</p>
+            <Workflow size={32} className="text-white/20" />
+            <p className="text-sm text-slate-400">Todavía no tienes ningún canvas de procesos.</p>
             <button
               onClick={handleCreate}
               disabled={creating}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all shadow disabled:opacity-60"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-60"
             >
               {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               Crear mi primer canvas
@@ -96,11 +96,11 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
               <button
                 key={c.id}
                 onClick={() => onOpen(c.id)}
-                className="group text-left rounded-2xl border border-slate-200 bg-white p-4 hover:border-cyan-300 hover:shadow-md transition-all"
+                className="group text-left rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 hover:border-cyan-500/40 hover:bg-white/[0.07] transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-cyan-600 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-cyan-300 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
                     style={{
                       background: 'linear-gradient(135deg, #0891b235, #0891b20a)',
                       boxShadow: '0 2px 8px #0891b225, inset 0 1px 0 #0891b225',
@@ -111,13 +111,13 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
                   </div>
                   <button
                     onClick={e => handleDelete(e, c.id)}
-                    className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                    className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
                     title="Eliminar canvas"
                   >
                     <Trash2 size={13} />
                   </button>
                 </div>
-                <p className="text-sm font-bold text-slate-800 mt-3 line-clamp-2">{c.name}</p>
+                <p className="text-sm font-bold text-white mt-3 line-clamp-2">{c.name}</p>
                 <p className="text-[10px] text-slate-400 mt-1">
                   Actualizado el {new Date(c.updated_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>

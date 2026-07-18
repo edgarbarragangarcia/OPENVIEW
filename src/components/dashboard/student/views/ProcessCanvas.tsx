@@ -608,7 +608,7 @@ function BoardView({ nodes, connections, connectingFrom, onEdit, onDelete, onAdd
   const nodeLabel = (id: string) => nodes.find(n => n.id === id)?.title || '?';
 
   return (
-    <div className="flex-1 relative overflow-x-auto overflow-y-hidden bg-[#f8f9fc]">
+    <div className="flex-1 relative overflow-x-auto overflow-y-hidden bg-transparent">
       <div className="flex gap-4 h-full p-5 min-w-max">
         {SPEC_SECTIONS.map(sec => {
           const items = nodes.filter(n => n.type === sec.key);
@@ -968,55 +968,55 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
   });
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f9fc] font-sans"
+    <div className="flex flex-col h-full bg-transparent font-sans text-white"
       style={{ cursor: isPanning ? 'grabbing' : connectingFrom ? 'crosshair' : 'default' }}>
 
       {/* TOP BAR */}
-      <header className="flex items-center gap-3 px-5 h-16 bg-white border-b border-slate-200 shrink-0 z-10 shadow-sm">
+      <header className="flex items-center gap-3 px-5 h-16 bg-white/5 backdrop-blur-xl border-b border-white/10 shrink-0 z-10">
 
-        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-cyan-600 font-semibold transition-colors shrink-0 pr-3 border-r border-slate-200">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-cyan-400 font-semibold transition-colors shrink-0 pr-3 border-r border-white/10">
           <ArrowLeft size={14} /> Mis Canvas
         </button>
 
         {editingName ? (
           <input autoFocus value={canvasName} onChange={e => setCanvasName(e.target.value)}
             onBlur={() => setEditingName(false)} onKeyDown={e => e.key === 'Enter' && setEditingName(false)}
-            className="text-sm font-black text-slate-800 bg-transparent focus:outline-none border-b-2 border-sky-400 px-1" />
+            className="text-sm font-black text-white bg-transparent focus:outline-none border-b-2 border-sky-400 px-1" />
         ) : (
           <button onClick={() => setEditingName(true)} className="flex items-center gap-2 group">
-            <Layers size={14} className="text-sky-500" />
-            <span className="text-sm font-black text-slate-800 group-hover:text-sky-600 transition-colors">{canvasName}</span>
-            <Edit3 size={11} className="text-slate-300 group-hover:text-sky-400 transition-colors" />
+            <Layers size={14} className="text-sky-400" />
+            <span className="text-sm font-black text-white group-hover:text-sky-400 transition-colors">{canvasName}</span>
+            <Edit3 size={11} className="text-slate-500 group-hover:text-sky-400 transition-colors" />
           </button>
         )}
 
         <div className="flex-1" />
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1">
           <button onClick={() => setViewMode('flow')}
             title="Vista de flujo"
-            className={`p-1.5 rounded-lg transition-all ${viewMode === 'flow' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>
+            className={`p-1.5 rounded-lg transition-all ${viewMode === 'flow' ? 'bg-white/15 shadow-sm text-white' : 'text-slate-400 hover:text-white'}`}>
             <Workflow size={14} />
           </button>
           <button onClick={() => setViewMode('board')}
             title="Vista de columnas"
-            className={`p-1.5 rounded-lg transition-all ${viewMode === 'board' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>
+            className={`p-1.5 rounded-lg transition-all ${viewMode === 'board' ? 'bg-white/15 shadow-sm text-white' : 'text-slate-400 hover:text-white'}`}>
             <LayoutGrid size={14} />
           </button>
         </div>
 
         {/* Zoom */}
         {viewMode === 'flow' && (
-        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
-          <button onClick={() => setZoom(z => Math.max(0.25, z - 0.1))} className="w-7 h-7 rounded-lg hover:bg-white flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all">
+        <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1">
+          <button onClick={() => setZoom(z => Math.max(0.25, z - 0.1))} className="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-slate-400 hover:text-white transition-all">
             <ZoomOut size={13} />
           </button>
-          <span className="text-xs font-bold text-slate-600 w-9 text-center">{Math.round(zoom * 100)}%</span>
-          <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="w-7 h-7 rounded-lg hover:bg-white flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all">
+          <span className="text-xs font-bold text-slate-200 w-9 text-center">{Math.round(zoom * 100)}%</span>
+          <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-slate-400 hover:text-white transition-all">
             <ZoomIn size={13} />
           </button>
-          <button onClick={() => { setZoom(0.75); setPan({ x: 40, y: 20 }); }} className="w-7 h-7 rounded-lg hover:bg-white flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all ml-1">
+          <button onClick={() => { setZoom(0.75); setPan({ x: 40, y: 20 }); }} className="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-slate-400 hover:text-white transition-all ml-1">
             <Maximize2 size={13} />
           </button>
         </div>
@@ -1024,7 +1024,7 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
 
         <button
           onClick={handleExportDoc}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/15 text-slate-300 text-xs font-bold hover:bg-white/5 hover:text-white transition-all"
         >
           <FileText size={13} />
           Exportar SPEC
@@ -1049,7 +1049,7 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
       </header>
 
       {/* SPEC PROGRESS BAR */}
-      <div className="flex items-center gap-2 px-5 h-12 bg-white border-b border-slate-200 shrink-0 overflow-x-auto">
+      <div className="flex items-center gap-2 px-5 h-12 bg-white/5 backdrop-blur-xl border-b border-white/10 shrink-0 overflow-x-auto">
         {sectionStats.map(sec => {
           const Icon = sec.icon;
           const isEmpty = sec.total === 0;
@@ -1064,9 +1064,9 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
                 style={{ background: `${sec.color}22`, boxShadow: `inset 0 1px 0 ${sec.color}30` }}>
                 <Icon size={12} style={{ color: sec.color }} />
               </div>
-              <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">{sec.label}</span>
+              <span className="text-[10px] font-bold text-slate-300 whitespace-nowrap">{sec.label}</span>
               <span className="text-[10px] font-black whitespace-nowrap" style={{ color: sec.color }}>{sec.done}/{sec.total}</span>
-              <div className="w-10 h-1 rounded-full bg-slate-200 overflow-hidden shrink-0">
+              <div className="w-10 h-1 rounded-full bg-white/10 overflow-hidden shrink-0">
                 <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: sec.color }} />
               </div>
             </div>
@@ -1076,14 +1076,14 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
 
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT PANEL */}
-        <aside className="w-52 bg-white border-r border-slate-200 flex flex-col py-4 px-3 gap-1.5 overflow-y-auto shrink-0">
+        <aside className="w-52 bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col py-4 px-3 gap-1.5 overflow-y-auto shrink-0">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 mb-1">Bloques del método Karpathy</p>
           {PALETTE_TYPES.map(type => {
             const cfg = NODE_TYPES[type];
             const Icon = cfg.icon;
             return (
               <button key={type} onClick={() => addNode(type)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all text-left group">
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 border border-white/10 hover:border-white/20 transition-all text-left group">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3"
                   style={{
                     background: `linear-gradient(135deg, ${cfg.defaultColor}35, ${cfg.defaultColor}0a)`,
@@ -1093,13 +1093,13 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
                   }}>
                   <Icon size={16} />
                 </div>
-                <span className="text-xs font-bold text-slate-700">{cfg.label}</span>
-                <Plus size={11} className="ml-auto text-slate-300 group-hover:text-sky-400 group-hover:scale-125 transition-all" />
+                <span className="text-xs font-bold text-slate-200">{cfg.label}</span>
+                <Plus size={11} className="ml-auto text-slate-500 group-hover:text-sky-400 group-hover:scale-125 transition-all" />
               </button>
             );
           })}
 
-          <div className="border-t border-slate-100 mt-3 pt-3 px-2 space-y-1.5">
+          <div className="border-t border-white/10 mt-3 pt-3 px-2 space-y-1.5">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Atajos</p>
             {[
               ['Clic en nodo', 'Seleccionar'],
@@ -1110,8 +1110,8 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
               ['Esc', 'Cancelar'],
             ].map(([k, a]) => (
               <div key={k} className="flex items-center justify-between">
-                <span className="text-[9px] text-slate-500">{a}</span>
-                <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono font-bold">{k}</span>
+                <span className="text-[9px] text-slate-400">{a}</span>
+                <span className="text-[9px] bg-white/10 text-slate-300 px-1.5 py-0.5 rounded font-mono font-bold">{k}</span>
               </div>
             ))}
           </div>
@@ -1155,7 +1155,7 @@ export function ProcessCanvas({ onBack, canvasId }: ProcessCanvasProps) {
             <defs>
               <pattern id="dots" width={24 * zoom} height={24 * zoom} patternUnits="userSpaceOnUse"
                 x={pan.x % (24 * zoom)} y={pan.y % (24 * zoom)}>
-                <circle cx={1} cy={1} r={1} fill="#cbd5e1" opacity={0.5} />
+                <circle cx={1} cy={1} r={1} fill="#ffffff" opacity={0.15} />
               </pattern>
               <marker id="arrowhead" markerWidth={8} markerHeight={8} refX={6} refY={3} orient="auto">
                 <path d="M 0 0 L 6 3 L 0 6 z" fill="#94a3b8" />
