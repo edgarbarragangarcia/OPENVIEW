@@ -2,6 +2,7 @@ import { BookOpen, Menu, X, ArrowRight, User, ChevronDown, Search, LogOut } from
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useIsMobile } from '../lib/useIsMobile';
 
 interface HeaderProps {
   onLoginClick: () => void;
@@ -13,6 +14,7 @@ export function Header({ onLoginClick }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut, isLoading } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -35,13 +37,18 @@ export function Header({ onLoginClick }: HeaderProps) {
   return (
     <header className="fixed top-0 inset-x-0 z-50 px-3 sm:px-6 pt-3 sm:pt-4">
       <motion.div
-        animate={{
-          maxWidth: isScrolled ? 1100 : 1280,
-          boxShadow: isScrolled
-            ? '0 8px 30px -8px rgba(13,89,242,0.18), 0 1px 0 rgba(255,255,255,0.6) inset'
-            : '0 0px 0px rgba(0,0,0,0)',
-        }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        // En móvil dejamos valores fijos: animar `maxWidth` es una animación de
+        // layout (reflow por frame) y ahí no aporta nada, porque la pantalla es
+        // más angosta que cualquiera de los dos anchos.
+        animate={isMobile
+          ? { maxWidth: 9999, boxShadow: '0 0px 0px rgba(0,0,0,0)' }
+          : {
+              maxWidth: isScrolled ? 1100 : 1280,
+              boxShadow: isScrolled
+                ? '0 8px 30px -8px rgba(13,89,242,0.18), 0 1px 0 rgba(255,255,255,0.6) inset'
+                : '0 0px 0px rgba(0,0,0,0)',
+            }}
+        transition={{ duration: isMobile ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
         className={`mx-auto flex items-center justify-between transition-colors duration-500 ${
           isScrolled
             ? 'bg-white/70 backdrop-blur-2xl border border-white/60 rounded-full py-2.5 px-4 sm:px-6'
@@ -139,12 +146,15 @@ export function Header({ onLoginClick }: HeaderProps) {
         </div>
       </motion.div>
 
-      {/* Mobile Menu Panel — fondo sólido (sin backdrop-blur): este panel solo
-          existe en móvil/tablet, y desenfocar toda la página detrás hacía que el
-          menú tardara en aparecer al tocar la hamburguesa. */}
+      {/* Mobile Menu Panel — fondo sólido (sin backdrop-blur) y, sobre todo, sin
+          animar `max-height`: animar altura obliga a recalcular layout en cada
+          frame sobre una landing pesada, que era lo que hacía lento el despliegue.
+          La altura cambia de golpe y solo animamos opacidad/transform (GPU). */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-200 ease-out mx-1 mt-2 rounded-3xl bg-white border border-slate-200 shadow-[0_8px_30px_-8px_rgba(13,89,242,0.18)] ${
-          isMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0 border-transparent'
+        className={`lg:hidden overflow-hidden mx-1 mt-2 rounded-3xl bg-white border border-slate-200 shadow-[0_8px_30px_-8px_rgba(13,89,242,0.18)] origin-top will-change-transform transition-[opacity,transform] duration-200 ease-out ${
+          isMenuOpen
+            ? 'max-h-[80vh] opacity-100 translate-y-0'
+            : 'max-h-0 opacity-0 -translate-y-2 border-transparent pointer-events-none'
         }`}
       >
         <nav className="px-6 py-4 flex flex-col gap-1">
