@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Plus, Edit3, Trash2, Eye, EyeOff, BookOpen, Search, Users, PlayCircle, PauseCircle, CalendarClock } from 'lucide-react';
 import { Course, getCourses, updateCourse, deleteCourse } from '../../../../lib/courses';
 import { ConfirmModal } from '../../shared/Modals';
+import { CourseCover } from '../../../CourseCover';
 
 interface CoursesManagerProps {
   onEdit: (courseId?: string) => void;
@@ -174,13 +175,13 @@ export function CoursesManager({ onEdit }: CoursesManagerProps) {
             >
               {/* Cover */}
               <div className="relative h-44 bg-lms-hover overflow-hidden">
-                {course.cover_url ? (
-                  <img src={course.cover_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <BookOpen size={36} className="text-lms-text-muted/30" />
-                  </div>
-                )}
+                <CourseCover
+                  src={course.cover_url}
+                  alt={course.title}
+                  imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  iconClassName="text-lms-text-muted/30"
+                  iconSize={36}
+                />
                 {/* Status badge */}
                 <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border ${
                   course.published

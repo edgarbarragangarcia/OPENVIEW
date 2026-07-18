@@ -62,6 +62,24 @@ export async function getCourses(publishedOnly = true) {
   return data as Course[];
 }
 
+/**
+ * Cursos publicados con sus módulos y lecciones en UNA sola consulta anidada.
+ * Reemplaza el patrón N+1 (una consulta de módulos por curso), que en móvil
+ * con alta latencia disparaba decenas de peticiones y hacía lentísima la carga.
+ */
+export async function getCoursesWithModules(publishedOnly = true) {
+  let query = supabase
+    .from('courses')
+    .select('*, categories(*), modules(id, title, position, lessons(id, title, position, duration_min, video_url, pdf_url))')
+    .order('created_at', { ascending: false });
+
+  if (publishedOnly) query = query.eq('published', true);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data as unknown as (Course & { modules: Module[] })[];
+}
+
 export async function getCourseById(id: string) {
   const { data, error } = await supabase
     .from('courses')

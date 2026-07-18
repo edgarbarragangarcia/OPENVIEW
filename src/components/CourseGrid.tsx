@@ -1,9 +1,9 @@
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'motion/react';
-import { ArrowRight, Calendar, Clock, BookOpen, ChevronDown, Play, FileText } from 'lucide-react';
+import { ArrowRight, Calendar, Clock, ChevronDown, Play, FileText } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
-import { getCourses, Course } from '../lib/courses';
+import { getCoursesWithModules, Course } from '../lib/courses';
 import { RevealHeading } from './effects/RevealHeading';
+import { CourseCover } from './CourseCover';
 
 interface LessonPreview { id: string; title: string; position: number; duration_min: number; video_url: string | null; pdf_url: string | null; }
 interface ModulePreview { id: string; title: string; position: number; lessons: LessonPreview[]; }
@@ -43,18 +43,19 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
       onMouseMove={handleTiltMove}
       onMouseLeave={handleTiltLeave}
       style={{ rotateX, rotateY, transformPerspective: 1000 }}
-      transition={{ duration: 0.6, delay: idx * 0.12 }}
+      transition={{ duration: 0.6, delay: Math.min(idx, 5) * 0.08 }}
       className="group flex flex-col bg-slate-50 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] card-glow card-glow-brand transition-all duration-500"
     >
       {/* Image */}
       <div className="relative h-64 overflow-hidden bg-slate-200 cursor-pointer" onClick={() => setExpanded(!expanded)}>
-        {course.cover_url ? (
-          <img src={course.cover_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-500">
-            <BookOpen size={48} />
-          </div>
-        )}
+        <CourseCover
+          src={course.cover_url}
+          alt={course.title}
+          imgClassName="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+          placeholderClassName="bg-slate-800"
+          iconClassName="text-slate-500"
+          iconSize={48}
+        />
         {course.categories?.name && (
           <div className="sticker absolute top-4 left-4 bg-white/90 backdrop-blur-md text-primary-dark text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full shadow-sm">
             {course.categories.name}
@@ -187,19 +188,9 @@ export function CourseGrid({ selectedCategoryId = null, onClearFilter }: CourseG
   useEffect(() => {
     async function load() {
       try {
-        const data = await getCourses(true);
-
-        // Fetch modules + lessons for each course
-        const withModules = await Promise.all(data.map(async (course) => {
-          const { data: modulesData } = await supabase
-            .from('modules')
-            .select('id, title, position, lessons(id, title, position, duration_min, video_url, pdf_url)')
-            .eq('course_id', course.id)
-            .order('position');
-          return { ...course, modules: (modulesData ?? []) as unknown as ModulePreview[] };
-        }));
-
-        setCourses(withModules);
+        // Una sola consulta anidada con módulos + lecciones (evita el N+1)
+        const data = await getCoursesWithModules(true);
+        setCourses(data as unknown as CourseWithModules[]);
       } catch (err) {
         console.error(err);
       } finally {

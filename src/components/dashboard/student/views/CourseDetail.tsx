@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { MagneticButton } from '../../../effects/MagneticButton';
 import { RevealHeading } from '../../../effects/RevealHeading';
 import { StarfieldBackground } from '../../../effects/StarfieldBackground';
+import { CourseCover } from '../../../CourseCover';
 
 interface Props {
   courseId: string;
@@ -207,13 +208,14 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
           >
             <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
               <div className="h-44 bg-white/5 overflow-hidden">
-                {course.cover_url ? (
-                  <img src={course.cover_url} alt={course.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <BookOpen size={36} className="text-white/20" />
-                  </div>
-                )}
+                <CourseCover
+                  src={course.cover_url}
+                  alt={course.title}
+                  imgClassName="w-full h-full object-cover"
+                  iconClassName="text-white/20"
+                  iconSize={36}
+                  eager
+                />
               </div>
               <div className="p-5 space-y-3">
                 {course.price > 0 && (
@@ -329,13 +331,13 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
                   className="text-left rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden card-glow card-glow-brand"
                 >
                   <div className="h-24 bg-white/5 overflow-hidden">
-                    {r.cover_url ? (
-                      <img src={r.cover_url} alt={r.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen size={20} className="text-white/20" />
-                      </div>
-                    )}
+                    <CourseCover
+                      src={r.cover_url}
+                      alt={r.title}
+                      imgClassName="w-full h-full object-cover"
+                      iconClassName="text-white/20"
+                      iconSize={20}
+                    />
                   </div>
                   <div className="p-3">
                     <p className="text-xs font-bold text-white line-clamp-2">{r.title}</p>

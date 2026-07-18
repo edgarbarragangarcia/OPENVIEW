@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, Clock, Search, Filter } from 'lucide-react';
+import { Clock, Search, Filter } from 'lucide-react';
 import { getCourses, Course } from '../../../../lib/courses';
 import { enrollInCourse, getMyEnrollmentStatuses } from '../../../../lib/enrollments';
 import { cached, invalidateCache } from '../../../../lib/queryCache';
+import { CourseCover } from '../../../CourseCover';
 
 const CACHE_TTL = 60_000;
 
@@ -164,13 +165,13 @@ export function Explore({ onEnroll, onCourseSelect }: Props) {
                 className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl overflow-hidden card-glow card-glow-cyan transition-all duration-200 flex flex-col group"
               >
                 <div className="relative h-44 bg-white/5 overflow-hidden">
-                  {course.cover_url ? (
-                    <img src={course.cover_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <BookOpen size={36} className="text-white/20" />
-                    </div>
-                  )}
+                  <CourseCover
+                    src={course.cover_url}
+                    alt={course.title}
+                    imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    iconClassName="text-white/20"
+                    iconSize={36}
+                  />
                   {course.categories?.name && (
                     <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-cyan-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-cyan-500/20">
                       {course.categories.name}
