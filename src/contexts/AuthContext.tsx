@@ -45,6 +45,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [mustChangePassword, setMustChangePassword] = useState(false);
 
+  // Registra una conexión del usuario, deduplicada por pestaña con sessionStorage:
+  // cuenta una conexión cada vez que se abre la app (o se inicia sesión), pero no
+  // las recargas ni los eventos repetidos de SIGNED_IN (foco de pestaña / refresco
+  // de token). La marca se limpia al cerrar sesión, de modo que un nuevo login sí
+  // cuenta de nuevo.
+  const LOGIN_FLAG_KEY = 'ov_login_recorded';
+  const recordLogin = async (userId: string) => {
+    try {
+      if (sessionStorage.getItem(LOGIN_FLAG_KEY) === userId) return;
+      sessionStorage.setItem(LOGIN_FLAG_KEY, userId);
+      const { error } = await supabase.from('login_events').insert({ user_id: userId });
+      if (error) {
+        // Si falla (p. ej. RLS o red), limpiar la marca para reintentar luego
+        if (sessionStorage.getItem(LOGIN_FLAG_KEY) === userId) sessionStorage.removeItem(LOGIN_FLAG_KEY);
+        console.error('No se pudo registrar la conexión:', error.message);
+      }
+    } catch (e) {
+      console.error('No se pudo registrar la conexión:', e);
+    }
+  };
+
   const handleSetRole = async (currentUser: User) => {
     // FORZAR ROL ADMIN para admin@openview.com temporalmente
     if (currentUser.email === 'admin@openview.com') {
@@ -70,6 +91,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fetch role in the background after spinner is gone
       if (session?.user) {
         handleSetRole(session.user);
+        // Sesión ya existente al abrir la app: registrar una vez por pestaña
+        recordLogin(session.user.id);
       }
     });
 
@@ -79,12 +102,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       if (session?.user) {
         handleSetRole(session.user);
-        if (_event === 'SIGNED_IN') {
-          supabase.from('login_events').insert({ user_id: session.user.id });
-        }
+        // Login (o sesión restaurada): contar, deduplicado por pestaña
+        recordLogin(session.user.id);
       } else {
         setRole(null);
         setMustChangePassword(false);
+        // Re-armar el registro para la próxima conexión
+        sessionStorage.removeItem(LOGIN_FLAG_KEY);
       }
     });
 
