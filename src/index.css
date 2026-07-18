@@ -162,3 +162,24 @@
     animation: pulse-glow 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
+
+/* ── Rendimiento en móvil: quitar efectos de PC ──────────────────────
+   En teléfonos, `backdrop-filter` (cristal esmerilado) y los overlays con
+   mix-blend-mode son de los mayores causantes de tirones al hacer scroll,
+   porque el navegador recompone toda la capa por debajo en cada frame.
+   Los quitamos: los fondos translúcidos ya mantienen la legibilidad. */
+@media (max-width: 767px) {
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .glass-button {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  /* El overlay de grano usa mix-blend-mode (costoso al componer) */
+  .bg-grain::after { display: none; }
+}

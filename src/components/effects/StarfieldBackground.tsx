@@ -36,8 +36,11 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // Coarse-pointer/small-viewport devices (phones) get a much lighter starfield —
-    // fewer stars, capped DPR, and a lower frame rate to avoid draining battery/CPU.
+    // fewer stars, capped DPR, and NO animation loop (see `animate` below). El
+    // canvas animado en bucle era una de las mayores fugas de CPU/batería en móvil.
     const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+    // Solo animamos en PC sin "reduce motion": en móvil pintamos un frame estático.
+    const animate = !prefersReducedMotion && !isMobile;
     const container = canvas.parentElement!;
     let width = 0;
     let height = 0;
@@ -95,6 +98,12 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       buildStars();
+      // Sin animación (móvil / reduce-motion): repintar un frame estático al
+      // redimensionar o rotar el dispositivo.
+      if (!animate) {
+        draw();
+        cancelAnimationFrame(raf);
+      }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -148,11 +157,11 @@ export function StarfieldBackground({ density = 1, className }: StarfieldBackgro
 
     resize();
     window.addEventListener('resize', resize);
-    if (!prefersReducedMotion) {
+    if (animate) {
       window.addEventListener('mousemove', handleMouseMove);
       draw();
     } else {
-      // Static single frame for reduced-motion users
+      // Frame único estático (móvil / reduce-motion): nada de bucle RAF.
       draw();
       cancelAnimationFrame(raf);
     }

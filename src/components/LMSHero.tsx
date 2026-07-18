@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { MagneticButton } from './effects/MagneticButton';
 import { AnimatedCounter } from './effects/AnimatedCounter';
 import { StarfieldBackground } from './effects/StarfieldBackground';
+import { useIsMobile } from '../lib/useIsMobile';
 
 const scrollToId = (id: string) => {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -27,9 +28,12 @@ interface LMSHeroProps {
 
 export function LMSHero({ onCtaClick }: LMSHeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const contentFade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  // En móvil dejamos el parallax y el fundido en 0: mover/recomponer las capas
+  // grandes con blur del starfield en cada frame de scroll causaba mucho tirón.
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, isMobile ? 0 : 160]);
+  const contentFade = useTransform(scrollYProgress, [0, 0.7], [1, isMobile ? 1 : 0]);
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center pt-24 pb-12 sm:pt-20 sm:pb-0 z-10 overflow-hidden bg-slate-900 text-white">
