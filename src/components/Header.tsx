@@ -22,10 +22,11 @@ export function Header({ onLoginClick }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [isMenuOpen]);
+  // Nota: antes bloqueábamos el scroll con document.body.style.overflow al abrir
+  // el menú. En móvil eso fuerza un recálculo de layout de toda la landing (que es
+  // larga y pesada) justo en el tap, y era lo que quedaba haciendo lento el
+  // despliegue del menú. El panel es pequeño, así que no bloquear el scroll no
+  // molesta y el tap pasa a ser instantáneo.
 
   const handleNavClick = (item: string) => {
     setIsMenuOpen(false);
