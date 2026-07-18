@@ -91,7 +91,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const isBelowLg = useIsMobile('(max-width: 1023px)');
   const railExpanded = isBelowLg ? true : (pinned || hovered);
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
-  const [canvasView, setCanvasView] = useState<'list' | { canvasId: string } | null>(null);
+  // Persistimos también la vista de canvas (lista o un canvas concreto) para que
+  // al recargar estando en el canvas no se vuelva a la lección.
+  const [canvasView, setCanvasView] = usePersistentState<'list' | { canvasId: string } | null>(`ov:canvasview:${courseId}`, null);
   const [accessEnabled, setAccessEnabled] = useState(true);
   const [startOverride, setStartOverride] = useState(false);
   const showCanvas = canvasView !== null;
