@@ -139,9 +139,11 @@ export function Header({ onLoginClick }: HeaderProps) {
         </div>
       </motion.div>
 
-      {/* Mobile Menu Panel */}
+      {/* Mobile Menu Panel — fondo sólido (sin backdrop-blur): este panel solo
+          existe en móvil/tablet, y desenfocar toda la página detrás hacía que el
+          menú tardara en aparecer al tocar la hamburguesa. */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out mx-1 mt-2 rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_-8px_rgba(13,89,242,0.18)] ${
+        className={`lg:hidden overflow-hidden transition-all duration-200 ease-out mx-1 mt-2 rounded-3xl bg-white border border-slate-200 shadow-[0_8px_30px_-8px_rgba(13,89,242,0.18)] ${
           isMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0 border-transparent'
         }`}
       >
