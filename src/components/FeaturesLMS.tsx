@@ -10,7 +10,8 @@ const FEATURES = [
     description: 'Aprende de profesionales activos en la industria, con experiencia real aplicable desde el primer día.',
     colSpan: 'md:col-span-2',
     icon: GraduationCap,
-    accent: '#0d59f2'
+    accent: '#1d4ed8',
+    gradient: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #0891b2 100%)'
   },
   {
     number: '02',
@@ -18,7 +19,8 @@ const FEATURES = [
     description: 'Rutas personalizadas y asistencia inteligente que se adaptan a tu ritmo y tus objetivos.',
     colSpan: 'md:col-span-1',
     icon: Sparkles,
-    accent: '#6366f1'
+    accent: '#7c3aed',
+    gradient: 'linear-gradient(135deg, #6d28d9 0%, #7c3aed 45%, #c026d3 100%)'
   },
   {
     number: '03',
@@ -26,7 +28,8 @@ const FEATURES = [
     description: 'Conecta con otros estudiantes, comparte proyectos y crece acompañado en cada curso.',
     colSpan: 'md:col-span-1',
     icon: Users,
-    accent: '#06b6d4'
+    accent: '#0d9488',
+    gradient: 'linear-gradient(135deg, #0e7490 0%, #0d9488 50%, #059669 100%)'
   },
   {
     number: '04',
@@ -34,7 +37,8 @@ const FEATURES = [
     description: 'Valida tus habilidades con certificados que abren puertas en el mercado laboral.',
     colSpan: 'md:col-span-2',
     icon: Award,
-    accent: '#0ea5e9'
+    accent: '#e11d48',
+    gradient: 'linear-gradient(135deg, #be123c 0%, #e11d48 45%, #f97316 100%)'
   }
 ];
 
@@ -69,45 +73,33 @@ export function FeaturesLMS() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
-              style={{ '--accent': feature.accent } as CSSProperties}
-              className={`group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:border-[color-mix(in_srgb,var(--accent)_35%,transparent)] hover:shadow-[0_28px_60px_-20px_color-mix(in_srgb,var(--accent)_40%,transparent)] ${feature.colSpan}`}
+              style={{
+                '--accent': feature.accent,
+                backgroundImage: feature.gradient
+              } as CSSProperties}
+              className={`group relative flex flex-col overflow-hidden rounded-3xl p-10 text-white shadow-[0_18px_40px_-18px_color-mix(in_srgb,var(--accent)_55%,transparent)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:shadow-[0_36px_70px_-20px_color-mix(in_srgb,var(--accent)_70%,transparent)] ${feature.colSpan}`}
             >
-              {/* Lavado de color en hover, desde la esquina del ícono */}
+              {/* Brillo superior que da volumen al degradado */}
               <div
                 aria-hidden
-                className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-[0.18]"
-                style={{ background: feature.accent }}
+                className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-white/25 blur-3xl transition-opacity duration-500 group-hover:opacity-70"
               />
-              {/* Filete superior que se dibuja al pasar el cursor */}
-              <div
-                aria-hidden
-                className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100"
-                style={{ background: `linear-gradient(90deg, transparent, ${feature.accent}, transparent)` }}
-              />
+              {/* Borde interior claro, para que el color no se vea plano */}
+              <div aria-hidden className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/20" />
 
               <div className="relative z-10 flex h-full flex-col">
                 <div className="mb-8 flex items-start justify-between">
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl border transition-all duration-500 group-hover:scale-105"
-                    style={{
-                      borderColor: `${feature.accent}25`,
-                      backgroundColor: `${feature.accent}0F`,
-                      color: feature.accent
-                    }}
-                  >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/25 bg-white/15 text-white backdrop-blur-sm transition-transform duration-500 group-hover:scale-105">
                     <feature.icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
-                  <span className="font-serif text-5xl font-black leading-none text-slate-100 transition-colors duration-500 group-hover:text-[color-mix(in_srgb,var(--accent)_28%,white)]">
+                  <span className="font-serif text-5xl font-black leading-none text-white/35 transition-colors duration-500 group-hover:text-white/55">
                     {feature.number}
                   </span>
                 </div>
 
-                <h3 className="mb-4 font-serif text-2xl font-bold text-slate-900">{feature.title}</h3>
-                <div
-                  className="mb-6 h-1 w-12 rounded-full transition-all duration-500 group-hover:w-20"
-                  style={{ backgroundImage: `linear-gradient(90deg, ${feature.accent}, ${feature.accent}00)` }}
-                />
-                <p className="text-sm font-light leading-relaxed text-slate-500 transition-colors duration-500 group-hover:text-slate-600">
+                <h3 className="mb-4 font-serif text-2xl font-bold text-white">{feature.title}</h3>
+                <div className="mb-6 h-1 w-12 rounded-full bg-white/60 transition-all duration-500 group-hover:w-20" />
+                <p className="text-sm leading-relaxed text-white/90">
                   {feature.description}
                 </p>
               </div>

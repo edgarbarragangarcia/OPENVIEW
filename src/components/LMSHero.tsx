@@ -141,6 +141,17 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
 
       </motion.div>
 
+      {/* Fundido hacia la sección clara siguiente, para que el borde del
+          starfield no corte en seco contra el blanco. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 sm:h-36 z-0"
+        style={{
+          background:
+            'linear-gradient(to bottom, rgba(248,250,252,0) 0%, rgba(248,250,252,0.35) 45%, rgba(248,250,252,0.85) 78%, #f8fafc 100%)'
+        }}
+      />
+
       <style>{`
         @keyframes shimmer {
           0% { background-position: 0% center; }
