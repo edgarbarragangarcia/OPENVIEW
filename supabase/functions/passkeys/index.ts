@@ -19,10 +19,19 @@ import {
 } from 'https://esm.sh/@simplewebauthn/server@13.1.1';
 
 const RP_NAME = 'Open View Academy';
-// rpID es el dominio "dueño" del passkey. Tiene que coincidir exactamente con el
-// host desde el que se usa, o el navegador rechaza la ceremonia sin explicación.
-const RP_ID = Deno.env.get('WEBAUTHN_RP_ID')!;           // p.ej. openview-three.vercel.app
-const ORIGIN = Deno.env.get('WEBAUTHN_ORIGIN')!;         // p.ej. https://openview-three.vercel.app
+
+// Orígenes permitidos. El rpID (el dominio "dueño" del passkey) se deriva del
+// origen de cada petición: tiene que coincidir exacto con el host desde el que
+// se usa, o el navegador aborta la ceremonia sin explicación.
+//
+// Se deriva por petición en vez de leerse de un secret porque así producción y
+// desarrollo funcionan sin configuración extra, y no hay forma de dejar el
+// deploy a medias con una variable sin definir.
+const ALLOWED_ORIGINS = [
+  'https://openview-three.vercel.app',
+  'http://localhost:5173',
+  ...(Deno.env.get('WEBAUTHN_EXTRA_ORIGINS')?.split(',').map((o) => o.trim()) ?? []),
+];
 
 const admin = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -30,16 +39,23 @@ const admin = createClient(
   { auth: { persistSession: false } },
 );
 
-const CORS = {
-  'Access-Control-Allow-Origin': ORIGIN,
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+/** Devuelve el origen si está permitido; si no, el de producción. */
+function resolveOrigin(req: Request) {
+  const origin = req.headers.get('Origin') ?? '';
+  return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+}
 
-const json = (body: unknown, status = 200) =>
+const corsHeaders = (origin: string) => ({
+  'Access-Control-Allow-Origin': origin,
+  'Access-Control-Allow-Headers': 'authorization, content-type, apikey',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  Vary: 'Origin',
+});
+
+const json = (body: unknown, status = 200, origin = ALLOWED_ORIGINS[0]) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
   });
 
 const b64url = {
@@ -75,15 +91,20 @@ async function consumeChallenge(challenge: string, kind: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  const origin = resolveOrigin(req);
+  // El preflight tiene que responder 200 antes de cualquier otra cosa: si algo
+  // falla aquí, el navegador lo reporta como error de CORS y nunca se ve la
+  // causa real.
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(origin) });
 
+  const RP_ID = new URL(origin).hostname;
   const route = new URL(req.url).pathname.split('/').pop();
 
   try {
     // ---- Registro: el usuario ya inició sesión y quiere añadir su dispositivo ----
     if (route === 'register-options') {
       const user = await userFromRequest(req);
-      if (!user) return json({ error: 'No autenticado' }, 401);
+      if (!user) return json({ error: 'No autenticado' }, 401, origin);
 
       const { data: existing } = await admin
         .from('user_passkeys')
@@ -115,12 +136,12 @@ Deno.serve(async (req) => {
         kind: 'registration',
       });
 
-      return json(options);
+      return json(options, 200, origin);
     }
 
     if (route === 'register-verify') {
       const user = await userFromRequest(req);
-      if (!user) return json({ error: 'No autenticado' }, 401);
+      if (!user) return json({ error: 'No autenticado' }, 401, origin);
 
       const { response, deviceLabel } = await req.json();
       const clientData = JSON.parse(
@@ -129,19 +150,19 @@ Deno.serve(async (req) => {
 
       const stored = await consumeChallenge(clientData.challenge, 'registration');
       if (!stored || stored.user_id !== user.id) {
-        return json({ error: 'Challenge inválido o vencido' }, 400);
+        return json({ error: 'Challenge inválido o vencido' }, 400, origin);
       }
 
       const verification = await verifyRegistrationResponse({
         response,
         expectedChallenge: clientData.challenge,
-        expectedOrigin: ORIGIN,
+        expectedOrigin: origin,
         expectedRPID: RP_ID,
         requireUserVerification: true,
       });
 
       if (!verification.verified || !verification.registrationInfo) {
-        return json({ error: 'No se pudo verificar la llave' }, 400);
+        return json({ error: 'No se pudo verificar la llave' }, 400, origin);
       }
 
       const { credential } = verification.registrationInfo;
@@ -153,9 +174,9 @@ Deno.serve(async (req) => {
         transports: credential.transports ?? null,
         device_label: deviceLabel ?? null,
       });
-      if (error) return json({ error: error.message }, 400);
+      if (error) return json({ error: error.message }, 400, origin);
 
-      return json({ verified: true });
+      return json({ verified: true }, 200, origin);
     }
 
     // ---- Autenticación: sin correo ni contraseña ----
@@ -176,7 +197,7 @@ Deno.serve(async (req) => {
       // Aprovechamos para barrer los vencidos.
       await admin.rpc('purge_expired_webauthn_challenges');
 
-      return json(options);
+      return json(options, 200, origin);
     }
 
     if (route === 'auth-verify') {
@@ -186,7 +207,7 @@ Deno.serve(async (req) => {
       );
 
       const stored = await consumeChallenge(clientData.challenge, 'authentication');
-      if (!stored) return json({ error: 'Challenge inválido o vencido' }, 400);
+      if (!stored) return json({ error: 'Challenge inválido o vencido' }, 400, origin);
 
       const { data: passkey } = await admin
         .from('user_passkeys')
@@ -194,12 +215,12 @@ Deno.serve(async (req) => {
         .eq('credential_id', response.id)
         .maybeSingle();
 
-      if (!passkey) return json({ error: 'Llave no reconocida' }, 400);
+      if (!passkey) return json({ error: 'Llave no reconocida' }, 400, origin);
 
       const verification = await verifyAuthenticationResponse({
         response,
         expectedChallenge: clientData.challenge,
-        expectedOrigin: ORIGIN,
+        expectedOrigin: origin,
         expectedRPID: RP_ID,
         requireUserVerification: true,
         credential: {
@@ -210,7 +231,7 @@ Deno.serve(async (req) => {
         },
       });
 
-      if (!verification.verified) return json({ error: 'Firma inválida' }, 401);
+      if (!verification.verified) return json({ error: 'Firma inválida' }, 401, origin);
 
       // El counter que sube evita que sirva una llave clonada.
       await admin
@@ -225,24 +246,24 @@ Deno.serve(async (req) => {
       // y se devuelve solo el token_hash: el cliente lo canjea con verifyOtp y
       // obtiene una sesión normal. El correo no se envía.
       const { data: userRow } = await admin.auth.admin.getUserById(passkey.user_id);
-      if (!userRow?.user?.email) return json({ error: 'Usuario sin correo' }, 400);
+      if (!userRow?.user?.email) return json({ error: 'Usuario sin correo' }, 400, origin);
 
       const { data: link, error: linkError } = await admin.auth.admin.generateLink({
         type: 'magiclink',
         email: userRow.user.email,
       });
-      if (linkError) return json({ error: linkError.message }, 400);
+      if (linkError) return json({ error: linkError.message }, 400, origin);
 
       return json({
         verified: true,
         tokenHash: link.properties.hashed_token,
         email: userRow.user.email,
-      });
+      }, 200, origin);
     }
 
-    return json({ error: 'Ruta no encontrada' }, 404);
+    return json({ error: 'Ruta no encontrada' }, 404, origin);
   } catch (err) {
     console.error(err);
-    return json({ error: 'Error inesperado' }, 500);
+    return json({ error: 'Error inesperado' }, 500, origin);
   }
 });
