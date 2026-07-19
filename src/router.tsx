@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext';
+import { PasskeyPrompt } from './components/PasskeyPrompt';
 
 const AdminDashboard = lazy(() =>
   import('./components/dashboard/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard }))
@@ -29,6 +30,9 @@ export function AppRouter() {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
+      {/* Fuera del switch de rutas: al iniciar sesión se cambia de vista y
+          cualquier cosa montada dentro de la anterior se desmonta. */}
+      <PasskeyPrompt />
       {(() => {
         // Si no hay sesión, mostrar Landing
         if (!user) {
