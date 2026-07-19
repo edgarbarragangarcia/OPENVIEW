@@ -6,6 +6,10 @@ import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { saveQuizResult } from '../../../../lib/quizResults';
+import type { QuizQuestion } from '../quiz/types';
+import { isMatch, isOrder } from '../quiz/types';
+import { MatchQuestionView } from '../quiz/MatchQuestionView';
+import { OrderQuestionView } from '../quiz/OrderQuestionView';
 import { getFileNotes, saveFileNotes } from '../../../../lib/fileNotes';
 import { useIsMobile } from '../../../../lib/useIsMobile';
 import { usePersistentState } from '../../../../lib/usePersistentState';
@@ -54,11 +58,6 @@ const getFileMeta = (url?: string | null) => {
   return { type: 'other', icon: FileDown, label: 'Archivo Adjunto' };
 };
 
-interface QuizQuestion {
-  question: string;
-  options: string[];
-  correct: number;
-}
 
 const MODULE_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ec4899', '#0ea5e9', '#ef4444'];
 
@@ -754,9 +753,13 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
   const [tileStatus, setTileStatus] = useState<TileStatus[]>(() => questions.map(() => 'pending'));
   const [gameOver, setGameOver] = useState(false);
   const [finished, setFinished] = useState(false);
+  // Contador, no booleano: si se falla dos veces seguidas hay que poder
+  // relanzar la animación aunque el valor anterior fuera el mismo.
+  const [shake, setShake] = useState(0);
   const savedRef = useRef(false);
 
   const q = questions[step];
+  const isMultipleQ = !isMatch(q) && !isOrder(q);
 
   const finalize = (finalTiles: TileStatus[]) => {
     if (savedRef.current) return;
@@ -768,15 +771,20 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
     });
   };
 
-  const handleSelect = (idx: number) => {
-    if (locked) return;
-    setSelected(idx);
+  /**
+   * Resuelve el paso actual, venga de una opción, de un emparejamiento o de
+   * una ordenación. Todos los tipos de pregunta terminan aquí.
+   */
+  const resolve = (isCorrect: boolean) => {
     setLocked(true);
-    const isCorrect = idx === q.correct;
     const nextTiles = tileStatus.map((s, i) => (i === step ? (isCorrect ? 'correct' : 'wrong') as TileStatus : s));
     setTileStatus(nextTiles);
     const nextLives = isCorrect ? lives : lives - 1;
-    if (!isCorrect) setLives(nextLives);
+    if (!isCorrect) {
+      setLives(nextLives);
+      // Sacudida de la tarjeta y destello rojo: el fallo tiene que notarse.
+      setShake(k => k + 1);
+    }
 
     setTimeout(() => {
       if (!isCorrect && nextLives <= 0) {
@@ -793,6 +801,12 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
         finalize(nextTiles);
       }
     }, 1100);
+  };
+
+  const handleSelect = (idx: number) => {
+    if (locked || !isMultipleQ) return;
+    setSelected(idx);
+    resolve(idx === (q as { correct: number }).correct);
   };
 
   const restart = () => {
@@ -846,7 +860,24 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
   }
 
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-violet-50 via-white to-sky-50 border border-violet-100 p-6 shadow-lg">
+    <motion.div
+      // La tarjeta entera se sacude al fallar; el destello rojo lo pone la capa
+      // de abajo. Juntos hacen que el error se sienta sin bloquear la lectura.
+      animate={shake > 0 ? { x: [0, -10, 10, -6, 6, 0] } : { x: 0 }}
+      key={`card-${shake}`}
+      transition={{ duration: 0.45 }}
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-50 via-white to-sky-50 border border-violet-100 p-6 shadow-lg"
+    >
+      {shake > 0 && (
+        <motion.div
+          key={`flash-${shake}`}
+          aria-hidden
+          initial={{ opacity: 0.55 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.7 }}
+          className="pointer-events-none absolute inset-0 z-20 bg-rose-500/40"
+        />
+      )}
       {/* Level label + lives */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-[10px] font-black uppercase tracking-widest text-violet-500">Nivel {step + 1} de {questions.length}</p>
@@ -897,6 +928,11 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
         </motion.p>
       </AnimatePresence>
 
+      {isMatch(q) ? (
+        <MatchQuestionView key={step} question={q} locked={locked} onResolve={resolve} />
+      ) : isOrder(q) ? (
+        <OrderQuestionView key={step} question={q} locked={locked} onResolve={resolve} />
+      ) : (
       <div className="space-y-2.5">
         {q.options.map((opt, i) => {
           const isSelected = selected === i;
@@ -922,7 +958,8 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
           );
         })}
       </div>
-    </div>
+      )}
+    </motion.div>
   );
 }
 
