@@ -22,5 +22,8 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  // Las Edge Functions corren en Deno (imports por URL, global Deno), así que
+  // este tsconfig, que apunta al bundle del navegador, no las entiende.
+  "exclude": ["supabase/functions"]
 }
