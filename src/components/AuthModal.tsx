@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff, CheckCircle2, ArrowRight } from 'lucide-react';
+import { X, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff, CheckCircle2, ArrowRight, Fingerprint } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { passkeysSupported, signInWithPasskey } from '../lib/passkeys';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +17,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
+
+  const handlePasskey = async () => {
+    setIsPasskeyLoading(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      await signInWithPasskey();
+      onClose();
+    } catch (err: any) {
+      // Si el usuario cancela el diálogo del sistema no es un error que valga
+      // la pena mostrar: simplemente cambió de opinión.
+      if (err?.name !== 'NotAllowedError' && err?.name !== 'AbortError') {
+        setError(err.message || 'No se pudo entrar con este dispositivo');
+      }
+    } finally {
+      setIsPasskeyLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +155,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                 <p>{successMsg}</p>
               </motion.div>
+            )}
+
+            {isLogin && passkeysSupported() && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePasskey}
+                  disabled={isPasskeyLoading}
+                  className="group flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3.5 text-sm font-semibold text-white transition-all hover:border-white/25 hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isPasskeyLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Fingerprint className="h-5 w-5 text-blue-400" />
+                      Entrar con huella o Face ID
+                    </>
+                  )}
+                </button>
+
+                <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-widest text-slate-500">
+                  <span className="h-px flex-1 bg-white/10" />
+                  o con tu correo
+                  <span className="h-px flex-1 bg-white/10" />
+                </div>
+              </>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">

@@ -4,6 +4,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import { Save, Mail, User as UserIcon, Calendar, Shield, BookOpen, Award, Sparkles } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { getMyEnrollments } from '../../../../lib/enrollments';
+import { PasskeysCard } from '../../shared/PasskeysCard';
 import toast from 'react-hot-toast';
 
 export function Profile() {
@@ -173,6 +174,8 @@ export function Profile() {
             </div>
           </div>
         </motion.div>
+
+        <PasskeysCard />
 
       </div>
     </div>
