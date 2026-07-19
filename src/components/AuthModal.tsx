@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff, CheckCircle2, ArrowRight, Fingerprint } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { passkeysSupported, signInWithPasskey } from '../lib/passkeys';
+import { passkeysSupported, signInWithPasskey, registerPasskey, listPasskeys } from '../lib/passkeys';
+
+// Si el usuario dice "ahora no", no volvemos a preguntar en este navegador.
+// Ofrecerlo en cada login sería molesto y termina entrenando a la gente a
+// descartar el diálogo sin leerlo.
+const PASSKEY_DECLINED_KEY = 'openview:passkey-declined';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,6 +23,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
+  // Tras entrar con contraseña ofrecemos registrar el dispositivo. El passkey
+  // se añade a una cuenta existente, así que este es el único momento en que
+  // tiene sentido preguntarlo dentro del modal.
+  const [offerPasskey, setOfferPasskey] = useState(false);
+
+  /** ¿Vale la pena ofrecerle passkeys a este usuario? */
+  const shouldOfferPasskey = async () => {
+    if (!passkeysSupported()) return false;
+    if (localStorage.getItem(PASSKEY_DECLINED_KEY) === '1') return false;
+    try {
+      // Si ya tiene una llave registrada, no hay nada que ofrecer.
+      const keys = await listPasskeys();
+      return keys.length === 0;
+    } catch {
+      // Si la tabla o la función aún no existen, mejor no molestar.
+      return false;
+    }
+  };
 
   const handlePasskey = async () => {
     setIsPasskeyLoading(true);
@@ -47,7 +70,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        onClose();
+        if (await shouldOfferPasskey()) setOfferPasskey(true);
+        else onClose();
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
@@ -96,6 +120,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <X className="w-4 h-4" />
             </button>
 
+            {offerPasskey ? (
+              <div className="relative text-center">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-400/30 bg-blue-500/10">
+                  <Fingerprint className="h-7 w-7 text-blue-400" />
+                </div>
+                <h2 className="mb-2 font-serif text-2xl text-white">
+                  ¿Quieres entrar con huella o Face ID?
+                </h2>
+                <p className="mb-7 text-sm leading-relaxed text-slate-400">
+                  La próxima vez podrás acceder sin escribir tu contraseña. Tu huella nunca
+                  sale de este dispositivo: solo se guarda una llave que lo identifica.
+                </p>
+
+                {error && (
+                  <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-left text-sm text-red-300">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p>{error}</p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  disabled={isPasskeyLoading}
+                  onClick={async () => {
+                    setIsPasskeyLoading(true);
+                    setError(null);
+                    try {
+                      await registerPasskey(navigator.platform || 'Este dispositivo');
+                      onClose();
+                    } catch (err: any) {
+                      if (err?.name !== 'NotAllowedError' && err?.name !== 'AbortError') {
+                        setError(err.message || 'No se pudo registrar este dispositivo');
+                      }
+                    } finally {
+                      setIsPasskeyLoading(false);
+                    }
+                  }}
+                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 transition-all hover:brightness-110 disabled:opacity-70"
+                  style={{ backgroundImage: 'var(--gradient-brand)' }}
+                >
+                  {isPasskeyLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Activar'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem(PASSKEY_DECLINED_KEY, '1');
+                    onClose();
+                  }}
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-slate-400 transition-colors hover:text-white"
+                >
+                  Ahora no
+                </button>
+              </div>
+            ) : (
+            <>
             {/* Selector Ingresar / Registrarse */}
             <div className="relative mb-7 grid grid-cols-2 gap-1 rounded-xl border border-white/10 bg-white/5 p-1 text-sm font-medium">
               {[true, false].map((login) => (
@@ -272,6 +352,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {isLogin ? 'Regístrate' : 'Inicia Sesión'}
               </button>
             </div>
+            </>
+            )}
           </motion.div>
         </div>
       )}
