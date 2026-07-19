@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, Compass, User, LogOut, Menu, X, Bell, ChevronRight } from 'lucide-react';
+import { BookOpen, Compass, User, LogOut, Menu, X, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useIsMobile } from '../../../lib/useIsMobile';
 import { usePersistentState } from '../../../lib/usePersistentState';
@@ -182,14 +182,6 @@ export function StudentDashboard() {
               <h2 className={`text-sm font-bold ${isDarkView ? 'text-white' : 'text-lms-text-primary'}`}>
                 {NAV.find(n => n.id === view)?.label}
               </h2>
-            </div>
-            <div className="ml-auto flex items-center gap-3">
-              <button className={`relative p-2 rounded-xl transition-colors ${isDarkView ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-lms-text-muted hover:text-lms-text-primary hover:bg-lms-hover'}`}>
-                <Bell size={18} />
-              </button>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm">
-                {initials}
-              </div>
             </div>
           </header>
         )}
