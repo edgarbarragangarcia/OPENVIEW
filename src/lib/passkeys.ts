@@ -50,10 +50,11 @@ export async function registerPasskey(deviceLabel?: string) {
 export async function signInWithPasskey() {
   const options = await post('auth-options');
   const response = await startAuthentication({ optionsJSON: options });
-  const { tokenHash, email } = await post('auth-verify', { response });
+  const { tokenHash } = await post('auth-verify', { response });
 
+  // Con token_hash no se manda el email: Supabase rechaza la combinación con
+  // "Only the token_hash and type should be provided".
   const { error } = await supabase.auth.verifyOtp({
-    email,
     token_hash: tokenHash,
     type: 'email',
   });
