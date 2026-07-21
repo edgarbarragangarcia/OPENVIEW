@@ -2,7 +2,6 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { useRef } from 'react';
 import { MagneticButton } from './effects/MagneticButton';
-import { AnimatedCounter } from './effects/AnimatedCounter';
 import { StarfieldBackground } from './effects/StarfieldBackground';
 import { useIsMobile } from '../lib/useIsMobile';
 
@@ -114,29 +113,6 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
             Explorar cursos <ArrowRight size={18} />
           </MagneticButton>
 
-        </motion.div>
-
-        {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.85 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-10 border-t border-white/10 pt-10"
-        >
-          {[
-            { value: '+2,000', label: 'Estudiantes activos' },
-            { value: '+120', label: 'Cursos disponibles' },
-            { value: '98%', label: 'Satisfacción' },
-            { value: '+50', label: 'Empresas certificadas' },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <AnimatedCounter
-                value={stat.value}
-                className="text-gradient block text-3xl sm:text-4xl font-black font-serif"
-              />
-              <p className="text-xs sm:text-sm text-slate-400/80 uppercase tracking-widest mt-1 font-medium">{stat.label}</p>
-            </div>
-          ))}
         </motion.div>
 
       </motion.div>
