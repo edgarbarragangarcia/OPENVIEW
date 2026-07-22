@@ -976,13 +976,6 @@ interface ChatMessage {
   text: string;
 }
 
-/** Trims a topic's text down to a short chip label; the full text is what the "answer" bubble shows. */
-function chatQuestionLabel(text: string) {
-  const clean = text.trim();
-  const limit = 72;
-  return clean.length > limit ? `${clean.slice(0, limit).trimEnd()}…` : clean;
-}
-
 /** Guided-tutor style walkthrough: each "tema" becomes a pre-set question chip that, once tapped, plays out as a chat exchange. */
 function TopicChat({ temas, color }: { temas: string[]; color: string }) {
   const [asked, setAsked] = useState<number[]>([]);
@@ -1000,7 +993,7 @@ function TopicChat({ temas, color }: { temas: string[]; color: string }) {
     setAsked(prev => [...prev, idx]);
     setMessages(prev => [
       ...prev,
-      { role: 'user', text: chatQuestionLabel(temas[idx]) },
+      { role: 'user', text: `Tema ${idx + 1}` },
       { role: 'assistant', text: temas[idx] },
     ]);
   };
@@ -1062,7 +1055,7 @@ function TopicChat({ temas, color }: { temas: string[]; color: string }) {
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 hover:border-cyan-300 hover:bg-cyan-50/60 text-left text-xs sm:text-sm font-semibold text-lms-text-primary shadow-sm transition-colors"
             >
-              <span>{chatQuestionLabel(temas[i])}</span>
+              <span>{temas[i]}</span>
               <ArrowRight size={15} className="text-cyan-500 shrink-0" />
             </motion.button>
           ))}
