@@ -15,6 +15,7 @@ interface StructuredContent {
   type: 'structured';
   description: string;
   temas: string[];
+  explicaciones: string[];
   alcances: string[];
 }
 
@@ -32,7 +33,7 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
     try {
       if (formData.content?.trim().startsWith('{')) {
         const p = JSON.parse(formData.content);
-        if (p.type === 'structured') return p;
+        if (p.type === 'structured') return { ...p, explicaciones: p.explicaciones ?? [] };
       }
     } catch (e) {}
     return null;
@@ -40,7 +41,7 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
 
   const [useStructured, setUseStructured] = useState(!!initialParsed || !formData.content);
   const [structuredData, setStructuredData] = useState<StructuredContent>(
-    initialParsed || { type: 'structured', description: formData.content || '', temas: [], alcances: [] }
+    initialParsed || { type: 'structured', description: formData.content || '', temas: [], explicaciones: [], alcances: [] }
   );
 
   useEffect(() => {
@@ -54,14 +55,26 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
       e.preventDefault();
       const val = e.currentTarget.value.trim();
       if (val) {
-        setStructuredData(prev => ({ ...prev, temas: [...prev.temas, val] }));
+        setStructuredData(prev => ({ ...prev, temas: [...prev.temas, val], explicaciones: [...prev.explicaciones, ''] }));
         e.currentTarget.value = '';
       }
     }
   };
 
   const removeTema = (idx: number) => {
-    setStructuredData(prev => ({ ...prev, temas: prev.temas.filter((_, i) => i !== idx) }));
+    setStructuredData(prev => ({
+      ...prev,
+      temas: prev.temas.filter((_, i) => i !== idx),
+      explicaciones: prev.explicaciones.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const setExplicacion = (idx: number, value: string) => {
+    setStructuredData(prev => {
+      const next = [...prev.explicaciones];
+      next[idx] = value;
+      return { ...prev, explicaciones: next };
+    });
   };
 
   const addAlcance = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -265,39 +278,46 @@ export function LessonBuilder({ moduleId, lesson, onSaved, onCancel, onRefresh }
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-lms-text-primary mb-1">Temas (Presiona Enter para añadir)</label>
-                  <div className="space-y-2">
-                    {structuredData.temas.length > 0 && (
-                      <ul className="space-y-1">
-                        {structuredData.temas.map((tema, i) => (
-                          <li key={i} className="flex items-center justify-between text-xs bg-lms-bg border border-lms-border rounded-md px-2 py-1">
-                            <span className="truncate mr-2">{tema}</span>
-                            <button type="button" onClick={() => removeTema(i)} className="text-red-400"><X size={12} /></button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <input type="text" placeholder="Añadir tema ➔" onKeyDown={addTema} className="w-full px-3 py-1.5 bg-lms-bg border border-lms-border rounded-lg text-xs" />
-                  </div>
+              <div>
+                <label className="block text-xs font-semibold text-lms-text-primary mb-1">Temas del chat con el tutor (Presiona Enter para añadir)</label>
+                <div className="space-y-2">
+                  {structuredData.temas.length > 0 && (
+                    <ul className="space-y-2">
+                      {structuredData.temas.map((tema, i) => (
+                        <li key={i} className="bg-lms-bg border border-lms-border rounded-md px-2 py-2 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold truncate mr-2">{tema}</span>
+                            <button type="button" onClick={() => removeTema(i)} className="text-red-400 shrink-0"><X size={12} /></button>
+                          </div>
+                          <textarea
+                            value={structuredData.explicaciones[i] ?? ''}
+                            onChange={e => setExplicacion(i, e.target.value)}
+                            rows={2}
+                            placeholder="Explicación real de este tema (lo que el tutor responde al preguntarlo)"
+                            className="w-full px-2 py-1.5 bg-lms-surface border border-lms-border rounded text-xs text-lms-text-primary focus:outline-none focus:border-cyan-500"
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <input type="text" placeholder="Añadir tema ➔" onKeyDown={addTema} className="w-full px-3 py-1.5 bg-lms-bg border border-lms-border rounded-lg text-xs" />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-lms-text-primary mb-1">Alcances (Presiona Enter para añadir)</label>
-                  <div className="space-y-2">
-                    {structuredData.alcances.length > 0 && (
-                      <ul className="space-y-1">
-                        {structuredData.alcances.map((alcance, i) => (
-                          <li key={i} className="flex items-center justify-between text-xs bg-lms-bg border border-lms-border rounded-md px-2 py-1">
-                            <span className="truncate mr-2">{alcance}</span>
-                            <button type="button" onClick={() => removeAlcance(i)} className="text-red-400"><X size={12} /></button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <input type="text" placeholder="Añadir alcance ➔" onKeyDown={addAlcance} className="w-full px-3 py-1.5 bg-lms-bg border border-lms-border rounded-lg text-xs" />
-                  </div>
+              <div>
+                <label className="block text-xs font-semibold text-lms-text-primary mb-1">Alcances (Presiona Enter para añadir)</label>
+                <div className="space-y-2">
+                  {structuredData.alcances.length > 0 && (
+                    <ul className="space-y-1">
+                      {structuredData.alcances.map((alcance, i) => (
+                        <li key={i} className="flex items-center justify-between text-xs bg-lms-bg border border-lms-border rounded-md px-2 py-1">
+                          <span className="truncate mr-2">{alcance}</span>
+                          <button type="button" onClick={() => removeAlcance(i)} className="text-red-400"><X size={12} /></button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <input type="text" placeholder="Añadir alcance ➔" onKeyDown={addAlcance} className="w-full px-3 py-1.5 bg-lms-bg border border-lms-border rounded-lg text-xs" />
                 </div>
               </div>
             </div>

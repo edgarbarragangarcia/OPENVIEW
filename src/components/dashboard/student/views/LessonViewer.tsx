@@ -69,13 +69,13 @@ interface SectionRow {
   content: ReactNode;
 }
 
-const parseStructuredContent = (content?: string | null): { description?: string; temas: string[]; alcances: string[]; quiz: QuizQuestion[] } | null => {
+const parseStructuredContent = (content?: string | null): { description?: string; temas: string[]; explicaciones: string[]; alcances: string[]; quiz: QuizQuestion[] } | null => {
   if (!content) return null;
   try {
     if (content.trim().startsWith('{')) {
       const parsed = JSON.parse(content);
       if (parsed.type === 'structured') {
-        return { description: parsed.description, temas: parsed.temas ?? [], alcances: parsed.alcances ?? [], quiz: parsed.quiz ?? [] };
+        return { description: parsed.description, temas: parsed.temas ?? [], explicaciones: parsed.explicaciones ?? [], alcances: parsed.alcances ?? [], quiz: parsed.quiz ?? [] };
       }
     }
   } catch (e) {}
@@ -491,7 +491,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
                 icon: Target,
                 color: '#06b6d4',
-                content: <TopicChat temas={structuredContent.temas} color="#06b6d4" />,
+                content: <TopicChat temas={structuredContent.temas} explicaciones={structuredContent.explicaciones} color="#06b6d4" />,
               });
             }
 
@@ -985,7 +985,7 @@ function topicQuestion(tema: string) {
 }
 
 /** Guided-tutor style walkthrough: each "tema" becomes a pre-set question chip that, once tapped, plays out as a chat exchange. */
-function TopicChat({ temas, color }: { temas: string[]; color: string }) {
+function TopicChat({ temas, explicaciones, color }: { temas: string[]; explicaciones?: string[]; color: string }) {
   const [asked, setAsked] = useState<number[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'assistant', text: 'Estos son los temas clave de esta sesión. Elige uno para verlo con más detalle 👇' },
@@ -1002,7 +1002,7 @@ function TopicChat({ temas, color }: { temas: string[]; color: string }) {
     setMessages(prev => [
       ...prev,
       { role: 'user', text: topicQuestion(temas[idx]) },
-      { role: 'assistant', text: temas[idx] },
+      { role: 'assistant', text: explicaciones?.[idx] || temas[idx] },
     ]);
   };
 
