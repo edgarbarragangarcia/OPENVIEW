@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
@@ -11,7 +11,6 @@ import { isMatch, isOrder } from '../quiz/types';
 import { MatchQuestionView } from '../quiz/MatchQuestionView';
 import { OrderQuestionView } from '../quiz/OrderQuestionView';
 import { getFileNotes, saveFileNotes } from '../../../../lib/fileNotes';
-import { useIsMobile } from '../../../../lib/useIsMobile';
 import { usePersistentState } from '../../../../lib/usePersistentState';
 import { ProcessCanvas } from './ProcessCanvas';
 import { CanvasListView } from './CanvasListView';
@@ -61,6 +60,15 @@ const getFileMeta = (url?: string | null) => {
 
 const MODULE_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ec4899', '#0ea5e9', '#ef4444'];
 
+interface SectionRow {
+  key: string;
+  title: string;
+  count: string;
+  icon: React.ElementType;
+  color: string;
+  content: ReactNode;
+}
+
 const parseStructuredContent = (content?: string | null): { description?: string; temas: string[]; alcances: string[]; quiz: QuizQuestion[] } | null => {
   if (!content) return null;
   try {
@@ -82,13 +90,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  // El índice de curso queda siempre abierto en PC; en móvil es un drawer.
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // En PC el índice queda colapsado (riel de iconos) y se expande al pasar el
-  // mouse; "pinned" (botón PanelLeft) lo deja fijo abierto. En móvil es un drawer.
-  const [pinned, setPinned] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const isBelowLg = useIsMobile('(max-width: 1023px)');
-  const railExpanded = isBelowLg ? true : (pinned || hovered);
+  // Sección activa del sidebar derecho de "niveles" (temas, material, feedback, quiz).
+  const [activeSectionKey, setActiveSectionKey] = useState<string | null>(null);
   const [viewingFile, setViewingFile] = useState<{ url: string; viewerUrl: string; name: string } | null>(null);
   // Persistimos también la vista de canvas (lista o un canvas concreto) para que
   // al recargar estando en el canvas no se vuelva a la lección.
@@ -231,81 +236,65 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
       <div className={`relative flex h-full w-full ${locked ? 'blur-md pointer-events-none select-none' : ''}`}>
 
-      {/* ── Sidebar: Course Index ── */}
+      {/* ── Sidebar: Course Index (siempre expandido en PC) ── */}
       <aside
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         className={`
-          z-30 flex flex-col shrink-0 h-full overflow-hidden
-          bg-[#0a0f1e]/80 lg:bg-white/5 lg:backdrop-blur-xl border-r border-white/10
-          fixed lg:absolute lg:top-0 lg:left-0 transition-[width,transform] duration-300 ease-out
-          ${sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 lg:translate-x-0'}
-          ${railExpanded ? 'lg:w-72 lg:shadow-2xl lg:shadow-black/40' : 'lg:w-20'}
+          z-30 flex flex-col shrink-0 h-full w-72 overflow-hidden
+          bg-[#0a0f1e]/80 lg:bg-white/5 lg:backdrop-blur-xl lg:shadow-2xl lg:shadow-black/40 border-r border-white/10
+          fixed lg:static transition-transform duration-300 ease-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <div className={`h-full flex flex-col ${railExpanded ? 'w-72' : 'w-20'}`}>
+        <div className="h-full flex flex-col w-72">
 
           {/* Logo header — same as StudentDashboard */}
-          <div className={`flex items-center h-16 border-b border-white/10 shrink-0 ${railExpanded ? 'justify-between px-5' : 'justify-center px-2'}`}>
+          <div className="flex items-center justify-between h-16 px-5 border-b border-white/10 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               <img src="/logo.png" alt="Open View Logo" className="h-10 w-auto object-contain shrink-0" />
-              {railExpanded && (
-                <div className="min-w-0">
-                  <p className="font-black text-sm text-white leading-none mb-1">OpenView</p>
-                  <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
-                </div>
-              )}
+              <div className="min-w-0">
+                <p className="font-black text-sm text-white leading-none mb-1">OpenView</p>
+                <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
+              </div>
             </div>
-            {railExpanded && (
-              <button onClick={onBack} className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-cyan-400 transition-colors shrink-0">
-                <ArrowLeft size={12} /> Salir
-              </button>
-            )}
+            <button onClick={onBack} className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-cyan-400 transition-colors shrink-0">
+              <ArrowLeft size={12} /> Salir
+            </button>
           </div>
 
-          {/* Course header (solo expandido) */}
-          {railExpanded ? (
-            <div className="p-4 border-b border-white/10">
-              <div className="rounded-2xl border border-cyan-500/15 p-4 relative overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(14,165,233,0.02))' }}>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #06b6d440, #06b6d410)', boxShadow: '0 2px 6px #06b6d425' }}>
-                    <BookOpen size={12} className="text-cyan-400" />
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Curso actual</p>
+          {/* Course header */}
+          <div className="p-4 border-b border-white/10">
+            <div className="rounded-2xl border border-cyan-500/15 p-4 relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(14,165,233,0.02))' }}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #06b6d440, #06b6d410)', boxShadow: '0 2px 6px #06b6d425' }}>
+                  <BookOpen size={12} className="text-cyan-400" />
                 </div>
-                <h2 className="text-sm font-sans font-black text-white line-clamp-2 leading-snug">{course.title}</h2>
-                {/* Progress */}
-                <div className="mt-3 space-y-1.5">
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-400 font-semibold">Tu progreso</span>
-                    <motion.span key={progressPct} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-cyan-400 font-black">
-                      {progressPct}%
-                    </motion.span>
-                  </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full relative"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPct}%` }}
-                      transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                    >
-                      <div className="absolute inset-0 bg-white/30 animate-pulse" />
-                    </motion.div>
-                  </div>
-                  <p className="text-[10px] text-slate-400">{completed.size} de {totalLessons} lecciones completadas</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Curso actual</p>
+              </div>
+              <h2 className="text-sm font-sans font-black text-white line-clamp-2 leading-snug">{course.title}</h2>
+              {/* Progress */}
+              <div className="mt-3 space-y-1.5">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-400 font-semibold">Tu progreso</span>
+                  <motion.span key={progressPct} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-cyan-400 font-black">
+                    {progressPct}%
+                  </motion.span>
                 </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full relative"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                  >
+                    <div className="absolute inset-0 bg-white/30 animate-pulse" />
+                  </motion.div>
+                </div>
+                <p className="text-[10px] text-slate-400">{completed.size} de {totalLessons} lecciones completadas</p>
               </div>
             </div>
-          ) : (
-            /* Colapsado: barrita de progreso mínima */
-            <div className="px-3 py-3 border-b border-white/10 flex justify-center">
-              <div className="w-8 h-1.5 bg-white/10 rounded-full overflow-hidden" title={`${progressPct}% completado`}>
-                <div className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full" style={{ width: `${progressPct}%` }} />
-              </div>
-            </div>
-          )}
+          </div>
 
           {/* Module / Lesson list */}
           <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -314,7 +303,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
             <button
               onClick={() => { setCanvasView('list'); setSidebarOpen(false); }}
               title="Canvas de Procesos SPEC"
-              className={`w-full flex items-center gap-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${railExpanded ? 'px-3' : 'px-0 justify-center'} ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
                 showCanvas
                   ? 'bg-cyan-500/15 text-cyan-400'
                   : 'text-slate-400 hover:bg-white/5 hover:text-white'
@@ -330,12 +319,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
               >
                 <Workflow size={15} className={showCanvas ? 'text-cyan-400' : 'text-slate-400 group-hover:text-cyan-400 transition-colors'} />
               </div>
-              {railExpanded && (
-                <>
-                  <span className="flex-1 truncate">Canvas de Procesos SPEC</span>
-                  {showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
-                </>
-              )}
+              <span className="flex-1 truncate">Canvas de Procesos SPEC</span>
+              {showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
             </button>
 
             {course.modules.map((mod, mIdx) => {
@@ -346,9 +331,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
               return (
                 <div key={mod.id}>
                   <button
-                    onClick={() => railExpanded ? toggleModule(mod.id) : setHovered(true)}
+                    onClick={() => toggleModule(mod.id)}
                     title={mod.title}
-                    className={`w-full flex items-center gap-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${railExpanded ? 'px-3' : 'px-0 justify-center'} ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
                       isModActive
                         ? 'bg-cyan-500/10 text-white'
                         : 'text-slate-400 hover:bg-white/5 hover:text-white'
@@ -364,23 +349,19 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     >
                       <Layers size={15} style={{ color: modColor }} />
                     </div>
-                    {railExpanded && (
-                      <>
-                        <span className="flex-1 truncate">
-                          {mod.title}
-                        </span>
-                        {mod.lessons.length > 0 && (
-                          <span className="text-[9px] font-bold text-slate-500 shrink-0">{modDone}/{mod.lessons.length}</span>
-                        )}
-                        <motion.div animate={{ rotate: isModActive ? 90 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }} className="shrink-0">
-                          <ChevronRight size={14} className={isModActive ? 'text-cyan-400' : 'text-slate-500'} />
-                        </motion.div>
-                      </>
+                    <span className="flex-1 truncate">
+                      {mod.title}
+                    </span>
+                    {mod.lessons.length > 0 && (
+                      <span className="text-[9px] font-bold text-slate-500 shrink-0">{modDone}/{mod.lessons.length}</span>
                     )}
+                    <motion.div animate={{ rotate: isModActive ? 90 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }} className="shrink-0">
+                      <ChevronRight size={14} className={isModActive ? 'text-cyan-400' : 'text-slate-500'} />
+                    </motion.div>
                   </button>
 
                   <AnimatePresence initial={false}>
-                    {isModOpen && railExpanded && (
+                    {isModOpen && (
                       <motion.div
                         key="content"
                         initial={{ height: 0, opacity: 0 }}
@@ -456,7 +437,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
       )}
 
       {/* ── Main Content ── */}
-      <div className={`relative z-10 flex-1 flex flex-col overflow-hidden min-w-0 transition-[filter] duration-300 lg:pl-20 ${sidebarOpen ? 'blur-sm lg:blur-none' : ''}`}>
+      <div className={`relative z-10 flex-1 flex flex-col overflow-hidden min-w-0 transition-[filter] duration-300 ${sidebarOpen ? 'blur-sm lg:blur-none' : ''}`}>
         {canvasView === 'list' ? (
           <CanvasListView
             courseId={courseId}
@@ -476,14 +457,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
             className="lg:hidden flex items-center gap-2 text-xs text-slate-400 hover:text-white font-semibold shrink-0"
           >
             <BookOpen size={15} /> Índice
-          </button>
-
-          <button
-            onClick={() => setPinned(p => !p)}
-            className={`hidden lg:flex items-center transition-colors shrink-0 ${pinned ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}
-            title={pinned ? "Desfijar índice" : "Fijar índice abierto"}
-          >
-            <PanelLeft size={20} />
           </button>
 
           <h3 className="text-sm font-bold text-white truncate flex-1">
@@ -506,224 +479,286 @@ export function LessonViewer({ courseId, onBack }: Props) {
           )}
         </div>
 
-        {/* Lesson body */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-          {!activeLesson ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 gap-4">
-              <BookOpen size={40} className="opacity-20" />
-              <p className="text-sm">Selecciona una lección del panel izquierdo para comenzar</p>
-            </div>
-          ) : (
-            <div className="max-w-4xl mx-auto space-y-5">
+        {/* Lesson body: contenido a la izquierda + sidebar de "niveles" a la derecha */}
+        {(() => {
+          const rows: SectionRow[] = [];
 
-              {/* Video Player */}
-              {activeLesson.video_url && (
-                <div className="rounded-2xl overflow-hidden bg-black aspect-video shadow-lg shadow-black/10">
-                  <iframe
-                    src={activeLesson.video_url}
-                    title={activeLesson.title}
-                    className="w-full h-full"
-                    allowFullScreen
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  />
-                </div>
-              )}
+          if (activeLesson) {
+            if (structuredContent && structuredContent.temas.length > 0) {
+              rows.push({
+                key: 'temas',
+                title: 'Temas a cubrir',
+                count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
+                icon: Target,
+                color: '#06b6d4',
+                content: <TopicChat temas={structuredContent.temas} color="#06b6d4" />,
+              });
+            }
 
-              {activeLesson.content && (
-                structuredContent ? (
-                  structuredContent.description && (
-                    <AreaCards description={structuredContent.description} />
-                  )
-                ) : (
-                  <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-white border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
-                    <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
-                  </div>
-                )
-              )}
+            if (structuredContent && structuredContent.alcances.length > 0) {
+              rows.push({
+                key: 'alcances',
+                title: 'Alcances',
+                count: `${structuredContent.alcances.length} alcance${structuredContent.alcances.length !== 1 ? 's' : ''}`,
+                icon: Flag,
+                color: '#10b981',
+                content: (
+                  <ul className="space-y-3 m-0 p-0 list-none">
+                    {structuredContent.alcances.map((alcance, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-slate-200 leading-relaxed">
+                        <span className="text-emerald-400 mt-0.5 font-bold">•</span>
+                        <span>{alcance}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ),
+              });
+            }
 
-              {/* Contenido de la sesión: temas, alcances, material y feedback en un solo acordeón tipo Platzi */}
-              {(() => {
-                const rows: { key: string; title: string; count: string; icon: React.ElementType; color: string; content: ReactNode }[] = [];
+            if (activeLesson.pdf_url) {
+              const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+              rows.push({
+                key: 'material',
+                title: 'Material Descargable',
+                count: `${urls.length} archivo${urls.length !== 1 ? 's' : ''}`,
+                icon: Package,
+                color: '#6366f1',
+                content: (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {urls.map((url, idx) => {
+                      const meta = getFileMeta(url);
+                      if (!meta) return null;
 
-                if (structuredContent && structuredContent.temas.length > 0) {
-                  rows.push({
-                    key: 'temas',
-                    title: 'Temas a cubrir',
-                    count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
-                    icon: Target,
-                    color: '#06b6d4',
-                    content: <TopicChat temas={structuredContent.temas} color="#06b6d4" />,
-                  });
-                }
+                      const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
+                      const decodedName = decodeURIComponent(rawName);
+                      const displayName = decodedName.replace(/^\d+-/, '');
 
-                if (structuredContent && structuredContent.alcances.length > 0) {
-                  rows.push({
-                    key: 'alcances',
-                    title: 'Alcances',
-                    count: `${structuredContent.alcances.length} alcance${structuredContent.alcances.length !== 1 ? 's' : ''}`,
-                    icon: Flag,
-                    color: '#10b981',
-                    content: (
-                      <ul className="space-y-3 m-0 p-0 list-none">
-                        {structuredContent.alcances.map((alcance, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-slate-200 leading-relaxed">
-                            <span className="text-emerald-400 mt-0.5 font-bold">•</span>
-                            <span>{alcance}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ),
-                  });
-                }
+                      const lowerUrl = url.toLowerCase();
+                      let viewerUrl = url;
+                      if (meta.type === 'ppt' || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.xlsx') || lowerUrl.includes('.docx?') || lowerUrl.includes('.xlsx?')) {
+                         viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+                      } else if (meta.type !== 'pdf') {
+                         viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
+                      }
 
-                if (activeLesson.pdf_url) {
-                  const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
-                  rows.push({
-                    key: 'material',
-                    title: 'Material Descargable',
-                    count: `${urls.length} archivo${urls.length !== 1 ? 's' : ''}`,
-                    icon: Package,
-                    color: '#6366f1',
-                    content: (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {urls.map((url, idx) => {
-                          const meta = getFileMeta(url);
-                          if (!meta) return null;
-
-                          const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
-                          const decodedName = decodeURIComponent(rawName);
-                          const displayName = decodedName.replace(/^\d+-/, '');
-
-                          const lowerUrl = url.toLowerCase();
-                          let viewerUrl = url;
-                          if (meta.type === 'ppt' || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.xlsx') || lowerUrl.includes('.docx?') || lowerUrl.includes('.xlsx?')) {
-                             viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
-                          } else if (meta.type !== 'pdf') {
-                             viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
-                          }
-
-                          return (
-                            <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
-                              <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                                  <meta.icon size={20} className="text-cyan-400" />
-                                </div>
-                                <div className="flex-1 min-w-0 pt-1">
-                                  <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
-                                    {displayName}
-                                  </h4>
-                                  <p className="text-xs text-lms-text-muted truncate mt-0.5">
-                                    Archivo descargable
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 mt-2">
-                                <button
-                                  onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
-                                  className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-400 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
-                                >
-                                  <Eye size={16} /> Ver Archivo
-                                </button>
-                                <a
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center justify-center gap-2 bg-lms-hover border border-lms-border hover:border-lms-text-muted/40 text-lms-text-muted hover:text-lms-text-primary px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
-                                >
-                                  <DownloadCloud size={16} /> Descargar
-                                </a>
-                              </div>
+                      return (
+                        <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                              <meta.icon size={20} className="text-cyan-400" />
                             </div>
+                            <div className="flex-1 min-w-0 pt-1">
+                              <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
+                                {displayName}
+                              </h4>
+                              <p className="text-xs text-lms-text-muted truncate mt-0.5">
+                                Archivo descargable
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <button
+                              onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
+                              className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-400 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                            >
+                              <Eye size={16} /> Ver Archivo
+                            </button>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 bg-lms-hover border border-lms-border hover:border-lms-text-muted/40 text-lms-text-muted hover:text-lms-text-primary px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                            >
+                              <DownloadCloud size={16} /> Descargar
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ),
+              });
+            }
+
+            if (structuredContent && structuredContent.temas.length > 0) {
+              rows.push({
+                key: 'kanban',
+                title: 'Feedback de aprendizaje',
+                count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
+                icon: MessageSquare,
+                color: '#8b5cf6',
+                content: <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structuredContent.temas} />,
+              });
+            }
+
+            if (structuredContent && structuredContent.quiz.length > 0) {
+              rows.push({
+                key: 'quiz',
+                title: 'Evaluación',
+                count: `${structuredContent.quiz.length} preguntas`,
+                icon: Trophy,
+                color: '#f59e0b',
+                content: <QuizGame key={activeLesson.id} lessonId={activeLesson.id} questions={structuredContent.quiz} />,
+              });
+            }
+          }
+
+          const resolvedKey = rows.find(r => r.key === activeSectionKey)?.key ?? rows[0]?.key ?? null;
+          const activeSection = rows.find(r => r.key === resolvedKey) ?? null;
+          const activeIndex = activeSection ? rows.indexOf(activeSection) : -1;
+
+          return (
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+                {!activeLesson ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 gap-4">
+                    <BookOpen size={40} className="opacity-20" />
+                    <p className="text-sm">Selecciona una lección del panel izquierdo para comenzar</p>
+                  </div>
+                ) : (
+                  <div className="max-w-4xl mx-auto space-y-5">
+
+                    {/* Video Player */}
+                    {activeLesson.video_url && (
+                      <div className="rounded-2xl overflow-hidden bg-black aspect-video shadow-lg shadow-black/10">
+                        <iframe
+                          src={activeLesson.video_url}
+                          title={activeLesson.title}
+                          className="w-full h-full"
+                          allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        />
+                      </div>
+                    )}
+
+                    {activeLesson.content && (
+                      structuredContent ? (
+                        structuredContent.description && (
+                          <AreaCards description={structuredContent.description} />
+                        )
+                      ) : (
+                        <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-white border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
+                          <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                        </div>
+                      )
+                    )}
+
+                    {/* Niveles como chips en móvil: no hay espacio para el sidebar fijo */}
+                    {rows.length > 1 && (
+                      <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                        {rows.map((row, i) => {
+                          const isActive = row.key === resolvedKey;
+                          return (
+                            <button
+                              key={row.key}
+                              onClick={() => setActiveSectionKey(row.key)}
+                              className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${
+                                isActive ? 'text-white' : 'text-slate-400 border-white/10 bg-white/5 hover:text-white'
+                              }`}
+                              style={isActive ? { borderColor: row.color, background: `${row.color}20` } : {}}
+                            >
+                              <row.icon size={14} /> Nivel {i + 1}: {row.title}
+                            </button>
                           );
                         })}
                       </div>
-                    ),
-                  });
-                }
+                    )}
 
-                if (structuredContent && structuredContent.temas.length > 0) {
-                  rows.push({
-                    key: 'kanban',
-                    title: 'Feedback de aprendizaje',
-                    count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
-                    icon: MessageSquare,
-                    color: '#8b5cf6',
-                    content: <TopicKanban key={activeLesson.id} lessonId={activeLesson.id} temas={structuredContent.temas} />,
-                  });
-                }
+                    {/* Contenido del nivel seleccionado (elegido desde el sidebar derecho) */}
+                    {activeSection && (
+                      <div className="rounded-2xl border overflow-hidden"
+                        style={{ borderColor: `${activeSection.color}55`, boxShadow: `0 10px 28px ${activeSection.color}18` }}>
+                        <div className="flex items-center gap-3 px-5 py-4"
+                          style={{ background: `linear-gradient(135deg, ${activeSection.color}12, transparent 70%)` }}>
+                          <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white shadow-lg"
+                            style={{ background: `linear-gradient(135deg, ${activeSection.color}, ${activeSection.color}bb)`, boxShadow: `0 4px 14px ${activeSection.color}45` }}>
+                            <activeSection.icon size={17} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: activeSection.color }}>Nivel {activeIndex + 1}</p>
+                            <span className="text-sm font-black text-white truncate block">{activeSection.title}</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-400 shrink-0">{activeSection.count}</span>
+                        </div>
+                        <div className="px-5 pb-5 pt-0.5">{activeSection.content}</div>
+                      </div>
+                    )}
 
-                if (structuredContent && structuredContent.quiz.length > 0) {
-                  rows.push({
-                    key: 'quiz',
-                    title: 'Evaluación',
-                    count: `${structuredContent.quiz.length} preguntas`,
-                    icon: Trophy,
-                    color: '#f59e0b',
-                    content: <QuizGame key={activeLesson.id} lessonId={activeLesson.id} questions={structuredContent.quiz} />,
-                  });
-                }
+                    {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
+                      <div className="flex flex-col items-center justify-center py-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-slate-400 gap-3">
+                        <Lock size={32} className="opacity-20" />
+                        <p className="text-sm">Esta lección aún no tiene contenido.</p>
+                      </div>
+                    )}
 
-                if (rows.length === 0) return null;
-
-                return (
-                  <div className="space-y-4">
-                    {rows.map((row, i) => (
-                      <AccordionRow
-                        key={`${activeLesson.id}-${row.key}`}
-                        index={i + 1}
-                        title={row.title}
-                        count={row.count}
-                        icon={row.icon}
-                        color={row.color}
-                      >
-                        {row.content}
-                      </AccordionRow>
-                    ))}
+                    {/* Navigation */}
+                    <div className="flex justify-between pt-4 border-t border-white/10">
+                      {/* Previous lesson */}
+                      {(() => {
+                        const allLessons = course?.modules.flatMap(m => m.lessons) ?? [];
+                        const idx = allLessons.findIndex(l => l.id === activeLesson.id);
+                        const prev = idx > 0 ? allLessons[idx - 1] : null;
+                        const next = idx < allLessons.length - 1 ? allLessons[idx + 1] : null;
+                        return (
+                          <>
+                            <button
+                              onClick={() => prev && setActiveLesson(prev)}
+                              disabled={!prev}
+                              className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ArrowLeft size={16} /> Anterior
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (!completed.has(activeLesson.id)) toggleComplete(activeLesson.id);
+                                if (next) setActiveLesson(next);
+                              }}
+                              disabled={!next && completed.has(activeLesson.id)}
+                              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg shadow-cyan-500/20"
+                            >
+                              {next ? 'Siguiente lección' : completed.has(activeLesson.id) ? '¡Curso completado!' : 'Marcar como completada'} <ChevronRight size={16} />
+                            </button>
+                          </>
+                        );
+                      })()}
+                    </div>
                   </div>
-                );
-              })()}
-
-              {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
-                <div className="flex flex-col items-center justify-center py-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-slate-400 gap-3">
-                  <Lock size={32} className="opacity-20" />
-                  <p className="text-sm">Esta lección aún no tiene contenido.</p>
-                </div>
-              )}
-
-              {/* Navigation */}
-              <div className="flex justify-between pt-4 border-t border-white/10">
-                {/* Previous lesson */}
-                {(() => {
-                  const allLessons = course?.modules.flatMap(m => m.lessons) ?? [];
-                  const idx = allLessons.findIndex(l => l.id === activeLesson.id);
-                  const prev = idx > 0 ? allLessons[idx - 1] : null;
-                  const next = idx < allLessons.length - 1 ? allLessons[idx + 1] : null;
-                  return (
-                    <>
-                      <button
-                        onClick={() => prev && setActiveLesson(prev)}
-                        disabled={!prev}
-                        className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <ArrowLeft size={16} /> Anterior
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (!completed.has(activeLesson.id)) toggleComplete(activeLesson.id);
-                          if (next) setActiveLesson(next);
-                        }}
-                        disabled={!next && completed.has(activeLesson.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg shadow-cyan-500/20"
-                      >
-                        {next ? 'Siguiente lección' : completed.has(activeLesson.id) ? '¡Curso completado!' : 'Marcar como completada'} <ChevronRight size={16} />
-                      </button>
-                    </>
-                  );
-                })()}
+                )}
               </div>
+
+              {/* Sidebar derecho: niveles de la sesión (Temas, Material, Feedback, Evaluación) */}
+              {rows.length > 0 && (
+                <aside className="hidden lg:flex flex-col w-64 shrink-0 border-l border-white/10 bg-white/5 backdrop-blur-xl overflow-y-auto p-3 gap-1.5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 pt-1 pb-2">Niveles de la sesión</p>
+                  {rows.map((row, i) => {
+                    const isActive = row.key === resolvedKey;
+                    return (
+                      <button
+                        key={row.key}
+                        onClick={() => setActiveSectionKey(row.key)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                        style={isActive ? { boxShadow: `inset 0 0 0 1px ${row.color}55` } : {}}
+                      >
+                        <div className="relative w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-white"
+                          style={{ background: `linear-gradient(135deg, ${row.color}, ${row.color}bb)`, boxShadow: isActive ? `0 2px 8px ${row.color}45` : 'none' }}>
+                          <row.icon size={15} />
+                          <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0a0f1e] border flex items-center justify-center text-[8px] font-black"
+                            style={{ borderColor: row.color, color: row.color }}>
+                            {i + 1}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-300'}`}>{row.title}</p>
+                          <p className="text-[10px] text-slate-500 truncate">{row.count}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </aside>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
         </>
         )}
       </div>
@@ -1115,67 +1150,6 @@ function TopicChat({ temas, color }: { temas: string[]; color: string }) {
   );
 }
 
-interface AccordionRowProps {
-  index: number;
-  title: string;
-  count: string;
-  icon: React.ElementType;
-  color: string;
-  defaultOpen?: boolean;
-  children: ReactNode;
-}
-
-/** "Level card" style accordion row: gradient icon badge with a level-number chip, glow on open. */
-function AccordionRow({ index, title, count, icon: Icon, color, defaultOpen = false, children }: AccordionRowProps) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div className="rounded-2xl border overflow-hidden transition-all duration-300"
-      style={{
-        borderColor: open ? `${color}55` : `${color}20`,
-        boxShadow: open ? `0 10px 28px ${color}18` : `0 1px 3px rgba(0,0,0,0.04)`,
-      }}
-    >
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-5 py-4 transition-colors text-left group"
-        style={{ background: `linear-gradient(135deg, ${color}12, transparent 70%)` }}
-      >
-        <motion.div whileHover={{ scale: 1.1, rotate: -4 }}
-          className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white shadow-lg"
-          style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, boxShadow: `0 4px 14px ${color}45` }}
-        >
-          <Icon size={17} />
-          <span className="absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border-2 flex items-center justify-center text-[9px] font-black"
-            style={{ borderColor: color, color }}>
-            {index}
-          </span>
-        </motion.div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-widest" style={{ color }}>Nivel {index}</p>
-          <span className="text-sm font-black text-white truncate block">{title}</span>
-        </div>
-        <span className="text-[10px] font-bold text-slate-400 shrink-0">{count}</span>
-        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="shrink-0 text-slate-400">
-          <ChevronDown size={16} />
-        </motion.div>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5 pt-0.5">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 interface FileNotesPageProps {
   file: { url: string; viewerUrl: string; name: string };
