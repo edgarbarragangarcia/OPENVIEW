@@ -605,7 +605,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
           const resolvedKey = rows.find(r => r.key === activeSectionKey)?.key ?? rows[0]?.key ?? null;
           const activeSection = rows.find(r => r.key === resolvedKey) ?? null;
-          const activeIndex = activeSection ? rows.indexOf(activeSection) : -1;
 
           return (
             <div className="flex-1 flex overflow-hidden">
@@ -660,21 +659,9 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
                     {/* Contenido del nivel seleccionado (elegido desde el sidebar derecho) */}
                     {activeSection && (
-                      <div className="rounded-2xl border overflow-hidden"
+                      <div className="rounded-2xl border overflow-hidden p-5"
                         style={{ borderColor: `${activeSection.color}55`, boxShadow: `0 10px 28px ${activeSection.color}18` }}>
-                        <div className="flex items-center gap-3 px-5 py-4"
-                          style={{ background: `linear-gradient(135deg, ${activeSection.color}12, transparent 70%)` }}>
-                          <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white shadow-lg"
-                            style={{ background: `linear-gradient(135deg, ${activeSection.color}, ${activeSection.color}bb)`, boxShadow: `0 4px 14px ${activeSection.color}45` }}>
-                            <activeSection.icon size={17} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: activeSection.color }}>Nivel {activeIndex + 1}</p>
-                            <span className="text-sm font-black text-white truncate block">{activeSection.title}</span>
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-400 shrink-0">{activeSection.count}</span>
-                        </div>
-                        <div className="px-5 pb-5 pt-0.5">{activeSection.content}</div>
+                        {activeSection.content}
                       </div>
                     )}
 
