@@ -659,7 +659,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
                     {/* Contenido del nivel seleccionado (elegido desde el sidebar derecho) */}
                     {activeSection && (
-                      <div className="rounded-2xl border overflow-hidden p-5"
+                      <div className="rounded-2xl border overflow-y-auto p-5 max-h-[70vh]"
                         style={{ borderColor: `${activeSection.color}55`, boxShadow: `0 10px 28px ${activeSection.color}18` }}>
                         {activeSection.content}
                       </div>
