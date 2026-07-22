@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronDown, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, PanelLeft, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
@@ -552,7 +552,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     count: `${structuredContent.temas.length} tema${structuredContent.temas.length !== 1 ? 's' : ''}`,
                     icon: Target,
                     color: '#06b6d4',
-                    content: <TopicPath temas={structuredContent.temas} color="#06b6d4" />,
+                    content: <TopicChat temas={structuredContent.temas} color="#06b6d4" />,
                   });
                 }
 
@@ -1009,40 +1009,108 @@ function AreaCards({ description }: { description: string }) {
   );
 }
 
-/** Duolingo-style zigzag progress path: numbered nodes on a dashed spine, alternating sides. */
-function TopicPath({ temas, color }: { temas: string[]; color: string }) {
+interface ChatMessage {
+  role: 'assistant' | 'user';
+  text: string;
+}
+
+/** Trims a topic's text down to a short chip label; the full text is what the "answer" bubble shows. */
+function chatQuestionLabel(text: string) {
+  const clean = text.trim();
+  const limit = 72;
+  return clean.length > limit ? `${clean.slice(0, limit).trimEnd()}…` : clean;
+}
+
+/** Guided-tutor style walkthrough: each "tema" becomes a pre-set question chip that, once tapped, plays out as a chat exchange. */
+function TopicChat({ temas, color }: { temas: string[]; color: string }) {
+  const [asked, setAsked] = useState<number[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { role: 'assistant', text: 'Estos son los temas clave de esta sesión. Elige uno para verlo con más detalle 👇' },
+  ]);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [messages.length]);
+
+  const askTopic = (idx: number) => {
+    if (asked.includes(idx)) return;
+    setAsked(prev => [...prev, idx]);
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', text: chatQuestionLabel(temas[idx]) },
+      { role: 'assistant', text: temas[idx] },
+    ]);
+  };
+
+  const pending = temas.map((_, i) => i).filter(i => !asked.includes(i));
+
   return (
-    <div className="relative py-2">
-      <div className="absolute left-1/2 top-6 bottom-6 -translate-x-1/2 border-l-2 border-dashed pointer-events-none"
-        style={{ borderColor: `${color}35` }} />
-      <div className="space-y-5">
-        {temas.map((tema, i) => {
-          const isLeft = i % 2 === 0;
-          const card = (
-            <div className={`max-w-xs rounded-2xl border bg-white px-4 py-3 shadow-sm ${isLeft ? 'text-right' : 'text-left'}`}
-              style={{ borderColor: `${color}25` }}>
-              <p className="text-xs sm:text-sm text-lms-text-primary leading-relaxed">{tema}</p>
-            </div>
-          );
-          return (
-            <motion.div key={i}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-30px' }}
-              transition={{ delay: i * 0.06, type: 'spring', stiffness: 320, damping: 26 }}
-              className="grid grid-cols-[1fr_auto_1fr] items-center gap-3"
-            >
-              <div className={isLeft ? 'flex justify-end' : ''}>{isLeft && card}</div>
-              <motion.div whileHover={{ scale: 1.15 }}
-                className="relative z-10 w-11 h-11 rounded-full flex items-center justify-center font-black text-sm text-white shrink-0 shadow-lg"
-                style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, boxShadow: `0 4px 14px ${color}50` }}>
-                {i + 1}
-              </motion.div>
-              <div className={!isLeft ? 'flex justify-start' : ''}>{!isLeft && card}</div>
-            </motion.div>
-          );
-        })}
+    <div className="space-y-4">
+      {/* Tutor header, once — matches a chat contact card, not repeated per message */}
+      <div className="flex items-center gap-2.5">
+        <div className="relative w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white shadow-lg"
+          style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, boxShadow: `0 4px 14px ${color}45` }}>
+          <Sparkles size={16} />
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0a0f1e]" />
+        </div>
+        <div>
+          <p className="text-sm font-black text-white leading-none">Tutor OpenView</p>
+          <p className="text-[10px] text-slate-400 font-semibold mt-1">Toca una pregunta para profundizar</p>
+        </div>
       </div>
+
+      {/* Thread */}
+      <div className="space-y-3">
+        {messages.map((m, i) => (
+          <motion.div key={i}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+            className={`flex items-end gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {m.role === 'assistant' && (
+              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-white"
+                style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)` }}>
+                <Sparkles size={11} />
+              </div>
+            )}
+            <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed shadow-sm ${
+              m.role === 'user'
+                ? 'bg-cyan-600 text-white rounded-br-md'
+                : 'bg-white text-lms-text-primary border border-slate-200 rounded-tl-md'
+            }`}>
+              {m.text}
+            </div>
+          </motion.div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Pre-set question chips: the only way to "ask" here, no free-text input */}
+      {pending.length > 0 ? (
+        <div className="space-y-2 pt-1">
+          {pending.map(i => (
+            <motion.button
+              key={i}
+              onClick={() => askTopic(i)}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ x: 2 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 hover:border-cyan-300 hover:bg-cyan-50/60 text-left text-xs sm:text-sm font-semibold text-lms-text-primary shadow-sm transition-colors"
+            >
+              <span>{chatQuestionLabel(temas[i])}</span>
+              <ArrowRight size={15} className="text-cyan-500 shrink-0" />
+            </motion.button>
+          ))}
+        </div>
+      ) : (
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+          <CheckCircle size={14} /> Ya viste todos los temas de esta sesión
+        </motion.p>
+      )}
     </div>
   );
 }
