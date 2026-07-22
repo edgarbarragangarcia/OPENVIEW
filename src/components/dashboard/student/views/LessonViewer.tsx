@@ -1063,7 +1063,7 @@ function TopicChat({ temas, color }: { temas: string[]; color: string }) {
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 hover:border-cyan-300 hover:bg-cyan-50/60 text-left text-xs sm:text-sm font-semibold text-lms-text-primary shadow-sm transition-colors"
             >
-              <span>{temas[i]}</span>
+              <span>{topicQuestion(temas[i])}</span>
               <ArrowRight size={15} className="text-cyan-500 shrink-0" />
             </motion.button>
           ))}
