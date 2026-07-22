@@ -680,6 +680,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                         const idx = allLessons.findIndex(l => l.id === activeLesson.id);
                         const prev = idx > 0 ? allLessons[idx - 1] : null;
                         const next = idx < allLessons.length - 1 ? allLessons[idx + 1] : null;
+                        const activeIdx = rows.findIndex(r => r.key === resolvedKey);
+                        const isLastNivel = rows.length === 0 || activeIdx === rows.length - 1;
                         return (
                           <>
                             <button
@@ -691,13 +693,19 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             </button>
                             <button
                               onClick={() => {
+                                if (!isLastNivel) {
+                                  setActiveSectionKey(rows[activeIdx + 1].key);
+                                  return;
+                                }
                                 if (!completed.has(activeLesson.id)) toggleComplete(activeLesson.id);
                                 if (next) setActiveLesson(next);
                               }}
-                              disabled={!next && completed.has(activeLesson.id)}
+                              disabled={isLastNivel && !next && completed.has(activeLesson.id)}
                               className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg shadow-cyan-500/20"
                             >
-                              {next ? 'Siguiente lección' : completed.has(activeLesson.id) ? '¡Curso completado!' : 'Marcar como completada'} <ChevronRight size={16} />
+                              {!isLastNivel
+                                ? 'Siguiente nivel'
+                                : next ? 'Siguiente lección' : completed.has(activeLesson.id) ? '¡Curso completado!' : 'Marcar como completada'} <ChevronRight size={16} />
                             </button>
                           </>
                         );
