@@ -976,6 +976,14 @@ interface ChatMessage {
   text: string;
 }
 
+/** Turns a topic's raw text into a short question, so the "user" bubble reads like something a student would actually ask. */
+function topicQuestion(tema: string) {
+  const clean = tema.trim();
+  const words = clean.split(/\s+/);
+  const snippet = words.slice(0, 8).join(' ');
+  return `¿Qué necesito saber sobre "${snippet}${words.length > 8 ? '…' : ''}"?`;
+}
+
 /** Guided-tutor style walkthrough: each "tema" becomes a pre-set question chip that, once tapped, plays out as a chat exchange. */
 function TopicChat({ temas, color }: { temas: string[]; color: string }) {
   const [asked, setAsked] = useState<number[]>([]);
@@ -993,7 +1001,7 @@ function TopicChat({ temas, color }: { temas: string[]; color: string }) {
     setAsked(prev => [...prev, idx]);
     setMessages(prev => [
       ...prev,
-      { role: 'user', text: `Tema ${idx + 1}` },
+      { role: 'user', text: topicQuestion(temas[idx]) },
       { role: 'assistant', text: temas[idx] },
     ]);
   };
