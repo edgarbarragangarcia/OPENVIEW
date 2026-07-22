@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, DollarSign, Users, ClipboardList, ShoppingCart, Sparkles, X, Trophy, Layers } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
@@ -631,16 +631,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
                       </div>
                     )}
 
-                    {activeLesson.content && (
-                      structuredContent ? (
-                        structuredContent.description && (
-                          <AreaCards description={structuredContent.description} />
-                        )
-                      ) : (
-                        <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-white border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
-                          <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
-                        </div>
-                      )
+                    {activeLesson.content && !structuredContent && (
+                      <div className="prose prose-slate prose-sm md:prose-base max-w-none bg-white border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm text-slate-700">
+                        <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                      </div>
                     )}
 
                     {/* Niveles como chips en móvil: no hay espacio para el sidebar fijo */}
@@ -767,14 +761,6 @@ export function LessonViewer({ courseId, onBack }: Props) {
   );
 }
 
-const AREA_STYLES: Record<string, { icon: React.ElementType; color: string }> = {
-  'Finanzas': { icon: DollarSign, color: '#10b981' },
-  'Recursos Humanos': { icon: Users, color: '#8b5cf6' },
-  'Administrativa': { icon: ClipboardList, color: '#0ea5e9' },
-  'Compras': { icon: ShoppingCart, color: '#f59e0b' },
-};
-
-/** Splits the "Aplicación por área" paragraph into a grid of colorful area cards instead of one dense block of text. */
 /** Kahoot/trivia-style quiz: one question at a time, streak counter, and a celebratory results screen. */
 type TileStatus = 'pending' | 'correct' | 'wrong';
 const QUIZ_LIVES = 3;
@@ -995,52 +981,6 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
       </div>
       )}
     </motion.div>
-  );
-}
-
-function AreaCards({ description }: { description: string }) {
-  const items = description
-    .split('\n')
-    .map(line => {
-      const m = line.match(/^([^:]+):\s*(.*)$/);
-      return m ? { label: m[1].trim(), text: m[2].trim() } : null;
-    })
-    .filter((v): v is { label: string; text: string } => v !== null && v.text.length > 0);
-
-  if (items.length === 0) {
-    return (
-      <div className="bg-lms-surface border border-lms-border rounded-2xl p-6 md:p-8 shadow-sm">
-        <p className="text-xs md:text-sm text-lms-text-primary leading-relaxed">{description}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {items.map((item, i) => {
-        const style = AREA_STYLES[item.label] ?? { icon: Sparkles, color: '#64748b' };
-        const Icon = style.icon;
-        return (
-          <motion.div key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, type: 'spring', stiffness: 320, damping: 26 }}
-            whileHover={{ y: -2 }}
-            className="rounded-2xl border p-4 shadow-sm transition-shadow"
-            style={{ borderColor: `${style.color}30`, background: `linear-gradient(135deg, ${style.color}0d, transparent)` }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ background: `linear-gradient(135deg, ${style.color}40, ${style.color}15)`, boxShadow: `0 2px 6px ${style.color}30` }}>
-                <Icon size={15} style={{ color: style.color }} />
-              </div>
-              <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: style.color }}>{item.label}</p>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">{item.text}</p>
-          </motion.div>
-        );
-      })}
-    </div>
   );
 }
 
