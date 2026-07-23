@@ -23,11 +23,13 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
 
   return (
     <section ref={sectionRef} className="relative min-h-[92vh] flex flex-col items-center justify-center pt-28 pb-16 sm:pt-24 bg-black text-white overflow-hidden">
-      {/* Ambient glow, muy sutil — nada de starfield ni parallax */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-70"
-        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 20%, rgba(0,113,227,0.25) 0%, transparent 70%)' }}
-      />
+      {/* Ambient glow animado: varios "blobs" de color que se desplazan lento
+          y sin rumbo fijo (nada de starfield ni parallax de scroll). */}
+      <div className="absolute inset-0 pointer-events-none opacity-80">
+        <div className="hero-blob hero-blob-a" style={{ background: 'radial-gradient(circle, rgba(0,113,227,0.55) 0%, transparent 70%)' }} />
+        <div className="hero-blob hero-blob-b" style={{ background: 'radial-gradient(circle, rgba(41,151,255,0.4) 0%, transparent 70%)' }} />
+        <div className="hero-blob hero-blob-c" style={{ background: 'radial-gradient(circle, rgba(94,92,230,0.35) 0%, transparent 70%)' }} />
+      </div>
 
       <motion.div style={{ scale, opacity }} className="relative z-10 max-w-4xl mx-auto px-6 sm:px-10 w-full text-center">
         <motion.h1
