@@ -7,7 +7,6 @@ import { supabase } from '../../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { MagneticButton } from '../../../effects/MagneticButton';
 import { RevealHeading } from '../../../effects/RevealHeading';
-import { StarfieldBackground } from '../../../effects/StarfieldBackground';
 import { CourseCover } from '../../../CourseCover';
 
 interface Props {
@@ -125,11 +124,10 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
   if (loading) {
     return (
-      <div className={`relative min-h-full p-6 lg:p-8 overflow-hidden ${isEmbedded ? '' : 'bg-[#05070f]'}`}>
-        {!isEmbedded && <StarfieldBackground density={0.6} />}
+      <div className={`relative min-h-full p-6 lg:p-8 overflow-hidden ${isEmbedded ? '' : 'bg-lms-bg'}`}>
         <div className="relative z-10 max-w-6xl mx-auto space-y-6">
-          <div className="h-64 bg-white/5 rounded-3xl animate-pulse border border-white/10" />
-          <div className="h-40 bg-white/5 rounded-3xl animate-pulse border border-white/10" />
+          <div className="h-64 bg-lms-surface rounded-3xl animate-pulse border border-lms-border" />
+          <div className="h-40 bg-lms-surface rounded-3xl animate-pulse border border-lms-border" />
         </div>
       </div>
     );
@@ -137,7 +135,7 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
   if (!course) {
     return (
-      <div className={`flex h-full items-center justify-center text-slate-400 ${isEmbedded ? '' : 'bg-[#05070f]'}`}>
+      <div className={`flex h-full items-center justify-center text-lms-text-muted ${isEmbedded ? '' : 'bg-lms-bg'}`}>
         Curso no encontrado.
       </div>
     );
@@ -147,15 +145,13 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
   const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length ?? 0), 0);
 
   return (
-    <div className={`relative min-h-full text-white overflow-hidden ${isEmbedded ? '' : 'bg-[#05070f]'}`}>
-      {!isEmbedded && <StarfieldBackground density={0.9} />}
-
+    <div className={`relative min-h-full text-lms-text-primary overflow-hidden ${isEmbedded ? '' : 'bg-lms-bg'}`}>
       {/* Topbar */}
       {!isEmbedded && (
-        <div className="relative z-10 flex items-center gap-4 px-4 lg:px-8 h-14 bg-white/5 backdrop-blur-xl border-b border-white/10 sticky top-0">
+        <div className="relative z-10 flex items-center gap-4 px-4 lg:px-8 h-14 bg-lms-surface border-b border-lms-border sticky top-0">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-xs text-slate-400 hover:text-sky-300 font-semibold transition-colors"
+            className="flex items-center gap-2 text-xs text-lms-text-muted hover:text-sky-600 font-semibold transition-colors"
           >
             <ArrowLeft size={14} /> Volver
           </button>
@@ -177,14 +173,14 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
                 {course.categories.name}
               </span>
             )}
-            <h1 className="text-3xl sm:text-4xl font-serif font-black text-white leading-tight">
+            <h1 className="text-3xl sm:text-4xl font-serif font-black text-lms-text-primary leading-tight">
               {course.title}
             </h1>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-lms-text-muted leading-relaxed">
               {course.long_desc || course.description || 'Sin descripción disponible.'}
             </p>
 
-            <div className="flex flex-wrap items-center gap-5 pt-2 text-sm text-slate-400">
+            <div className="flex flex-wrap items-center gap-5 pt-2 text-sm text-lms-text-muted">
               <div className="flex items-center gap-2">
                 <BarChart3 size={15} className="text-sky-400" />
                 <span className="capitalize">{LEVEL_LABELS[course.level] ?? course.level}</span>
@@ -206,20 +202,20 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
             transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.1 }}
             className="lg:col-span-5"
           >
-            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
-              <div className="h-44 bg-white/5 overflow-hidden">
+            <div className="rounded-3xl border border-lms-border bg-lms-surface backdrop-blur-xl overflow-hidden shadow-2xl shadow-slate-200">
+              <div className="h-44 bg-lms-surface overflow-hidden">
                 <CourseCover
                   src={course.cover_url}
                   alt={course.title}
                   imgClassName="w-full h-full object-cover"
-                  iconClassName="text-white/20"
+                  iconClassName="text-lms-text-muted"
                   iconSize={36}
                   eager
                 />
               </div>
               <div className="p-5 space-y-3">
                 {course.price > 0 && (
-                  <p className="text-2xl font-black text-white">${course.price}</p>
+                  <p className="text-2xl font-black text-lms-text-primary">${course.price}</p>
                 )}
                 <MagneticButton
                   onClick={handlePrimaryAction}
@@ -247,8 +243,8 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
 
         {/* Curriculum */}
         <div>
-          <RevealHeading as="div" className="text-lg font-black text-white mb-4">Contenido del curso</RevealHeading>
-          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden divide-y divide-white/10">
+          <RevealHeading as="div" className="text-lg font-black text-lms-text-primary mb-4">Contenido del curso</RevealHeading>
+          <div className="rounded-3xl border border-lms-border bg-lms-surface backdrop-blur-xl overflow-hidden divide-y divide-lms-border">
             {modules.map((mod, mIdx) => {
               const isOpen = openModules.has(mod.id);
               const lessons = (mod.lessons ?? []).slice().sort((a, b) => a.position - b.position);
@@ -256,14 +252,14 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
-                    className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/5 transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-5 py-4 hover:bg-lms-surface transition-colors text-left"
                   >
-                    <span className="w-6 h-6 rounded-md bg-sky-400/10 border border-sky-400/25 flex items-center justify-center shrink-0 text-[10px] font-black text-sky-300">
+                    <span className="w-6 h-6 rounded-md bg-sky-400/10 border border-sky-400/25 flex items-center justify-center shrink-0 text-[10px] font-black text-sky-600">
                       {mIdx + 1}
                     </span>
-                    <span className="flex-1 text-sm font-bold text-white">{mod.title}</span>
-                    <span className="text-[10px] text-slate-400 shrink-0">{lessons.length} sesión{lessons.length !== 1 ? 'es' : ''}</span>
-                    <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="text-slate-400 shrink-0">
+                    <span className="flex-1 text-sm font-bold text-lms-text-primary">{mod.title}</span>
+                    <span className="text-[10px] text-lms-text-muted shrink-0">{lessons.length} sesión{lessons.length !== 1 ? 'es' : ''}</span>
+                    <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="text-lms-text-muted shrink-0">
                       <ChevronDown size={16} />
                     </motion.div>
                   </button>
@@ -279,10 +275,10 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
                         <div className="px-5 pb-4 space-y-1">
                           {lessons.map((lesson, lIdx) => (
                             <div key={lesson.id} className="flex items-center gap-2.5 pl-9 py-1.5">
-                              <span className="text-xs text-slate-300 flex-1 line-clamp-1">
+                              <span className="text-xs text-lms-text-muted flex-1 line-clamp-1">
                                 {lIdx + 1}. {lesson.title}
                               </span>
-                              <div className="flex items-center gap-1.5 shrink-0 text-slate-500">
+                              <div className="flex items-center gap-1.5 shrink-0 text-lms-text-muted">
                                 {lesson.video_url && <Play size={11} />}
                                 {lesson.pdf_url && <FileText size={11} />}
                                 {lesson.duration_min > 0 && <span className="text-[10px]">{lesson.duration_min}m</span>}
@@ -302,18 +298,18 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
         {/* Instructor */}
         {instructor && (instructor.full_name || instructor.bio) && (
           <div>
-            <RevealHeading as="div" className="text-lg font-black text-white mb-4">Tu instructor</RevealHeading>
-            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 flex items-center gap-4">
+            <RevealHeading as="div" className="text-lg font-black text-lms-text-primary mb-4">Tu instructor</RevealHeading>
+            <div className="rounded-3xl border border-lms-border bg-lms-surface backdrop-blur-xl p-6 flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-sky-400/10 border border-sky-400/25 flex items-center justify-center shrink-0 overflow-hidden">
                 {instructor.avatar_url ? (
                   <img src={instructor.avatar_url} alt={instructor.full_name ?? ''} className="w-full h-full object-cover" />
                 ) : (
-                  <UserIcon size={22} className="text-sky-300" />
+                  <UserIcon size={22} className="text-sky-600" />
                 )}
               </div>
               <div>
-                <p className="text-sm font-bold text-white">{instructor.full_name ?? 'Instructor'}</p>
-                {instructor.bio && <p className="text-xs text-slate-400 mt-1 leading-relaxed">{instructor.bio}</p>}
+                <p className="text-sm font-bold text-lms-text-primary">{instructor.full_name ?? 'Instructor'}</p>
+                {instructor.bio && <p className="text-xs text-lms-text-muted mt-1 leading-relaxed">{instructor.bio}</p>}
               </div>
             </div>
           </div>
@@ -322,26 +318,26 @@ export function CourseDetail({ courseId, onBack, onEnter, onSelectRelated, isEmb
         {/* Related courses */}
         {related.length > 0 && (
           <div>
-            <RevealHeading as="div" className="text-lg font-black text-white mb-4">Cursos relacionados</RevealHeading>
+            <RevealHeading as="div" className="text-lg font-black text-lms-text-primary mb-4">Cursos relacionados</RevealHeading>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {related.map(r => (
                 <button
                   key={r.id}
                   onClick={() => onSelectRelated(r.id)}
-                  className="text-left rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden card-glow card-glow-brand"
+                  className="text-left rounded-2xl border border-lms-border bg-lms-surface backdrop-blur-xl overflow-hidden card-glow card-glow-brand"
                 >
-                  <div className="h-24 bg-white/5 overflow-hidden">
+                  <div className="h-24 bg-lms-surface overflow-hidden">
                     <CourseCover
                       src={r.cover_url}
                       alt={r.title}
                       imgClassName="w-full h-full object-cover"
-                      iconClassName="text-white/20"
+                      iconClassName="text-lms-text-muted"
                       iconSize={20}
                     />
                   </div>
                   <div className="p-3">
-                    <p className="text-xs font-bold text-white line-clamp-2">{r.title}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{r.duration_hrs}h · {LEVEL_LABELS[r.level] ?? r.level}</p>
+                    <p className="text-xs font-bold text-lms-text-primary line-clamp-2">{r.title}</p>
+                    <p className="text-[10px] text-lms-text-muted mt-1">{r.duration_hrs}h · {LEVEL_LABELS[r.level] ?? r.level}</p>
                   </div>
                 </button>
               ))}

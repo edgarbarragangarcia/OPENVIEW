@@ -30,15 +30,6 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
       />
 
       <motion.div style={{ scale, opacity }} className="relative z-10 max-w-4xl mx-auto px-6 sm:px-10 w-full text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-sm sm:text-base font-semibold text-[#2997ff] mb-4"
-        >
-          Open View Academy
-        </motion.p>
-
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}

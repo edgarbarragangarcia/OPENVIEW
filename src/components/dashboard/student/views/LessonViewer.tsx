@@ -14,7 +14,6 @@ import { getFileNotes, saveFileNotes } from '../../../../lib/fileNotes';
 import { usePersistentState } from '../../../../lib/usePersistentState';
 import { ProcessCanvas } from './ProcessCanvas';
 import { CanvasListView } from './CanvasListView';
-import { StarfieldBackground } from '../../../effects/StarfieldBackground';
 
 interface Props {
   courseId: string;
@@ -183,7 +182,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#05070f]">
+      <div className="flex h-full items-center justify-center bg-lms-bg">
         <div className="w-10 h-10 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
       </div>
     );
@@ -191,7 +190,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
   if (!course) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#05070f] text-slate-400">
+      <div className="flex h-full items-center justify-center bg-lms-bg text-lms-text-muted">
         Curso no encontrado.
       </div>
     );
@@ -203,21 +202,17 @@ export function LessonViewer({ courseId, onBack }: Props) {
   const isScheduled = notStarted && !!course.starts_at && !scheduledUnlockPassed;
 
   return (
-    <div className="relative flex h-full bg-[#05070f] overflow-hidden">
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <StarfieldBackground density={0.6} />
-      </div>
-
+    <div className="relative flex h-full bg-lms-bg overflow-hidden">
       {locked && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
-          <div className="max-w-sm w-full bg-white/10 backdrop-blur-xl border border-white/15 rounded-3xl p-8 text-center shadow-2xl">
+          <div className="max-w-sm w-full bg-lms-hover backdrop-blur-xl border border-lms-border rounded-3xl p-8 text-center shadow-2xl">
             <div className={`w-14 h-14 mx-auto rounded-2xl border flex items-center justify-center mb-5 ${!accessEnabled ? 'bg-red-500/10 border-red-500/20' : 'bg-cyan-500/10 border-cyan-500/20'}`}>
-              <Lock size={24} className={!accessEnabled ? 'text-red-400' : 'text-cyan-400'} />
+              <Lock size={24} className={!accessEnabled ? 'text-red-600' : 'text-cyan-600'} />
             </div>
-            <h3 className="text-lg font-black text-white mb-2">
+            <h3 className="text-lg font-black text-lms-text-primary mb-2">
               {!accessEnabled ? 'Acceso restringido' : 'Curso aún no iniciado'}
             </h3>
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-lms-text-muted">
               {!accessEnabled
                 ? 'Tu acceso a este curso fue bloqueado por el administrador. Contáctalo para más información.'
                 : isScheduled
@@ -226,7 +221,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
             </p>
             <button
               onClick={onBack}
-              className="mt-6 w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-sm font-bold transition-colors"
+              className="mt-6 w-full py-2.5 rounded-xl bg-lms-hover hover:bg-white/15 border border-lms-border text-lms-text-primary text-sm font-bold transition-colors"
             >
               Volver
             </button>
@@ -240,7 +235,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
       <aside
         className={`
           z-30 flex flex-col shrink-0 h-full w-72 overflow-hidden
-          bg-[#0a0f1e]/80 lg:bg-white/5 lg:backdrop-blur-xl lg:shadow-2xl lg:shadow-black/40 border-r border-white/10
+          bg-lms-surface lg:bg-lms-surface lg:backdrop-blur-xl lg:shadow-2xl lg:shadow-slate-200 border-r border-lms-border
           fixed lg:static transition-transform duration-300 ease-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
@@ -248,40 +243,40 @@ export function LessonViewer({ courseId, onBack }: Props) {
         <div className="h-full flex flex-col w-72">
 
           {/* Logo header — same as StudentDashboard */}
-          <div className="flex items-center justify-between h-16 px-5 border-b border-white/10 shrink-0">
+          <div className="flex items-center justify-between h-16 px-5 border-b border-lms-border shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               <img src="/logo.png" alt="Open View Logo" className="h-10 w-auto object-contain shrink-0" />
               <div className="min-w-0">
-                <p className="font-black text-sm text-white leading-none mb-1">OpenView</p>
+                <p className="font-black text-sm text-lms-text-primary leading-none mb-1">OpenView</p>
                 <p className="text-[10px] text-sky-400 font-bold uppercase tracking-widest leading-none">Academia</p>
               </div>
             </div>
-            <button onClick={onBack} className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-cyan-400 transition-colors shrink-0">
+            <button onClick={onBack} className="flex items-center gap-1 text-[10px] font-bold text-lms-text-muted hover:text-cyan-600 transition-colors shrink-0">
               <ArrowLeft size={12} /> Salir
             </button>
           </div>
 
           {/* Course header */}
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4 border-b border-lms-border">
             <div className="rounded-2xl border border-cyan-500/15 p-4 relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(14,165,233,0.02))' }}>
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
                   style={{ background: 'linear-gradient(135deg, #06b6d440, #06b6d410)', boxShadow: '0 2px 6px #06b6d425' }}>
-                  <BookOpen size={12} className="text-cyan-400" />
+                  <BookOpen size={12} className="text-cyan-600" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Curso actual</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-lms-text-muted">Curso actual</p>
               </div>
-              <h2 className="text-sm font-sans font-black text-white line-clamp-2 leading-snug">{course.title}</h2>
+              <h2 className="text-sm font-sans font-black text-lms-text-primary line-clamp-2 leading-snug">{course.title}</h2>
               {/* Progress */}
               <div className="mt-3 space-y-1.5">
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-slate-400 font-semibold">Tu progreso</span>
-                  <motion.span key={progressPct} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-cyan-400 font-black">
+                  <span className="text-lms-text-muted font-semibold">Tu progreso</span>
+                  <motion.span key={progressPct} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-cyan-600 font-black">
                     {progressPct}%
                   </motion.span>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-2 bg-lms-hover rounded-full overflow-hidden">
                   <motion.div
                     className="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full relative"
                     initial={{ width: 0 }}
@@ -291,7 +286,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     <div className="absolute inset-0 bg-white/30 animate-pulse" />
                   </motion.div>
                 </div>
-                <p className="text-[10px] text-slate-400">{completed.size} de {totalLessons} lecciones completadas</p>
+                <p className="text-[10px] text-lms-text-muted">{completed.size} de {totalLessons} lecciones completadas</p>
               </div>
             </div>
           </div>
@@ -305,8 +300,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
               title="Canvas de Procesos SPEC"
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
                 showCanvas
-                  ? 'bg-cyan-500/15 text-cyan-400'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                  ? 'bg-cyan-500/15 text-cyan-600'
+                  : 'text-lms-text-muted hover:bg-lms-surface hover:text-lms-text-primary'
               }`}
             >
               <div
@@ -317,10 +312,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
                   border: `1px solid #0891b2${showCanvas ? '30' : '18'}`,
                 }}
               >
-                <Workflow size={15} className={showCanvas ? 'text-cyan-400' : 'text-slate-400 group-hover:text-cyan-400 transition-colors'} />
+                <Workflow size={15} className={showCanvas ? 'text-cyan-600' : 'text-lms-text-muted group-hover:text-cyan-600 transition-colors'} />
               </div>
               <span className="flex-1 truncate">Canvas de Procesos SPEC</span>
-              {showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-400" />}
+              {showCanvas && <ChevronRight size={14} className="ml-auto text-cyan-600" />}
             </button>
 
             {course.modules.map((mod, mIdx) => {
@@ -335,8 +330,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     title={mod.title}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group text-left ${
                       isModActive
-                        ? 'bg-cyan-500/10 text-white'
-                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                        ? 'bg-cyan-500/10 text-lms-text-primary'
+                        : 'text-lms-text-muted hover:bg-lms-surface hover:text-lms-text-primary'
                     }`}
                   >
                     <div
@@ -353,10 +348,10 @@ export function LessonViewer({ courseId, onBack }: Props) {
                       {mod.title}
                     </span>
                     {mod.lessons.length > 0 && (
-                      <span className="text-[9px] font-bold text-slate-500 shrink-0">{modDone}/{mod.lessons.length}</span>
+                      <span className="text-[9px] font-bold text-lms-text-muted shrink-0">{modDone}/{mod.lessons.length}</span>
                     )}
                     <motion.div animate={{ rotate: isModActive ? 90 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }} className="shrink-0">
-                      <ChevronRight size={14} className={isModActive ? 'text-cyan-400' : 'text-slate-500'} />
+                      <ChevronRight size={14} className={isModActive ? 'text-cyan-600' : 'text-lms-text-muted'} />
                     </motion.div>
                   </button>
 
@@ -385,14 +380,14 @@ export function LessonViewer({ courseId, onBack }: Props) {
                                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all text-left ${
                                   isActive
                                     ? 'bg-cyan-500/10 border border-cyan-500/20 shadow-sm'
-                                    : 'hover:bg-white/5'
+                                    : 'hover:bg-lms-surface'
                                 }`}
                               >
                                 <div className="shrink-0 w-4">
                                   <AnimatePresence mode="wait" initial={false}>
                                     {isDone ? (
                                       <motion.div key="done" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                        <CheckCircle size={14} className="text-emerald-400" />
+                                        <CheckCircle size={14} className="text-emerald-600" />
                                       </motion.div>
                                     ) : isActive ? (
                                       <motion.div key="active" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
@@ -402,19 +397,19 @@ export function LessonViewer({ courseId, onBack }: Props) {
                                       </motion.div>
                                     ) : (
                                       <motion.div key="idle" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                        <Circle size={14} className="text-slate-500" />
+                                        <Circle size={14} className="text-lms-text-muted" />
                                       </motion.div>
                                     )}
                                   </AnimatePresence>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className={`text-[11px] font-semibold leading-snug transition-colors ${
-                                    isActive ? 'text-cyan-400' : isDone ? 'text-slate-500' : 'text-slate-300'
+                                    isActive ? 'text-cyan-600' : isDone ? 'text-lms-text-muted' : 'text-lms-text-muted'
                                   }`}>
                                     {lIdx + 1}. {lesson.title}
                                   </p>
                                   {lesson.duration_min > 0 && (
-                                    <p className="text-[9px] text-slate-500 mt-0.5">{lesson.duration_min} min</p>
+                                    <p className="text-[9px] text-lms-text-muted mt-0.5">{lesson.duration_min} min</p>
                                   )}
                                 </div>
                               </motion.button>
@@ -451,15 +446,15 @@ export function LessonViewer({ courseId, onBack }: Props) {
         ) : (
         <>
         {/* Lesson topbar */}
-        <div className="flex items-center gap-4 px-4 lg:px-6 h-16 bg-white/5 backdrop-blur-xl border-b border-white/10 shrink-0">
+        <div className="flex items-center gap-4 px-4 lg:px-6 h-16 bg-lms-surface backdrop-blur-xl border-b border-lms-border shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden flex items-center gap-2 text-xs text-slate-400 hover:text-white font-semibold shrink-0"
+            className="lg:hidden flex items-center gap-2 text-xs text-lms-text-muted hover:text-lms-text-primary font-semibold shrink-0"
           >
             <BookOpen size={15} /> Índice
           </button>
 
-          <h3 className="text-sm font-bold text-white truncate flex-1">
+          <h3 className="text-sm font-bold text-lms-text-primary truncate flex-1">
             {activeLesson?.title ?? 'Selecciona una lección'}
           </h3>
           {activeLesson && (
@@ -467,8 +462,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
               onClick={() => toggleComplete(activeLesson.id)}
               className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 completed.has(activeLesson.id)
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
-                  : 'bg-white/5 text-slate-300 hover:text-white border border-white/10'
+                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20'
+                  : 'bg-lms-surface text-lms-text-muted hover:text-lms-text-primary border border-lms-border'
               }`}
             >
               {completed.has(activeLesson.id)
@@ -505,8 +500,8 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 content: (
                   <ul className="space-y-3 m-0 p-0 list-none">
                     {structuredContent.alcances.map((alcance, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-sm text-slate-200 leading-relaxed">
-                        <span className="text-emerald-400 mt-0.5 font-bold">•</span>
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-lms-text-muted leading-relaxed">
+                        <span className="text-emerald-600 mt-0.5 font-bold">•</span>
                         <span>{alcance}</span>
                       </li>
                     ))}
@@ -545,7 +540,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                         <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                              <meta.icon size={20} className="text-cyan-400" />
+                              <meta.icon size={20} className="text-cyan-600" />
                             </div>
                             <div className="flex-1 min-w-0 pt-1">
                               <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
@@ -559,7 +554,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                           <div className="grid grid-cols-2 gap-2 mt-2">
                             <button
                               onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
-                              className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-400 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                              className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-600 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
                             >
                               <Eye size={16} /> Ver Archivo
                             </button>
@@ -610,7 +605,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
             <div className="flex-1 flex overflow-hidden">
               <div className="flex-1 overflow-y-auto p-4 lg:p-8">
                 {!activeLesson ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 gap-4">
+                  <div className="flex flex-col items-center justify-center h-full text-center text-lms-text-muted gap-4">
                     <BookOpen size={40} className="opacity-20" />
                     <p className="text-sm">Selecciona una lección del panel izquierdo para comenzar</p>
                   </div>
@@ -646,7 +641,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                               key={row.key}
                               onClick={() => setActiveSectionKey(row.key)}
                               className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${
-                                isActive ? 'text-white' : 'text-slate-400 border-white/10 bg-white/5 hover:text-white'
+                                isActive ? 'text-lms-text-primary' : 'text-lms-text-muted border-lms-border bg-lms-surface hover:text-lms-text-primary'
                               }`}
                               style={isActive ? { borderColor: row.color, background: `${row.color}20` } : {}}
                             >
@@ -666,14 +661,14 @@ export function LessonViewer({ courseId, onBack }: Props) {
                     )}
 
                     {!activeLesson.video_url && !activeLesson.pdf_url && !activeLesson.content && (
-                      <div className="flex flex-col items-center justify-center py-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-slate-400 gap-3">
+                      <div className="flex flex-col items-center justify-center py-16 bg-lms-surface backdrop-blur-xl border border-lms-border rounded-2xl text-lms-text-muted gap-3">
                         <Lock size={32} className="opacity-20" />
                         <p className="text-sm">Esta lección aún no tiene contenido.</p>
                       </div>
                     )}
 
                     {/* Navigation */}
-                    <div className="flex justify-between pt-4 border-t border-white/10">
+                    <div className="flex justify-between pt-4 border-t border-lms-border">
                       {/* Previous lesson */}
                       {(() => {
                         const allLessons = course?.modules.flatMap(m => m.lessons) ?? [];
@@ -687,7 +682,7 @@ export function LessonViewer({ courseId, onBack }: Props) {
                             <button
                               onClick={() => prev && setActiveLesson(prev)}
                               disabled={!prev}
-                              className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="flex items-center gap-2 text-sm font-semibold text-lms-text-muted hover:text-lms-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
                               <ArrowLeft size={16} /> Anterior
                             </button>
@@ -717,28 +712,28 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
               {/* Sidebar derecho: niveles de la sesión (Temas, Material, Feedback, Evaluación) */}
               {rows.length > 0 && (
-                <aside className="hidden lg:flex flex-col w-64 shrink-0 border-l border-white/10 bg-white/5 backdrop-blur-xl overflow-y-auto p-3 gap-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 pt-1 pb-2">Niveles de la sesión</p>
+                <aside className="hidden lg:flex flex-col w-64 shrink-0 border-l border-lms-border bg-lms-surface backdrop-blur-xl overflow-y-auto p-3 gap-1.5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-lms-text-muted px-2 pt-1 pb-2">Niveles de la sesión</p>
                   {rows.map((row, i) => {
                     const isActive = row.key === resolvedKey;
                     return (
                       <button
                         key={row.key}
                         onClick={() => setActiveSectionKey(row.key)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${isActive ? 'bg-lms-hover' : 'hover:bg-lms-surface'}`}
                         style={isActive ? { boxShadow: `inset 0 0 0 1px ${row.color}55` } : {}}
                       >
                         <div className="relative w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-white"
                           style={{ background: `linear-gradient(135deg, ${row.color}, ${row.color}bb)`, boxShadow: isActive ? `0 2px 8px ${row.color}45` : 'none' }}>
                           <row.icon size={15} />
-                          <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0a0f1e] border flex items-center justify-center text-[8px] font-black"
+                          <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white border flex items-center justify-center text-[8px] font-black"
                             style={{ borderColor: row.color, color: row.color }}>
                             {i + 1}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={`text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-300'}`}>{row.title}</p>
-                          <p className="text-[10px] text-slate-500 truncate">{row.count}</p>
+                          <p className={`text-xs font-bold truncate ${isActive ? 'text-lms-text-primary' : 'text-lms-text-muted'}`}>{row.title}</p>
+                          <p className="text-[10px] text-lms-text-muted truncate">{row.count}</p>
                         </div>
                       </button>
                     );
@@ -1023,11 +1018,11 @@ function TopicChat({ temas, explicaciones, color }: { temas: string[]; explicaci
         <div className="relative w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white shadow-lg"
           style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, boxShadow: `0 4px 14px ${color}45` }}>
           <Sparkles size={16} />
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0a0f1e]" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white" />
         </div>
         <div>
-          <p className="text-sm font-black text-white leading-none">Tutor OpenView</p>
-          <p className="text-[10px] text-slate-400 font-semibold mt-1">Toca una pregunta para profundizar</p>
+          <p className="text-sm font-black text-lms-text-primary leading-none">Tutor OpenView</p>
+          <p className="text-[10px] text-lms-text-muted font-semibold mt-1">Toca una pregunta para profundizar</p>
         </div>
       </div>
 
@@ -1078,7 +1073,7 @@ function TopicChat({ temas, explicaciones, color }: { temas: string[]; explicaci
         </div>
       ) : (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+          className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
           <CheckCircle size={14} /> Ya viste todos los temas de esta sesión
         </motion.p>
       )}
