@@ -7,6 +7,43 @@ import { useRef } from 'react';
 import { RevealHeading } from './effects/RevealHeading';
 import { useIsMobile } from '../lib/useIsMobile';
 
+// ─── Franja "también hacemos consultoría" (para el Home de cursos) ──────────
+
+interface ConsultingBannerProps {
+  onViewServices?: () => void;
+}
+
+export function ConsultingBanner({ onViewServices }: ConsultingBannerProps) {
+  return (
+    <section className="py-16 sm:py-20 px-6 sm:px-10 bg-[#f5f5f7]">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-6xl mx-auto rounded-3xl bg-black px-8 py-12 sm:px-16 sm:py-16 flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left"
+      >
+        <div className="max-w-xl">
+          <p className="text-sm font-semibold text-[#2997ff] mb-3">Para empresas</p>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight mb-3">
+            También llevamos la transformación digital a tu empresa.
+          </h2>
+          <p className="text-[#86868b] text-base sm:text-lg font-normal leading-relaxed">
+            Además de capacitar personas, hemos acompañado a empresas en proyectos de IA,
+            desarrollo web y transformación digital de punta a punta.
+          </p>
+        </div>
+        <button
+          onClick={onViewServices}
+          className="shrink-0 flex h-11 items-center gap-1 rounded-full bg-white px-6 text-base font-normal text-black hover:bg-white/90 transition-colors duration-200 whitespace-nowrap"
+        >
+          Ver servicios de consultoría <ChevronRight size={16} />
+        </button>
+      </motion.div>
+    </section>
+  );
+}
+
 // ─── Hero de Consultoría ─────────────────────────────────────────────────────
 
 interface ConsultingHeroProps {

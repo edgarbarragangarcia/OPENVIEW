@@ -5,7 +5,7 @@ import { LMSHero } from '../components/LMSHero';
 import { CourseGrid } from '../components/CourseGrid';
 import { FeaturesLMS } from '../components/FeaturesLMS';
 import { CategoriesSection, ProcessSection, TestimonialsSection, FinalCTA } from '../components/AcademiaSections';
-import { ConsultingHero, ConsultingServicesSection, MethodologySection, CaseStudiesSection, ConsultingCTA } from '../components/ConsultingSections';
+import { ConsultingBanner, ConsultingHero, ConsultingServicesSection, MethodologySection, CaseStudiesSection, ConsultingCTA } from '../components/ConsultingSections';
 import { AuthModal } from '../components/AuthModal';
 import { ScrollProgressBar } from '../components/effects/ScrollProgressBar';
 import { CursorSpotlight } from '../components/effects/CursorSpotlight';
@@ -36,6 +36,7 @@ export default function LandingPage() {
           <>
             <LMSHero onCtaClick={openAuth} />
             <FeaturesLMS />
+            <ConsultingBanner onViewServices={() => handleNavigateView('consultoria')} />
             <CategoriesSection onSelectCategory={handleSelectCategory} />
             <CourseGrid selectedCategoryId={selectedCategoryId} onClearFilter={() => setSelectedCategoryId(null)} />
             <ProcessSection />
