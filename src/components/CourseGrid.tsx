@@ -75,7 +75,7 @@ function CourseCard({ course, idx }: { course: CourseWithModules; idx: number })
       {/* Content */}
       <div className="flex flex-col flex-1 p-8">
         <h3
-          className="text-2xl font-serif font-bold text-slate-900 leading-tight mb-4 group-hover:text-primary transition-colors cursor-pointer"
+          className="text-2xl font-semibold text-[#1d1d1f] tracking-tight leading-tight mb-4 group-hover:text-[#0071e3] transition-colors cursor-pointer"
           onClick={() => setExpanded(!expanded)}
         >
           {course.title}
@@ -212,18 +212,17 @@ export function CourseGrid({ selectedCategoryId = null, onClearFilter }: CourseG
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-end mb-20 gap-8">
           <div>
-            <RevealHeading className="text-4xl sm:text-6xl font-serif text-slate-900 mb-4 leading-tight">
-              {filteredCategoryName ?? 'Programas'} <br />
-              <span className="text-gradient italic font-black">{filteredCategoryName ? 'Cursos' : 'Ejecutivos'}</span>
+            <RevealHeading className="text-4xl sm:text-6xl font-semibold text-[#1d1d1f] mb-4 leading-tight tracking-tight">
+              {filteredCategoryName ?? 'Programas'} {filteredCategoryName ? 'Cursos' : 'Ejecutivos'}
             </RevealHeading>
           </div>
           {selectedCategoryId ? (
             <button
               onClick={onClearFilter}
-              className="group flex items-center gap-3 text-slate-900 font-bold tracking-widest uppercase text-sm border-b-2 border-primary-light pb-2 hover:text-primary transition-colors"
+              className="group flex items-center gap-2 text-[#1d1d1f] font-medium text-sm border-b border-[#0071e3]/40 pb-1 hover:text-[#0071e3] transition-colors"
             >
               Ver Catálogo Completo
-              <ArrowRight className="h-5 w-5 transform group-hover:translate-x-2 text-primary transition-transform" />
+              <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 text-[#0071e3] transition-transform" />
             </button>
           ) : (
             <div className="text-slate-400 text-sm font-medium">{filtered.length} curso{filtered.length !== 1 ? 's' : ''} disponibles</div>

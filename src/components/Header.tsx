@@ -1,20 +1,21 @@
-import { BookOpen, Menu, X, ArrowRight, User, ChevronDown, Search, LogOut } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Menu, X, ChevronRight, User, Search, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useIsMobile } from '../lib/useIsMobile';
+
+export type LandingView = 'home' | 'consultoria';
 
 interface HeaderProps {
   onLoginClick: () => void;
+  activeView?: LandingView;
+  onNavigateView?: (view: LandingView) => void;
 }
 
-const NAV_ITEMS = ['Explorar Cursos', 'Rutas de Aprendizaje', 'Comunidad', 'Planes'];
+const NAV_ITEMS = ['Explorar Cursos', 'Servicios de Consultoría', 'Rutas de Aprendizaje', 'Comunidad', 'Planes'];
 
-export function Header({ onLoginClick }: HeaderProps) {
+export function Header({ onLoginClick, activeView = 'home', onNavigateView }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut, isLoading } = useAuth();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -22,113 +23,102 @@ export function Header({ onLoginClick }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Nota: antes bloqueábamos el scroll con document.body.style.overflow al abrir
-  // el menú. En móvil eso fuerza un recálculo de layout de toda la landing (que es
-  // larga y pesada) justo en el tap, y era lo que quedaba haciendo lento el
-  // despliegue del menú. El panel es pequeño, así que no bloquear el scroll no
-  // molesta y el tap pasa a ser instantáneo.
-
   const handleNavClick = (item: string) => {
     setIsMenuOpen(false);
+    if (item === 'Servicios de Consultoría') {
+      if (activeView !== 'consultoria') {
+        onNavigateView?.('consultoria');
+        return;
+      }
+      document.getElementById('servicios-consultoria')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (item === 'Explorar Cursos' || item === 'Rutas de Aprendizaje') {
+      if (activeView !== 'home') {
+        onNavigateView?.('home');
+      }
+    }
     if (item === 'Rutas de Aprendizaje') {
-      document.getElementById('rutas')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => document.getElementById('rutas')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), activeView !== 'home' ? 50 : 0);
     }
   };
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 px-3 sm:px-6 pt-3 sm:pt-4">
-      <motion.div
-        // En móvil dejamos valores fijos: animar `maxWidth` es una animación de
-        // layout (reflow por frame) y ahí no aporta nada, porque la pantalla es
-        // más angosta que cualquiera de los dos anchos.
-        animate={isMobile
-          ? { maxWidth: 9999, boxShadow: '0 0px 0px rgba(0,0,0,0)' }
-          : {
-              maxWidth: isScrolled ? 1100 : 1280,
-              boxShadow: isScrolled
-                ? '0 8px 30px -8px rgba(13,89,242,0.18), 0 1px 0 rgba(255,255,255,0.6) inset'
-                : '0 0px 0px rgba(0,0,0,0)',
-            }}
-        transition={{ duration: isMobile ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className={`mx-auto flex items-center justify-between transition-colors duration-500 ${
-          isScrolled
-            ? 'bg-white/70 backdrop-blur-2xl border border-white/60 rounded-full py-2.5 px-4 sm:px-6'
-            : 'bg-transparent border border-transparent rounded-full py-3 px-2'
-        }`}
-      >
-
+    <header
+      className={`fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${
+        isScrolled ? 'bg-white/80 backdrop-blur-xl border-b border-black/5' : 'bg-black/30 backdrop-blur-xl'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between h-12 sm:h-14 px-4 sm:px-8">
         {/* Left: Logo */}
-        <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0">
-          <img src="/logo.png" alt="Open View Academy Logo" className="h-10 sm:h-16 w-auto object-contain shrink-0 transition-transform duration-300 group-hover:scale-105" />
-          <div className={`hidden sm:flex flex-col justify-center border-l-2 pl-4 py-1 transition-colors duration-500 ${isScrolled ? 'border-slate-200' : 'border-white/25'}`}>
-            <span className={`font-display text-xl font-black tracking-tight leading-none transition-colors duration-500 ${isScrolled ? 'text-slate-900' : 'text-white'}`}>
-              Open View
-            </span>
-            <span className="text-xs font-bold tracking-widest text-sky-400 uppercase mt-1">
-              Academy
-            </span>
-          </div>
-        </div>
+        <button
+          onClick={() => onNavigateView?.('home')}
+          className="flex items-center gap-2 group min-w-0"
+        >
+          <img src="/logo.png" alt="Open View Academy" className="h-7 w-auto object-contain shrink-0" />
+          <span className={`hidden sm:inline text-sm font-semibold tracking-tight transition-colors duration-300 ${isScrolled ? 'text-[#1d1d1f]' : 'text-white'}`}>
+            Open View
+          </span>
+        </button>
 
         {/* Center: Desktop Nav */}
-        <nav className={`hidden lg:flex items-center p-1.5 rounded-full backdrop-blur-md transition-colors duration-500 ${
-          isScrolled ? 'bg-slate-100/50 border border-slate-200/50' : 'bg-white/10 border border-white/15'
-        }`}>
-          {NAV_ITEMS.map((item) => (
-            <div
-              key={item}
-              className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5 group ${
-                isScrolled
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-[0_2px_10px_rgba(0,0,0,0.05)]'
-                  : 'text-slate-200 hover:text-white hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick(item)}
-            >
-              {item}
-              {item === 'Explorar Cursos' && (
-                <ChevronDown size={14} className={`transition-colors ${isScrolled ? 'text-slate-400 group-hover:text-sky-500' : 'text-slate-400 group-hover:text-sky-300'}`} />
-              )}
-            </div>
-          ))}
+        <nav className="hidden lg:flex items-center gap-8">
+          {NAV_ITEMS.map((item) => {
+            const isActive = item === 'Servicios de Consultoría' && activeView === 'consultoria';
+            return (
+              <button
+                key={item}
+                onClick={() => handleNavClick(item)}
+                className={`text-xs font-medium tracking-wide whitespace-nowrap transition-colors duration-200 ${
+                  isActive
+                    ? (isScrolled ? 'text-[#0071e3]' : 'text-white')
+                    : isScrolled
+                      ? 'text-[#1d1d1f]/80 hover:text-[#0071e3]'
+                      : 'text-white/80 hover:text-white'
+                }`}
+              >
+                {item}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
-          <button className={`hidden md:flex items-center justify-center w-10 h-10 rounded-full transition-all ${
-            isScrolled ? 'text-slate-500 hover:text-sky-500 hover:bg-sky-50' : 'text-slate-300 hover:text-white hover:bg-white/10'
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+          <button className={`hidden md:flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
+            isScrolled ? 'text-[#1d1d1f]/70 hover:text-[#0071e3]' : 'text-white/80 hover:text-white'
           }`}>
-            <Search size={18} />
+            <Search size={16} />
           </button>
 
           {!isLoading && (
             user ? (
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="hidden sm:flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
-                    <User size={16} />
+                  <div className="w-7 h-7 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
+                    <User size={14} />
                   </div>
-                  <span className={`text-sm font-medium transition-colors duration-500 ${isScrolled ? 'text-slate-700' : 'text-slate-200'}`}>
+                  <span className={`text-xs font-medium transition-colors duration-300 ${isScrolled ? 'text-[#1d1d1f]/80' : 'text-white/80'}`}>
                     {user.email?.split('@')[0]}
                   </span>
                 </div>
                 <button
                   onClick={signOut}
-                  className={`p-2 transition-colors ${isScrolled ? 'text-slate-400 hover:text-red-500' : 'text-slate-300 hover:text-red-400'}`}
+                  className={`p-2 transition-colors ${isScrolled ? 'text-[#1d1d1f]/50 hover:text-red-500' : 'text-white/60 hover:text-red-300'}`}
                   title="Cerrar sesión"
                 >
-                  <LogOut size={18} />
+                  <LogOut size={16} />
                 </button>
               </div>
             ) : (
               <button
                 onClick={onLoginClick}
-                className={`pulse-glow hidden lg:inline-flex group relative items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-white transition-all duration-300 rounded-full hover:-translate-y-0.5 overflow-hidden whitespace-nowrap ${
-                  isScrolled ? 'bg-slate-900 hover:shadow-[0_8px_20px_rgba(14,165,233,0.4)]' : 'bg-gradient-primary hover:shadow-[0_8px_20px_rgba(14,165,233,0.5)]'
+                className={`hidden lg:inline-flex items-center gap-1 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-200 ${
+                  isScrolled ? 'bg-[#1d1d1f] text-white hover:bg-black' : 'bg-white text-[#1d1d1f] hover:bg-white/90'
                 }`}
               >
-                <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="relative z-10">Ingresar</span>
-                <ArrowRight size={14} className="relative z-10 hidden sm:inline transition-transform duration-300 group-hover:translate-x-1" />
+                Ingresar
+                <ChevronRight size={13} />
               </button>
             )
           )}
@@ -138,53 +128,46 @@ export function Header({ onLoginClick }: HeaderProps) {
             onClick={() => setIsMenuOpen((v) => !v)}
             aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
             aria-expanded={isMenuOpen}
-            className={`lg:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full transition-colors ${
-              isScrolled ? 'text-slate-600 hover:bg-slate-100' : 'text-white hover:bg-white/10'
+            className={`lg:hidden flex items-center justify-center w-8 h-8 shrink-0 rounded-full transition-colors ${
+              isScrolled ? 'text-[#1d1d1f]' : 'text-white'
             }`}
           >
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Mobile Menu Panel — fondo sólido (sin backdrop-blur) y, sobre todo, sin
-          animar `max-height`: animar altura obliga a recalcular layout en cada
-          frame sobre una landing pesada, que era lo que hacía lento el despliegue.
-          La altura cambia de golpe y solo animamos opacidad/transform (GPU). */}
+      {/* Mobile Menu Panel */}
       <div
-        className={`lg:hidden overflow-hidden mx-1 mt-2 rounded-3xl bg-white border border-slate-200 shadow-[0_8px_30px_-8px_rgba(13,89,242,0.18)] origin-top will-change-transform transition-[opacity,transform] duration-200 ease-out ${
-          isMenuOpen
-            ? 'max-h-[80vh] opacity-100 translate-y-0'
-            : 'max-h-0 opacity-0 -translate-y-2 border-transparent pointer-events-none'
+        className={`lg:hidden overflow-hidden bg-white border-b border-black/5 will-change-transform transition-[max-height,opacity] duration-200 ease-out ${
+          isMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
         }`}
       >
-        <nav className="px-6 py-4 flex flex-col gap-1">
+        <nav className="px-6 py-3 flex flex-col">
           {NAV_ITEMS.map((item) => (
             <button
               key={item}
               onClick={() => handleNavClick(item)}
-              className="text-left px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+              className="text-left py-3 border-b border-black/5 text-sm font-medium text-[#1d1d1f] last:border-none"
             >
               {item}
             </button>
           ))}
 
-          <div className="h-px bg-slate-200 my-2" />
-
           {!isLoading && (
             user ? (
-              <div className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
+                  <div className="w-8 h-8 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
                     <User size={16} />
                   </div>
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-medium text-[#1d1d1f]">
                     {user.email?.split('@')[0]}
                   </span>
                 </div>
                 <button
                   onClick={() => { setIsMenuOpen(false); signOut(); }}
-                  className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                  className="p-2 text-[#1d1d1f]/50 hover:text-red-500 transition-colors"
                   title="Cerrar sesión"
                 >
                   <LogOut size={18} />
@@ -193,10 +176,10 @@ export function Header({ onLoginClick }: HeaderProps) {
             ) : (
               <button
                 onClick={() => { setIsMenuOpen(false); onLoginClick(); }}
-                className="mx-4 mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 text-xs font-black uppercase tracking-widest text-white bg-slate-900 rounded-full"
+                className="mt-3 mb-2 inline-flex items-center justify-center gap-1 px-6 py-2.5 text-sm font-medium text-white bg-[#1d1d1f] rounded-full"
               >
                 Ingresar
-                <ArrowRight size={16} />
+                <ChevronRight size={15} />
               </button>
             )
           )}

@@ -36,6 +36,25 @@
 
   /* ── Brand gradient (azul → índigo → cian) ── */
   --gradient-brand: linear-gradient(135deg, #0d59f2 0%, #6366f1 50%, #06b6d4 100%);
+
+  /* ── Apple-style accent (usado solo en la landing) ── */
+  --color-apple-blue:      #0071e3;
+  --color-apple-blue-dark: #0058b0;
+  --color-apple-ink:       #1d1d1f;
+  --color-apple-gray:      #86868b;
+}
+
+@layer utilities {
+  /* Tipografía de la landing estilo Apple: sans-serif grande, sin cursiva ni
+     serif. Se aplica solo dentro de `.apple-landing` para no tocar el resto
+     del sitio (dashboard, admin), que sigue usando Playfair Display. */
+  .apple-landing h1,
+  .apple-landing h2,
+  .apple-landing h3,
+  .apple-landing h4 {
+    font-family: var(--font-display);
+    font-style: normal;
+  }
 }
 
 @layer base {
