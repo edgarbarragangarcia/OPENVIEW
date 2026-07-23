@@ -1,17 +1,12 @@
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
 import { useIsMobile } from '../lib/useIsMobile';
-
-const scrollToId = (id: string) => {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-};
 
 interface LMSHeroProps {
   onCtaClick?: () => void;
 }
 
-export function LMSHero({ onCtaClick }: LMSHeroProps) {
+export function LMSHero({}: LMSHeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const isMobile = useIsMobile();
   // Efecto "apertura de producto" de Apple: el titular se encoge y se
@@ -49,26 +44,6 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
         >
           Domina IA, tecnología, liderazgo y negocios con instructores que viven la industria.
         </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-5"
-        >
-          <button
-            onClick={() => scrollToId('cursos')}
-            className="flex h-11 items-center gap-1 rounded-full bg-[#0071e3] px-6 text-base font-normal text-white hover:bg-[#0077ed] transition-colors duration-200"
-          >
-            Explorar cursos
-          </button>
-          <button
-            onClick={onCtaClick}
-            className="flex items-center gap-1 text-base font-normal text-[#2997ff] hover:underline underline-offset-4"
-          >
-            Crear cuenta <ChevronRight size={16} />
-          </button>
-        </motion.div>
       </motion.div>
 
       {/* Fundido hacia la siguiente sección blanca — curva "smoothstep" con
