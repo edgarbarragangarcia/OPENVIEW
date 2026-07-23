@@ -71,12 +71,22 @@ export function LMSHero({ onCtaClick }: LMSHeroProps) {
         </motion.div>
       </motion.div>
 
-      {/* Fundido hacia la siguiente sección blanca */}
+      {/* Fundido hacia la siguiente sección blanca — curva "smoothstep" con
+          muchas paradas para que no se note el codo que deja un gradiente
+          de 2-3 paradas lineales. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 sm:h-32 z-0"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 sm:h-56 z-0"
         style={{
-          background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 60%, #fff 100%)',
+          background: `linear-gradient(to bottom,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.02) 15%,
+            rgba(255,255,255,0.08) 30%,
+            rgba(255,255,255,0.2) 45%,
+            rgba(255,255,255,0.4) 60%,
+            rgba(255,255,255,0.65) 75%,
+            rgba(255,255,255,0.88) 90%,
+            #fff 100%)`,
         }}
       />
     </section>
