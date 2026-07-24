@@ -18,6 +18,17 @@ export function LMSHero({}: LMSHeroProps) {
 
   return (
     <section ref={sectionRef} className="relative min-h-[92vh] flex flex-col items-center justify-center pt-28 pb-16 sm:pt-24 bg-black text-white overflow-hidden">
+      {/* Video de fondo, a pantalla completa y con opacidad reducida para
+          que el texto siga siendo legible por encima. */}
+      <video
+        src="/hero-bear.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-40"
+      />
+
       {/* Ambient glow animado: varios "blobs" de color que se desplazan lento
           y sin rumbo fijo (nada de starfield ni parallax de scroll). */}
       <div className="absolute inset-0 pointer-events-none opacity-80">
@@ -28,47 +39,25 @@ export function LMSHero({}: LMSHeroProps) {
 
       <motion.div
         style={{ scale, opacity }}
-        className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center"
+        className="relative z-10 max-w-4xl mx-auto px-6 sm:px-10 w-full text-center"
       >
-        {/* Video a la izquierda — sin tarjeta ni borde: una máscara de
-            degradado difumina los cuatro bordes para que se funda con el
-            fondo negro en vez de leerse como un rectángulo recortado. */}
-        <motion.div
-          initial={{ opacity: 0, x: -24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.05 }}
-          className="order-1"
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.05 }}
+          className="text-5xl sm:text-7xl lg:text-8xl font-semibold leading-[1.05] tracking-tight mb-6"
         >
-          <video
-            src="/hero-bear.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="hero-video w-full h-full object-cover aspect-square lg:aspect-[4/5]"
-          />
-        </motion.div>
+          Aprende las habilidades<br className="hidden sm:block" /> que transforman carreras.
+        </motion.h1>
 
-        {/* Texto a la derecha */}
-        <div className="order-2 text-center lg:text-left">
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-4xl sm:text-6xl lg:text-6xl font-semibold leading-[1.05] tracking-tight mb-6"
-          >
-            Aprende las habilidades que transforman carreras.
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="text-lg sm:text-xl text-[#86868b] max-w-xl mx-auto lg:mx-0 font-normal leading-relaxed"
-          >
-            Domina IA, tecnología, liderazgo y negocios con instructores que viven la industria.
-          </motion.p>
-        </div>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="text-lg sm:text-2xl text-[#86868b] max-w-2xl mx-auto font-normal leading-relaxed"
+        >
+          Domina IA, tecnología, liderazgo y negocios con instructores que viven la industria.
+        </motion.p>
       </motion.div>
 
       {/* Fundido hacia la siguiente sección blanca — curva "smoothstep" con

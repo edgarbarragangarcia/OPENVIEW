@@ -206,15 +206,9 @@
     filter: blur(60px);
     will-change: transform;
   }
-  .hero-blob-a { top: -5%;   right: 20%; width: 640px; height: 640px; animation: hero-drift-a 13s ease-in-out infinite; }
-  .hero-blob-b { top: 15%;   right: -10%; width: 560px; height: 560px; animation: hero-drift-b 16s ease-in-out infinite; }
-  .hero-blob-c { bottom: -10%; right: 5%;  width: 600px; height: 600px; animation: hero-drift-c 18s ease-in-out infinite; }
-
-  /* ── Hero video: bordes difuminados hacia el fondo negro (sin tarjeta) ── */
-  .hero-video {
-    -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 55%, transparent 100%);
-    mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 55%, transparent 100%);
-  }
+  .hero-blob-a { top: -10%;  left: 5%;   width: 640px; height: 640px; animation: hero-drift-a 13s ease-in-out infinite; }
+  .hero-blob-b { top: 10%;   right: -5%; width: 560px; height: 560px; animation: hero-drift-b 16s ease-in-out infinite; }
+  .hero-blob-c { bottom: -15%; left: 30%; width: 600px; height: 600px; animation: hero-drift-c 18s ease-in-out infinite; }
 }
 
 /* Reduce motion: sin desplazamiento, se queda como un glow estático */
