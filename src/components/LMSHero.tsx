@@ -30,12 +30,14 @@ export function LMSHero({}: LMSHeroProps) {
         style={{ scale, opacity }}
         className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center"
       >
-        {/* Video a la izquierda */}
+        {/* Video a la izquierda — sin tarjeta ni borde: una máscara de
+            degradado difumina los cuatro bordes para que se funda con el
+            fondo negro en vez de leerse como un rectángulo recortado. */}
         <motion.div
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, delay: 0.05 }}
-          className="order-1 rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-black/40"
+          className="order-1"
         >
           <video
             src="/hero-bear.mp4"
@@ -43,7 +45,7 @@ export function LMSHero({}: LMSHeroProps) {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover aspect-square lg:aspect-[4/5]"
+            className="hero-video w-full h-full object-cover aspect-square lg:aspect-[4/5]"
           />
         </motion.div>
 
