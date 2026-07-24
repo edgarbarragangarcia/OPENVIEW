@@ -26,24 +26,47 @@ export function LMSHero({}: LMSHeroProps) {
         <div className="hero-blob hero-blob-c" style={{ background: 'radial-gradient(circle, rgba(94,92,230,0.35) 0%, transparent 70%)' }} />
       </div>
 
-      <motion.div style={{ scale, opacity }} className="relative z-10 max-w-4xl mx-auto px-6 sm:px-10 w-full text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.05 }}
-          className="text-5xl sm:text-7xl lg:text-8xl font-semibold leading-[1.05] tracking-tight mb-6"
+      <motion.div
+        style={{ scale, opacity }}
+        className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center"
+      >
+        {/* Video a la izquierda */}
+        <motion.div
+          initial={{ opacity: 0, x: -24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, delay: 0.05 }}
+          className="order-1 rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-black/40"
         >
-          Aprende las habilidades<br className="hidden sm:block" /> que transforman carreras.
-        </motion.h1>
+          <video
+            src="/hero-bear.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover aspect-square lg:aspect-[4/5]"
+          />
+        </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="text-lg sm:text-2xl text-[#86868b] max-w-2xl mx-auto font-normal leading-relaxed mb-10"
-        >
-          Domina IA, tecnología, liderazgo y negocios con instructores que viven la industria.
-        </motion.p>
+        {/* Texto a la derecha */}
+        <div className="order-2 text-center lg:text-left">
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-4xl sm:text-6xl lg:text-6xl font-semibold leading-[1.05] tracking-tight mb-6"
+          >
+            Aprende las habilidades que transforman carreras.
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-lg sm:text-xl text-[#86868b] max-w-xl mx-auto lg:mx-0 font-normal leading-relaxed"
+          >
+            Domina IA, tecnología, liderazgo y negocios con instructores que viven la industria.
+          </motion.p>
+        </div>
       </motion.div>
 
       {/* Fundido hacia la siguiente sección blanca — curva "smoothstep" con
