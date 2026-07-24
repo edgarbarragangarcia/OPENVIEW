@@ -51,7 +51,7 @@ export function LMSHero({}: LMSHeroProps) {
         className="relative z-10 max-w-4xl mx-auto px-6 sm:px-10 w-full text-center"
       >
         <motion.div
-          animate={{ opacity: showText ? 1 : 0, y: showText ? 0 : -16 }}
+          animate={{ opacity: showText ? 1 : 0, x: showText ? '0%' : '-60%' }}
           transition={{ duration: 1.8, ease: 'easeInOut' }}
         >
           <motion.h1
