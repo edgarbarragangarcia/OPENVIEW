@@ -12,22 +12,41 @@ export function LMSHero({}: LMSHeroProps) {
   const isMobile = useIsMobile();
 
   // Algunos navegadores móviles bloquean el autoplay programático aunque el
-  // video esté muted+playsInline (política de ahorro de datos/batería). Si
-  // el <video> se queda pausado, reintentamos al poder reproducir y al
-  // volver a primer plano la pestaña.
+  // video esté muted+playsInline (política de ahorro de datos/batería), o lo
+  // pausan si el elemento no ha entrado aún al viewport. Forzamos `muted` por
+  // JS (algunos WebKit lo ignoran si solo viene como atributo cuando React
+  // monta el nodo) y reintentamos play() en varios disparadores: al poder
+  // reproducir, al volver a la pestaña, al entrar en viewport y con un
+  // reintento corto por si el primer intento llega antes de que el video
+  // esté listo.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    video.muted = true;
+    video.defaultMuted = true;
 
     const tryPlay = () => {
       if (video.paused) video.play().catch(() => {});
     };
 
     tryPlay();
+    const retries = [200, 500, 1000, 2000, 4000].map((ms) => setTimeout(tryPlay, ms));
+
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((entry) => entry.isIntersecting && tryPlay()),
+      { threshold: 0.1 }
+    );
+    observer.observe(video);
+
     video.addEventListener('canplay', tryPlay);
+    video.addEventListener('loadeddata', tryPlay);
     document.addEventListener('visibilitychange', tryPlay);
     return () => {
+      retries.forEach(clearTimeout);
+      observer.disconnect();
       video.removeEventListener('canplay', tryPlay);
+      video.removeEventListener('loadeddata', tryPlay);
       document.removeEventListener('visibilitychange', tryPlay);
     };
   }, []);
@@ -40,8 +59,9 @@ export function LMSHero({}: LMSHeroProps) {
 
   return (
     <section ref={sectionRef} className="relative min-h-[92vh] flex flex-col items-center justify-center pt-28 pb-16 sm:pt-24 bg-black text-white overflow-hidden">
-      {/* Video de fondo, a pantalla completa y con opacidad reducida para
-          que el texto siga siendo legible por encima. */}
+      {/* Video de fondo. En desktop cubre toda la sección; en móvil se
+          muestra completo (sin recortar) y más pequeño, centrado, para que
+          no quede un acercamiento exagerado al oso. */}
       <video
         ref={videoRef}
         src="/hero-bear.mp4"
@@ -50,7 +70,7 @@ export function LMSHero({}: LMSHeroProps) {
         muted
         playsInline
         preload="auto"
-        className="absolute inset-0 w-full h-full object-cover opacity-40"
+        className="absolute inset-0 m-auto w-full h-full max-h-[55vh] sm:max-h-none object-contain sm:object-cover opacity-40"
       />
 
       {/* Ambient glow animado: varios "blobs" de color que se desplazan lento
