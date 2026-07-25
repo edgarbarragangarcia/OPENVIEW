@@ -84,7 +84,7 @@ export function LMSHero({}: LMSHeroProps) {
         muted
         playsInline
         preload="auto"
-        className="absolute inset-0 m-auto w-full h-full max-h-[70vh] sm:max-h-none object-contain sm:object-cover opacity-40"
+        className="absolute inset-x-0 top-0 mx-auto w-full h-[70vh] sm:inset-0 sm:m-auto sm:h-full sm:max-h-none object-contain sm:object-cover opacity-40"
       />
 
       {/* Ambient glow animado: varios "blobs" de color que se desplazan lento
