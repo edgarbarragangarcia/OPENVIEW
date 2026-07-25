@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from 'motion/react';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useIsMobile } from '../lib/useIsMobile';
 
 interface LMSHeroProps {
@@ -8,7 +8,29 @@ interface LMSHeroProps {
 
 export function LMSHero({}: LMSHeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
+
+  // Algunos navegadores móviles bloquean el autoplay programático aunque el
+  // video esté muted+playsInline (política de ahorro de datos/batería). Si
+  // el <video> se queda pausado, reintentamos al poder reproducir y al
+  // volver a primer plano la pestaña.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tryPlay = () => {
+      if (video.paused) video.play().catch(() => {});
+    };
+
+    tryPlay();
+    video.addEventListener('canplay', tryPlay);
+    document.addEventListener('visibilitychange', tryPlay);
+    return () => {
+      video.removeEventListener('canplay', tryPlay);
+      document.removeEventListener('visibilitychange', tryPlay);
+    };
+  }, []);
   // Efecto "apertura de producto" de Apple: el titular se encoge y se
   // desvanece levemente a medida que uno hace scroll hacia la siguiente
   // sección, en vez de quedarse estático. Desactivado en móvil (scroll-jank).
@@ -21,11 +43,13 @@ export function LMSHero({}: LMSHeroProps) {
       {/* Video de fondo, a pantalla completa y con opacidad reducida para
           que el texto siga siendo legible por encima. */}
       <video
+        ref={videoRef}
         src="/hero-bear.mp4"
         autoPlay
         loop
         muted
         playsInline
+        preload="auto"
         className="absolute inset-0 w-full h-full object-cover opacity-40"
       />
 
