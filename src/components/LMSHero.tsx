@@ -42,12 +42,26 @@ export function LMSHero({}: LMSHeroProps) {
     video.addEventListener('canplay', tryPlay);
     video.addEventListener('loadeddata', tryPlay);
     document.addEventListener('visibilitychange', tryPlay);
+
+    // iOS: con "Auto-Play Video Previews" desactivado en Ajustes >
+    // Accesibilidad > Movimiento, Safari bloquea el autoplay programático
+    // sin importar los reintentos anteriores. Pero sí permite reproducir
+    // dentro del handler de un gesto real del usuario, así que enganchamos
+    // el primer touch/click/scroll de la página para "desbloquear" el video.
+    const gestureEvents: (keyof DocumentEventMap)[] = ['touchstart', 'click', 'scroll'];
+    const unlock = () => {
+      tryPlay();
+      gestureEvents.forEach((ev) => document.removeEventListener(ev, unlock));
+    };
+    gestureEvents.forEach((ev) => document.addEventListener(ev, unlock, { passive: true }));
+
     return () => {
       retries.forEach(clearTimeout);
       observer.disconnect();
       video.removeEventListener('canplay', tryPlay);
       video.removeEventListener('loadeddata', tryPlay);
       document.removeEventListener('visibilitychange', tryPlay);
+      gestureEvents.forEach((ev) => document.removeEventListener(ev, unlock));
     };
   }, []);
   // Efecto "apertura de producto" de Apple: el titular se encoge y se
