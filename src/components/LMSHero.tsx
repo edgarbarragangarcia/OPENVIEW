@@ -72,7 +72,7 @@ export function LMSHero({}: LMSHeroProps) {
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, isMobile ? 1 : 0]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-[92vh] flex flex-col items-center justify-center pt-28 pb-16 sm:pt-24 bg-black text-white overflow-hidden">
+    <section ref={sectionRef} className="relative min-h-[92vh] flex flex-col items-center justify-start pt-16 pb-16 sm:justify-center sm:pt-24 bg-black text-white overflow-hidden">
       {/* Video de fondo. En desktop cubre toda la sección; en móvil se
           muestra completo (sin recortar) y más pequeño, centrado, para que
           no quede un acercamiento exagerado al oso. */}
@@ -84,7 +84,7 @@ export function LMSHero({}: LMSHeroProps) {
         muted
         playsInline
         preload="auto"
-        className="absolute inset-x-0 top-0 mx-auto w-full h-[70vh] sm:inset-0 sm:m-auto sm:h-full sm:max-h-none object-contain sm:object-cover opacity-40"
+        className="absolute inset-x-0 top-0 mx-auto w-full h-[42vh] object-contain object-top sm:inset-0 sm:top-auto sm:h-full sm:max-h-none sm:object-cover sm:object-center opacity-40"
       />
 
       {/* Ambient glow animado: varios "blobs" de color que se desplazan lento
