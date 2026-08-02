@@ -6,7 +6,7 @@ import { CourseGrid } from '../components/CourseGrid';
 import { FeaturesLMS } from '../components/FeaturesLMS';
 import { CategoriesSection, ProcessSection, TestimonialsSection, FinalCTA } from '../components/AcademiaSections';
 import { ConsultingBanner, ConsultingHero, ConsultingServicesSection, MethodologySection, CaseStudiesSection, ConsultingCTA } from '../components/ConsultingSections';
-import { AuthModal } from '../components/AuthModal';
+import AuthPage from './AuthPage';
 import { ScrollProgressBar } from '../components/effects/ScrollProgressBar';
 import { CursorSpotlight } from '../components/effects/CursorSpotlight';
 
@@ -25,6 +25,10 @@ export default function LandingPage() {
     setView(nextView);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (isAuthModalOpen) {
+    return <AuthPage onClose={() => setIsAuthModalOpen(false)} />;
+  }
 
   return (
     <div className="apple-landing relative w-full overflow-x-hidden bg-white text-[#1d1d1f] font-body antialiased selection:bg-[#0071e3]/20">
@@ -54,7 +58,6 @@ export default function LandingPage() {
         )}
       </main>
       <Footer />
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }

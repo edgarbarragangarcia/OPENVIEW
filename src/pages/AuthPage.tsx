@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff, CheckCircle2, ArrowRight, Fingerprint } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Mail, Lock, Loader2, AlertCircle, Eye, EyeOff, CheckCircle2, ArrowRight, Fingerprint, ArrowLeft, Sparkles, Award, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { passkeysSupported, signInWithPasskey } from '../lib/passkeys';
 
-
-interface AuthModalProps {
-  isOpen: boolean;
+interface AuthPageProps {
   onClose: () => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+const PILLS = [
+  { label: 'Aprendizaje con IA', icon: Sparkles },
+  { label: 'Comunidad Activa', icon: Users },
+  { label: 'Certificaciones', icon: Award },
+];
+
+export default function AuthPage({ onClose }: AuthPageProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,32 +67,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/50 md:backdrop-blur-sm"
-          />
+    <div className="min-h-dvh w-full flex bg-white">
+      {/* Panel izquierdo: formulario */}
+      <div className="w-full lg:w-[55%] flex flex-col p-6 md:p-12 relative">
+        {/* En desktop el logo del panel oscuro hace de botón de vuelta; en
+            mobile ese panel se oculta, así que aquí queda uno visible. */}
+        <button
+          onClick={onClose}
+          className="lg:hidden inline-flex items-center gap-1.5 text-sm font-medium text-[#6b7280] transition-colors hover:text-[#0a0a23] self-start"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Volver al inicio
+        </button>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 12 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-8 shadow-[0_32px_80px_-20px_rgba(15,23,42,0.35)] border border-[#e5e7eb]"
-          >
-            <button
-              onClick={onClose}
-              aria-label="Cerrar"
-              className="absolute right-4 top-4 z-10 rounded-full border border-[#e5e7eb] bg-white p-1.5 text-[#6b7280] transition-colors hover:bg-[#f8f9fb] hover:text-[#0a0a23]"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-[400px]">
             {/* Selector Ingresar / Registrarse */}
             <div className="relative mb-7 grid grid-cols-2 gap-1 rounded-xl border border-[#e5e7eb] bg-[#f8f9fb] p-1 text-sm font-medium">
               {[true, false].map((login) => (
@@ -117,9 +110,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="relative mb-7 text-center">
-              <h2 className="text-[28px] md:text-[32px] font-extrabold text-[#0a0a23] tracking-[-1px] mb-2">
+              <h1 className="text-[28px] md:text-[32px] font-extrabold text-[#0a0a23] tracking-[-1px] mb-2">
                 {isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
-              </h2>
+              </h1>
               <p className="text-[15px] text-[#6b7280]">
                 {isLogin
                   ? 'Ingresa tus credenciales para acceder'
@@ -265,9 +258,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {isLogin ? 'Regístrate' : 'Inicia Sesión'}
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
-      )}
-    </AnimatePresence>
+      </div>
+
+      {/* Panel derecho: marca */}
+      <div
+        className="hidden lg:flex lg:w-[45%] relative overflow-hidden flex-col justify-between p-12"
+        style={{ background: 'radial-gradient(120% 120% at 15% 15%, #2a2a45 0%, #14142a 55%, #0a0a1f 100%)' }}
+      >
+        <button onClick={onClose} className="flex justify-end" aria-label="Volver al inicio">
+          <img src="/logo.png" alt="Open View Academy" className="h-8 w-auto object-contain brightness-0 invert" />
+        </button>
+
+        <div className="max-w-md ml-auto text-right">
+          <h2 className="text-4xl xl:text-5xl font-extrabold text-white leading-[1.1] mb-6">
+            Domina las habilidades del mañana
+          </h2>
+          <p className="text-white/60 text-lg leading-relaxed">
+            Rutas personalizadas con IA, instructores expertos y certificaciones que abren puertas.
+          </p>
+        </div>
+
+        <div className="flex justify-end gap-3 flex-wrap">
+          {PILLS.map(({ label, icon: Icon }) => (
+            <span
+              key={label}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/70"
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
-};
+}
