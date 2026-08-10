@@ -52,14 +52,14 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
   };
 
   return (
-    <div className="flex flex-col h-full bg-transparent text-white">
+    <div className="flex flex-col h-full bg-transparent text-slate-900">
       {/* Topbar */}
-      <div className="flex items-center gap-3 px-5 h-16 bg-white/5 backdrop-blur-xl border-b border-white/10 shrink-0">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-cyan-400 font-semibold transition-colors">
+      <div className="flex items-center gap-3 px-5 h-16 bg-white border-b border-slate-200 shrink-0">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-cyan-600 font-semibold transition-colors">
           <ArrowLeft size={14} /> Volver
         </button>
-        <h2 className="flex-1 text-sm font-black text-white flex items-center gap-2 justify-center">
-          <Workflow size={16} className="text-cyan-400" /> Mis Canvas de Procesos
+        <h2 className="flex-1 text-sm font-black text-slate-900 flex items-center gap-2 justify-center">
+          <Workflow size={16} className="text-cyan-600" /> Mis Canvas de Procesos
         </h2>
         <button
           onClick={handleCreate}
@@ -79,8 +79,8 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
           </div>
         ) : canvases.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
-            <Workflow size={32} className="text-white/20" />
-            <p className="text-sm text-slate-400">Todavía no tienes ningún canvas de procesos.</p>
+            <Workflow size={32} className="text-slate-300" />
+            <p className="text-sm text-slate-500">Todavía no tienes ningún canvas de procesos.</p>
             <button
               onClick={handleCreate}
               disabled={creating}
@@ -96,29 +96,29 @@ export function CanvasListView({ courseId, onOpen, onBack }: CanvasListViewProps
               <button
                 key={c.id}
                 onClick={() => onOpen(c.id)}
-                className="group text-left rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 hover:border-cyan-500/40 hover:bg-white/[0.07] transition-all"
+                className="group text-left rounded-2xl border border-slate-200 bg-white shadow-sm p-4 hover:border-cyan-400 hover:shadow-md transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-cyan-300 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-cyan-700 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
                     style={{
-                      background: 'linear-gradient(135deg, #0891b235, #0891b20a)',
-                      boxShadow: '0 2px 8px #0891b225, inset 0 1px 0 #0891b225',
-                      border: '1px solid #0891b225',
+                      background: 'linear-gradient(135deg, #0891b255, #0891b218)',
+                      boxShadow: '0 2px 8px #0891b240, inset 0 1px 0 #0891b240',
+                      border: '1px solid #0891b245',
                     }}
                   >
                     <Workflow size={16} />
                   </div>
                   <button
                     onClick={e => handleDelete(e, c.id)}
-                    className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
                     title="Eliminar canvas"
                   >
                     <Trash2 size={13} />
                   </button>
                 </div>
-                <p className="text-sm font-bold text-white mt-3 line-clamp-2">{c.name}</p>
-                <p className="text-[10px] text-slate-400 mt-1">
+                <p className="text-sm font-bold text-slate-900 mt-3 line-clamp-2">{c.name}</p>
+                <p className="text-[10px] text-slate-500 mt-1">
                   Actualizado el {new Date(c.updated_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
               </button>
