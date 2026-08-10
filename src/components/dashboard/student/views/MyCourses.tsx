@@ -28,9 +28,9 @@ const LEVEL_LABELS: Record<string, string> = {
   advanced: 'Avanzado',
 };
 const LEVEL_COLORS: Record<string, string> = {
-  beginner: 'bg-emerald-500/10 text-emerald-400',
-  intermediate: 'bg-amber-500/10 text-amber-400',
-  advanced: 'bg-red-500/10 text-red-400',
+  beginner: 'bg-emerald-100 text-emerald-700',
+  intermediate: 'bg-amber-100 text-amber-700',
+  advanced: 'bg-red-100 text-red-700',
 };
 
 export function MyCourses({ onEnter, onCourseSelect }: Props) {
@@ -71,11 +71,11 @@ export function MyCourses({ onEnter, onCourseSelect }: Props) {
   if (courses.length === 0) {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-          <BookOpen size={36} className="text-white/20" />
+        <div className="w-20 h-20 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mb-6">
+          <BookOpen size={36} className="text-slate-300" />
         </div>
-        <h3 className="text-xl font-black text-white mb-2">Sin cursos aún</h3>
-        <p className="text-slate-400 text-sm max-w-xs">Aún no estás matriculado en ningún curso. Pídele al administrador que te inscriba.</p>
+        <h3 className="text-xl font-black text-slate-900 mb-2">Sin cursos aún</h3>
+        <p className="text-slate-500 text-sm max-w-xs">Aún no estás matriculado en ningún curso. Pídele al administrador que te inscriba.</p>
       </div>
     );
   }
@@ -83,8 +83,8 @@ export function MyCourses({ onEnter, onCourseSelect }: Props) {
   return (
     <div className="p-6 lg:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white">Mi Aprendizaje</h1>
-        <p className="text-sm text-slate-400 mt-1">Tus cursos en progreso</p>
+        <h1 className="text-2xl font-black text-slate-900">Mi Aprendizaje</h1>
+        <p className="text-sm text-slate-500 mt-1">Tus cursos en progreso</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -94,15 +94,15 @@ export function MyCourses({ onEnter, onCourseSelect }: Props) {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28, delay: idx * 0.05 }}
-            className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl overflow-hidden card-glow card-glow-cyan transition-all duration-200 flex flex-col group cursor-pointer"
+            className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden card-glow card-glow-cyan transition-all duration-200 hover:shadow-md flex flex-col group cursor-pointer"
             onClick={() => onCourseSelect(course.id)}
           >
-            <div className="relative h-44 bg-white/5 overflow-hidden">
+            <div className="relative h-44 bg-slate-100 overflow-hidden">
               <CourseCover
                 src={course.cover_url}
                 alt={course.title}
                 imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                iconClassName="text-white/20"
+                iconClassName="text-slate-300"
                 iconSize={36}
               />
               {course.categories?.name && (
@@ -113,25 +113,25 @@ export function MyCourses({ onEnter, onCourseSelect }: Props) {
             </div>
             <div className="p-4 flex flex-col flex-1">
               <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="text-sm font-bold text-white line-clamp-2 flex-1">{course.title}</h3>
+                <h3 className="text-sm font-bold text-slate-900 line-clamp-2 flex-1">{course.title}</h3>
                 {course.level && (
-                  <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${LEVEL_COLORS[course.level] ?? 'bg-white/10 text-slate-300'}`}>
+                  <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${LEVEL_COLORS[course.level] ?? 'bg-slate-100 text-slate-600'}`}>
                     {LEVEL_LABELS[course.level] ?? course.level}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-1 text-xs text-slate-400 mb-3">
+              <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
                 <Clock size={11} />
                 {course.duration_hrs}h
               </div>
 
               <div className="mt-auto">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 mb-1.5">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1.5">
                   <span>Avance</span>
-                  <span className="text-cyan-400">{course.progress}%</span>
+                  <span className="text-cyan-600">{course.progress}%</span>
                 </div>
-                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-4">
+                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-4">
                   <div
                     className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
                     style={{ width: `${course.progress}%` }}
