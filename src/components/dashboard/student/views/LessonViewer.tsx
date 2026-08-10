@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, Sparkles, X, Trophy, Layers } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, FileSpreadsheet, FileType, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, Sparkles, X, Trophy, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
@@ -47,13 +47,29 @@ interface CourseData {
   modules: Module[];
 }
 
+/** Order in which file-type groups appear in "Material Descargable": PPT first, then PDF, then Excel, etc. */
+const FILE_TYPE_ORDER = ['ppt', 'pdf', 'excel', 'word', 'code', 'other'] as const;
+
+const FILE_TYPE_META: Record<typeof FILE_TYPE_ORDER[number], { icon: React.ElementType; label: string; groupLabel: string; color: string }> = {
+  ppt:   { icon: Presentation,   label: 'Presentación PPTX',        groupLabel: 'Presentaciones', color: '#f97316' },
+  pdf:   { icon: FileText,       label: 'Documento PDF',            groupLabel: 'PDF',             color: '#ef4444' },
+  excel: { icon: FileSpreadsheet, label: 'Hoja de cálculo Excel',   groupLabel: 'Excel',           color: '#22c55e' },
+  word:  { icon: FileType,       label: 'Documento Word',           groupLabel: 'Word',            color: '#2563eb' },
+  code:  { icon: FileCode,       label: 'Notebook Colab / IPYNB',   groupLabel: 'Notebooks',        color: '#8b5cf6' },
+  other: { icon: FileDown,       label: 'Archivo Adjunto',          groupLabel: 'Otros archivos',   color: '#64748b' },
+};
+
 const getFileMeta = (url?: string | null) => {
   if (!url) return null;
   const lowerUrl = url.toLowerCase();
-  if (lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?')) return { type: 'pdf', icon: FileText, label: 'Documento PDF' };
-  if (lowerUrl.endsWith('.pptx') || lowerUrl.endsWith('.ppt') || lowerUrl.includes('.ppt')) return { type: 'ppt', icon: Presentation, label: 'Presentación PPTX' };
-  if (lowerUrl.endsWith('.ipynb') || lowerUrl.includes('.ipynb')) return { type: 'code', icon: FileCode, label: 'Notebook Colab / IPYNB' };
-  return { type: 'other', icon: FileDown, label: 'Archivo Adjunto' };
+  let type: typeof FILE_TYPE_ORDER[number];
+  if (lowerUrl.endsWith('.pptx') || lowerUrl.endsWith('.ppt') || lowerUrl.includes('.ppt')) type = 'ppt';
+  else if (lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?')) type = 'pdf';
+  else if (lowerUrl.endsWith('.xlsx') || lowerUrl.endsWith('.xls') || lowerUrl.endsWith('.csv') || lowerUrl.includes('.xlsx?') || lowerUrl.includes('.xls?')) type = 'excel';
+  else if (lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc') || lowerUrl.includes('.docx?')) type = 'word';
+  else if (lowerUrl.endsWith('.ipynb') || lowerUrl.includes('.ipynb') || lowerUrl.endsWith('.py')) type = 'code';
+  else type = 'other';
+  return { type, ...FILE_TYPE_META[type] };
 };
 
 
@@ -512,6 +528,11 @@ export function LessonViewer({ courseId, onBack }: Props) {
 
             if (activeLesson.pdf_url) {
               const urls = activeLesson.pdf_url.split(',').map(u => u.trim()).filter(Boolean);
+              const filesWithMeta = urls
+                .map((url, idx) => ({ url, idx, meta: getFileMeta(url) }))
+                .filter((f): f is { url: string; idx: number; meta: NonNullable<ReturnType<typeof getFileMeta>> } => f.meta !== null)
+                .sort((a, b) => FILE_TYPE_ORDER.indexOf(a.meta.type) - FILE_TYPE_ORDER.indexOf(b.meta.type));
+
               rows.push({
                 key: 'material',
                 title: 'Material Descargable',
@@ -519,53 +540,70 @@ export function LessonViewer({ courseId, onBack }: Props) {
                 icon: Package,
                 color: '#6366f1',
                 content: (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {urls.map((url, idx) => {
-                      const meta = getFileMeta(url);
-                      if (!meta) return null;
-
-                      const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
-                      const decodedName = decodeURIComponent(rawName);
-                      const displayName = decodedName.replace(/^\d+-/, '');
-
-                      const lowerUrl = url.toLowerCase();
-                      let viewerUrl = url;
-                      if (meta.type === 'ppt' || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.xlsx') || lowerUrl.includes('.docx?') || lowerUrl.includes('.xlsx?')) {
-                         viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
-                      } else if (meta.type !== 'pdf') {
-                         viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
-                      }
+                  <div className="flex flex-col gap-5">
+                    {FILE_TYPE_ORDER.map(type => {
+                      const group = filesWithMeta.filter(f => f.meta.type === type);
+                      if (group.length === 0) return null;
+                      const groupMeta = FILE_TYPE_META[type];
 
                       return (
-                        <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 shrink-0 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                              <meta.icon size={20} className="text-cyan-600" />
-                            </div>
-                            <div className="flex-1 min-w-0 pt-1">
-                              <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
-                                {displayName}
-                              </h4>
-                              <p className="text-xs text-lms-text-muted truncate mt-0.5">
-                                Archivo descargable
-                              </p>
-                            </div>
+                        <div key={type} className="flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <groupMeta.icon size={13} style={{ color: groupMeta.color }} />
+                            <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: groupMeta.color }}>
+                              {groupMeta.groupLabel}
+                            </p>
+                            <span className="text-[11px] font-bold text-lms-text-muted">({group.length})</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 mt-2">
-                            <button
-                              onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
-                              className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-600 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
-                            >
-                              <Eye size={16} /> Ver Archivo
-                            </button>
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 bg-lms-hover border border-lms-border hover:border-lms-text-muted/40 text-lms-text-muted hover:text-lms-text-primary px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
-                            >
-                              <DownloadCloud size={16} /> Descargar
-                            </a>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {group.map(({ url, idx, meta }) => {
+                              const rawName = url.split('/').pop() || `Archivo ${urls.length > 1 ? idx + 1 : ''}`;
+                              const decodedName = decodeURIComponent(rawName);
+                              const displayName = decodedName.replace(/^\d+-/, '');
+
+                              const lowerUrl = url.toLowerCase();
+                              let viewerUrl = url;
+                              if (meta.type === 'ppt' || meta.type === 'word' || meta.type === 'excel' || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.xlsx') || lowerUrl.includes('.docx?') || lowerUrl.includes('.xlsx?')) {
+                                 viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+                              } else if (meta.type !== 'pdf') {
+                                 viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
+                              }
+
+                              return (
+                                <div key={idx} className="rounded-xl border border-lms-border bg-lms-bg p-4 flex flex-col gap-3 card-glow card-glow-cyan">
+                                  <div className="flex items-start gap-3">
+                                    <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center border"
+                                      style={{ background: `${meta.color}18`, borderColor: `${meta.color}35` }}>
+                                      <meta.icon size={20} style={{ color: meta.color }} />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-1">
+                                      <h4 className="text-sm font-bold text-lms-text-primary truncate" title={decodedName}>
+                                        {displayName}
+                                      </h4>
+                                      <p className="text-xs text-lms-text-muted truncate mt-0.5">
+                                        {meta.label}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 mt-2">
+                                    <button
+                                      onClick={() => setViewingFile({ url, viewerUrl, name: displayName })}
+                                      className="inline-flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 text-cyan-600 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                                    >
+                                      <Eye size={16} /> Ver Archivo
+                                    </button>
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center justify-center gap-2 bg-lms-hover border border-lms-border hover:border-lms-text-muted/40 text-lms-text-muted hover:text-lms-text-primary px-4 py-2.5 rounded-lg font-bold text-xs transition-colors w-full"
+                                    >
+                                      <DownloadCloud size={16} /> Descargar
+                                    </a>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
