@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, FileSpreadsheet, FileType, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, Sparkles, X, Trophy, Layers } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, FileSpreadsheet, FileType, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, Sparkles, X, Trophy, Layers, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { saveQuizResult } from '../../../../lib/quizResults';
+import { downloadCertificate } from '../../../../lib/certificate';
 import type { QuizQuestion } from '../quiz/types';
 import { isMatch, isOrder } from '../quiz/types';
 import { MatchQuestionView } from '../quiz/MatchQuestionView';
@@ -792,6 +793,28 @@ export function LessonViewer({ courseId, onBack }: Props) {
 /** Kahoot/trivia-style quiz: one question at a time, streak counter, and a celebratory results screen. */
 type TileStatus = 'pending' | 'correct' | 'wrong';
 const QUIZ_LIVES = 3;
+const FINAL_EVALUATION_LESSON_ID = '1775b1ec-a6b4-400f-a922-05dd386e1925';
+
+function CertificateButton({ score, total, className }: { score: number; total: number; className: string }) {
+  const [downloading, setDownloading] = useState(false);
+  const handleClick = async () => {
+    setDownloading(true);
+    try {
+      await downloadCertificate(score, total);
+    } catch (err) {
+      console.error('No se pudo generar el certificado:', err);
+      toast.error('No se pudo generar el certificado');
+    } finally {
+      setDownloading(false);
+    }
+  };
+  return (
+    <button onClick={handleClick} disabled={downloading} className={className}>
+      {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Award className="w-4 h-4" />}
+      {downloading ? 'Generando...' : 'Descargar certificado'}
+    </button>
+  );
+}
 
 /** Board-game style quiz: 5 level tiles on a path, a bear token that advances, and 3 lives — miss too many and it's game over. */
 function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQuestion[] }) {
@@ -877,10 +900,16 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
           transition={{ type: 'spring', stiffness: 220 }} className="text-5xl mb-2">💀</motion.div>
         <p className="text-2xl font-black mb-1">Te quedaste sin vidas</p>
         <p className="text-sm opacity-80 mb-5">Llegaste hasta la pregunta {step + 1} de {questions.length}</p>
-        <button onClick={restart}
-          className="px-6 py-2.5 rounded-xl bg-white text-slate-800 text-sm font-black hover:bg-slate-100 transition-colors shadow-lg">
-          Intentar de nuevo
-        </button>
+        <div className="flex flex-col items-center gap-2.5">
+          <button onClick={restart}
+            className="px-6 py-2.5 rounded-xl bg-white text-slate-800 text-sm font-black hover:bg-slate-100 transition-colors shadow-lg">
+            Intentar de nuevo
+          </button>
+          {lessonId === FINAL_EVALUATION_LESSON_ID && (
+            <CertificateButton score={tileStatus.filter(s => s === 'correct').length} total={questions.length}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
+          )}
+        </div>
       </motion.div>
     );
   }
@@ -900,10 +929,16 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
         <p className="text-2xl font-black mb-1">{msg}</p>
         <p className="text-sm opacity-90 mb-1">Terminaste con {lives} de {QUIZ_LIVES} vidas</p>
         <p className="text-xs opacity-75 mb-5">{score} de {questions.length} respuestas correctas</p>
-        <button onClick={restart}
-          className="px-6 py-2.5 rounded-xl bg-white text-violet-700 text-sm font-black hover:bg-violet-50 transition-colors shadow-lg">
-          Jugar de nuevo
-        </button>
+        <div className="flex flex-col items-center gap-2.5">
+          <button onClick={restart}
+            className="px-6 py-2.5 rounded-xl bg-white text-violet-700 text-sm font-black hover:bg-violet-50 transition-colors shadow-lg">
+            Jugar de nuevo
+          </button>
+          {lessonId === FINAL_EVALUATION_LESSON_ID && (
+            <CertificateButton score={score} total={questions.length}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
+          )}
+        </div>
       </motion.div>
     );
   }

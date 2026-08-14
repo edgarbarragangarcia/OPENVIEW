@@ -1,5 +1,6 @@
 import { Fragment, useState, useEffect, useMemo } from 'react';
-import { Search, Users, Clock, ChevronDown, ChevronUp, Mail, LogIn } from 'lucide-react';
+import { Search, Users, Clock, ChevronDown, ChevronUp, Mail, LogIn, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { getConnectionStats, UserConnectionStats } from '../../../../lib/loginEvents';
 
 const formatDateTime = (iso: string) =>
@@ -42,6 +43,22 @@ export function ConnectionsView() {
   const totalConnections = stats.reduce((acc, s) => acc + s.count, 0);
   const activeUsers = stats.filter(s => s.count > 0).length;
 
+  const handleExport = () => {
+    const rows = filtered.map(s => ({
+      Usuario: s.full_name || '—',
+      Email: s.email,
+      Rol: s.role,
+      Conexiones: s.count,
+      'Última conexión': s.lastLoginAt ? formatDateTime(s.lastLoginAt) : 'Nunca',
+      'Historial de conexiones': s.recentLogins.map(formatDateTime).join(' | '),
+    }));
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    sheet['!cols'] = [{ wch: 28 }, { wch: 28 }, { wch: 10 }, { wch: 12 }, { wch: 20 }, { wch: 60 }];
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, 'Conexiones');
+    XLSX.writeFile(book, `Conexiones OpenView - ${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   return (
     <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
@@ -81,15 +98,25 @@ export function ConnectionsView() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lms-text-muted" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar por nombre o email..."
-          className="w-full pl-10 pr-4 py-3 bg-lms-surface border border-lms-border rounded-xl text-sm text-lms-text-primary placeholder-lms-text-muted focus:outline-none focus:border-violet-500 transition-colors"
-        />
+      {/* Search + export */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lms-text-muted" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar por nombre o email..."
+            className="w-full pl-10 pr-4 py-3 bg-lms-surface border border-lms-border rounded-xl text-sm text-lms-text-primary placeholder-lms-text-muted focus:outline-none focus:border-violet-500 transition-colors"
+          />
+        </div>
+        <button
+          onClick={handleExport}
+          disabled={filtered.length === 0}
+          className="flex items-center gap-2 px-4 py-3 rounded-xl border border-lms-border text-sm font-bold text-lms-text-primary hover:bg-lms-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+        >
+          <FileSpreadsheet size={16} className="text-emerald-400" />
+          Exportar a Excel
+        </button>
       </div>
 
       {error && (
