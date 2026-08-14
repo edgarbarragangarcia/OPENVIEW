@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, FileSpreadsheet, FileType, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, Sparkles, X, Trophy, Layers, Award } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Circle, BookOpen, FileText, ChevronRight, Lock, FileCode, Presentation, FileDown, FileSpreadsheet, FileType, DownloadCloud, Eye, Copy, Save, ExternalLink, Loader2, StickyNote, HelpCircle, ThumbsUp, ThumbsDown, Workflow, Target, Flag, Package, MessageSquare, Sparkles, X, Trophy, Layers, Award, Linkedin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
 import { saveQuizResult, getBestQuizResult } from '../../../../lib/quizResults';
-import { downloadCertificate } from '../../../../lib/certificate';
+import { downloadCertificate, getOrIssueCertificate, buildLinkedInAddUrl } from '../../../../lib/certificate';
 import type { QuizQuestion } from '../quiz/types';
 import { isMatch, isOrder } from '../quiz/types';
 import { MatchQuestionView } from '../quiz/MatchQuestionView';
@@ -795,12 +795,12 @@ type TileStatus = 'pending' | 'correct' | 'wrong';
 const QUIZ_LIVES = 3;
 const FINAL_EVALUATION_LESSON_ID = '1775b1ec-a6b4-400f-a922-05dd386e1925';
 
-function CertificateButton({ className }: { className: string }) {
+function CertificateButton({ lessonId, score, total, className }: { lessonId: string; score: number; total: number; className: string }) {
   const [downloading, setDownloading] = useState(false);
   const handleClick = async () => {
     setDownloading(true);
     try {
-      await downloadCertificate();
+      await downloadCertificate(lessonId, score, total);
     } catch (err) {
       console.error('No se pudo generar el certificado:', err);
       toast.error('No se pudo generar el certificado');
@@ -812,6 +812,28 @@ function CertificateButton({ className }: { className: string }) {
     <button onClick={handleClick} disabled={downloading} className={className}>
       {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Award className="w-4 h-4" />}
       {downloading ? 'Generando...' : 'Descargar certificado'}
+    </button>
+  );
+}
+
+function LinkedInButton({ lessonId, score, total, className }: { lessonId: string; score: number; total: number; className: string }) {
+  const [loading, setLoading] = useState(false);
+  const handleClick = async () => {
+    setLoading(true);
+    try {
+      const cert = await getOrIssueCertificate(lessonId, score, total);
+      window.open(buildLinkedInAddUrl(cert), '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      console.error('No se pudo preparar el certificado para LinkedIn:', err);
+      toast.error('No se pudo abrir LinkedIn');
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <button onClick={handleClick} disabled={loading} className={className}>
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Linkedin className="w-4 h-4" />}
+      {loading ? 'Preparando...' : 'Agregar a LinkedIn'}
     </button>
   );
 }
@@ -916,8 +938,12 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
             Intentar de nuevo
           </button>
           {lessonId === FINAL_EVALUATION_LESSON_ID && (
-            <CertificateButton
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <CertificateButton lessonId={lessonId} score={tileStatus.filter(s => s === 'correct').length} total={questions.length}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
+              <LinkedInButton lessonId={lessonId} score={tileStatus.filter(s => s === 'correct').length} total={questions.length}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white text-slate-800 text-sm font-black hover:bg-slate-100 transition-colors shadow-lg disabled:opacity-60" />
+            </div>
           )}
         </div>
       </motion.div>
@@ -945,8 +971,12 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
             Jugar de nuevo
           </button>
           {lessonId === FINAL_EVALUATION_LESSON_ID && (
-            <CertificateButton
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <CertificateButton lessonId={lessonId} score={score} total={questions.length}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
+              <LinkedInButton lessonId={lessonId} score={score} total={questions.length}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white text-violet-700 text-sm font-black hover:bg-violet-50 transition-colors shadow-lg disabled:opacity-60" />
+            </div>
           )}
         </div>
       </motion.div>
@@ -967,8 +997,12 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
           <p className="text-xs font-bold text-amber-800">
             Ya completaste esta evaluación ({pastResult.score}/{pastResult.total}). Puedes volver a descargar tu certificado cuando quieras.
           </p>
-          <CertificateButton
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 text-slate-900 text-xs font-black hover:bg-amber-300 transition-colors shadow disabled:opacity-60 shrink-0" />
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <CertificateButton lessonId={lessonId} score={pastResult.score} total={pastResult.total}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 text-slate-900 text-xs font-black hover:bg-amber-300 transition-colors shadow disabled:opacity-60" />
+            <LinkedInButton lessonId={lessonId} score={pastResult.score} total={pastResult.total}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-amber-300 text-slate-800 text-xs font-black hover:bg-amber-100 transition-colors shadow disabled:opacity-60" />
+          </div>
         </div>
       )}
       {shake > 0 && (

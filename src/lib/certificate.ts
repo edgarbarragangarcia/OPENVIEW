@@ -2,6 +2,55 @@ import jsPDF from 'jspdf';
 import { supabase } from './supabase';
 
 const CERTIFICATE_LEVEL = 'Básico - Intermedio';
+const VERIFY_PATH = '/verificar';
+
+export interface IssuedCertificate {
+  code: string;
+  full_name: string;
+  issued_at: string;
+}
+
+export function buildVerificationUrl(code: string): string {
+  return `${window.location.origin}${VERIFY_PATH}?codigo=${encodeURIComponent(code)}`;
+}
+
+/** Emite (o reutiliza, si ya existe) el folio del certificado para el usuario autenticado y esta lección. */
+export async function getOrIssueCertificate(lessonId: string, score: number, total: number): Promise<IssuedCertificate> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No autenticado');
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+  if (profileError) throw profileError;
+
+  const fullName = profile?.full_name?.trim() || 'Participante';
+
+  const { data, error } = await supabase.rpc('issue_certificate', {
+    p_lesson_id: lessonId,
+    p_full_name: fullName,
+    p_score: score,
+    p_total: total,
+  });
+  if (error) throw error;
+  return data as IssuedCertificate;
+}
+
+export function buildLinkedInAddUrl(cert: IssuedCertificate): string {
+  const issued = new Date(cert.issued_at);
+  const params = new URLSearchParams({
+    startTask: 'CERTIFICATION_NAME',
+    name: 'Capacitación en Inteligencia Artificial',
+    organizationName: 'OpenView Academy',
+    issueYear: String(issued.getFullYear()),
+    issueMonth: String(issued.getMonth() + 1),
+    certUrl: buildVerificationUrl(cert.code),
+    certId: cert.code,
+  });
+  return `https://www.linkedin.com/profile/add?${params.toString()}`;
+}
 
 async function loadLogoDataUrl(): Promise<string | null> {
   try {
@@ -68,6 +117,7 @@ function drawSignatureDataUrl(name: string): string | null {
 
 interface CertificateData {
   fullName: string;
+  code: string;
 }
 
 function drawDecoration(doc: jsPDF, pageWidth: number, pageHeight: number) {
@@ -87,7 +137,7 @@ function drawDecoration(doc: jsPDF, pageWidth: number, pageHeight: number) {
   doc.triangle(pageWidth, pageHeight, pageWidth - pageWidth * 0.3, pageHeight, pageWidth, pageHeight - pageHeight * 0.42, 'F');
 }
 
-function drawCertificate(doc: jsPDF, { fullName }: CertificateData, logoDataUrl: string | null) {
+function drawCertificate(doc: jsPDF, { fullName, code }: CertificateData, logoDataUrl: string | null) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const centerX = pageWidth / 2;
@@ -157,20 +207,15 @@ function drawCertificate(doc: jsPDF, { fullName }: CertificateData, logoDataUrl:
   doc.text('8 sesiones · 16 horas', centerX - 45, 144, { align: 'center' });
   doc.text(`Bogotá D.C., ${today}`, centerX + 45, 144, { align: 'center' });
 
-  // Nivel alcanzado, dentro de una píldora
-  const level_w = 74;
-  doc.setFillColor(255, 251, 235);
-  doc.setDrawColor(...gold);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(centerX - level_w / 2, 153, level_w, 17, 8, 8, 'FD');
+  // Nivel alcanzado
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7);
   doc.setTextColor(...gold);
-  doc.text('NIVEL ALCANZADO', centerX, 160, { align: 'center' });
+  doc.text('NIVEL ALCANZADO', centerX, 158, { align: 'center' });
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(...navy);
-  doc.text(CERTIFICATE_LEVEL, centerX, 167, { align: 'center' });
+  doc.text(CERTIFICATE_LEVEL, centerX, 165, { align: 'center' });
 
   // Signature (single) — firma manuscrita inventada, rasterizada a imagen.
   // Sin línea de firma, pegada al nombre del instructor.
@@ -193,24 +238,23 @@ function drawCertificate(doc: jsPDF, { fullName }: CertificateData, logoDataUrl:
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.text('OPENVIEW · INSTRUCTOR', centerX, 200, { align: 'center' });
+
+  // Folio consecutivo + verificación, en la esquina inferior izquierda del marco.
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(90, 90, 90);
+  doc.text(`Folio: ${code}`, 26, 197.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.text(`Verifica este certificado en ${window.location.host}${VERIFY_PATH}`, 26, 201.5);
 }
 
 /** Genera y descarga el certificado en PDF para el usuario autenticado, tras completar la Evaluación Final. */
-export async function downloadCertificate(): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('No autenticado');
-
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user.id)
-    .single();
-  if (error) throw error;
-
-  const fullName = profile?.full_name?.trim() || 'Participante';
+export async function downloadCertificate(lessonId: string, score: number, total: number): Promise<void> {
+  const cert = await getOrIssueCertificate(lessonId, score, total);
   const logoDataUrl = await loadLogoDataUrl();
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  drawCertificate(doc, { fullName }, logoDataUrl);
-  doc.save(`Certificado OpenView - ${fullName}.pdf`);
+  drawCertificate(doc, { fullName: cert.full_name, code: cert.code }, logoDataUrl);
+  doc.save(`Certificado OpenView - ${cert.full_name}.pdf`);
 }

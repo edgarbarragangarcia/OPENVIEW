@@ -12,6 +12,7 @@ const ForceChangePassword = lazy(() =>
   import('./components/ForceChangePassword').then(m => ({ default: m.ForceChangePassword }))
 );
 const LandingPage = lazy(() => import('./pages/LandingPage'));
+const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'));
 
 function LoadingScreen() {
   return (
@@ -23,6 +24,16 @@ function LoadingScreen() {
 
 export function AppRouter() {
   const { user, role, isLoading, mustChangePassword } = useAuth();
+
+  // Página pública de verificación de certificados: no requiere sesión ni
+  // espera a que termine de cargar el estado de auth.
+  if (window.location.pathname === '/verificar') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <VerifyCertificate />
+      </Suspense>
+    );
+  }
 
   if (isLoading) {
     return <LoadingScreen />;
