@@ -1,11 +1,7 @@
 import jsPDF from 'jspdf';
 import { supabase } from './supabase';
 
-export type CertificateLevel = 'Básico' | 'Intermedio';
-
-export function levelForScore(score: number, total: number): CertificateLevel {
-  return total > 0 && score / total >= 0.7 ? 'Intermedio' : 'Básico';
-}
+const CERTIFICATE_LEVEL = 'Básico - Intermedio';
 
 async function loadLogoDataUrl(): Promise<string | null> {
   try {
@@ -72,7 +68,6 @@ function drawSignatureDataUrl(name: string): string | null {
 
 interface CertificateData {
   fullName: string;
-  level: CertificateLevel;
 }
 
 function drawDecoration(doc: jsPDF, pageWidth: number, pageHeight: number) {
@@ -92,7 +87,7 @@ function drawDecoration(doc: jsPDF, pageWidth: number, pageHeight: number) {
   doc.triangle(pageWidth, pageHeight, pageWidth - pageWidth * 0.3, pageHeight, pageWidth, pageHeight - pageHeight * 0.42, 'F');
 }
 
-function drawCertificate(doc: jsPDF, { fullName, level }: CertificateData, logoDataUrl: string | null) {
+function drawCertificate(doc: jsPDF, { fullName }: CertificateData, logoDataUrl: string | null) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const centerX = pageWidth / 2;
@@ -163,7 +158,7 @@ function drawCertificate(doc: jsPDF, { fullName, level }: CertificateData, logoD
   doc.text(`Bogotá D.C., ${today}`, centerX + 45, 144, { align: 'center' });
 
   // Nivel alcanzado, dentro de una píldora
-  const level_w = 50;
+  const level_w = 74;
   doc.setFillColor(255, 251, 235);
   doc.setDrawColor(...gold);
   doc.setLineWidth(0.4);
@@ -175,7 +170,7 @@ function drawCertificate(doc: jsPDF, { fullName, level }: CertificateData, logoD
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(...navy);
-  doc.text(level, centerX, 167, { align: 'center' });
+  doc.text(CERTIFICATE_LEVEL, centerX, 167, { align: 'center' });
 
   // Signature (single) — firma manuscrita inventada, rasterizada a imagen.
   // Debe caber entre el fondo de la píldora (y=170) y la línea de firma (y=190).
@@ -191,19 +186,19 @@ function drawCertificate(doc: jsPDF, { fullName, level }: CertificateData, logoD
     doc.text('Edgar Barragán G', centerX, 186, { align: 'center' });
   }
   doc.setDrawColor(180, 180, 180);
-  doc.line(centerX - 32, 190, centerX + 32, 190);
+  doc.line(centerX - 32, 189, centerX + 32, 189);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(60, 60, 60);
-  doc.text('Edgar Barragán G', centerX, 195, { align: 'center' });
+  doc.text('Edgar Barragán G', centerX, 193.5, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text('OPENVIEW · INSTRUCTOR', centerX, 200, { align: 'center' });
+  doc.text('OPENVIEW · INSTRUCTOR', centerX, 197.5, { align: 'center' });
 }
 
-/** Genera y descarga el certificado en PDF para el usuario autenticado, según su puntaje en la Evaluación Final. */
-export async function downloadCertificate(score: number, total: number): Promise<void> {
+/** Genera y descarga el certificado en PDF para el usuario autenticado, tras completar la Evaluación Final. */
+export async function downloadCertificate(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No autenticado');
 
@@ -215,10 +210,9 @@ export async function downloadCertificate(score: number, total: number): Promise
   if (error) throw error;
 
   const fullName = profile?.full_name?.trim() || 'Participante';
-  const level = levelForScore(score, total);
   const logoDataUrl = await loadLogoDataUrl();
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  drawCertificate(doc, { fullName, level }, logoDataUrl);
+  drawCertificate(doc, { fullName }, logoDataUrl);
   doc.save(`Certificado OpenView - ${fullName}.pdf`);
 }

@@ -795,12 +795,12 @@ type TileStatus = 'pending' | 'correct' | 'wrong';
 const QUIZ_LIVES = 3;
 const FINAL_EVALUATION_LESSON_ID = '1775b1ec-a6b4-400f-a922-05dd386e1925';
 
-function CertificateButton({ score, total, className }: { score: number; total: number; className: string }) {
+function CertificateButton({ className }: { className: string }) {
   const [downloading, setDownloading] = useState(false);
   const handleClick = async () => {
     setDownloading(true);
     try {
-      await downloadCertificate(score, total);
+      await downloadCertificate();
     } catch (err) {
       console.error('No se pudo generar el certificado:', err);
       toast.error('No se pudo generar el certificado');
@@ -916,7 +916,7 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
             Intentar de nuevo
           </button>
           {lessonId === FINAL_EVALUATION_LESSON_ID && (
-            <CertificateButton score={tileStatus.filter(s => s === 'correct').length} total={questions.length}
+            <CertificateButton
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
           )}
         </div>
@@ -945,7 +945,7 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
             Jugar de nuevo
           </button>
           {lessonId === FINAL_EVALUATION_LESSON_ID && (
-            <CertificateButton score={score} total={questions.length}
+            <CertificateButton
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 text-slate-900 text-sm font-black hover:bg-amber-300 transition-colors shadow-lg disabled:opacity-60" />
           )}
         </div>
@@ -967,7 +967,7 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
           <p className="text-xs font-bold text-amber-800">
             Ya completaste esta evaluación ({pastResult.score}/{pastResult.total}). Puedes volver a descargar tu certificado cuando quieras.
           </p>
-          <CertificateButton score={pastResult.score} total={pastResult.total}
+          <CertificateButton
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 text-slate-900 text-xs font-black hover:bg-amber-300 transition-colors shadow disabled:opacity-60 shrink-0" />
         </div>
       )}
