@@ -99,10 +99,10 @@ function drawCertificate(doc: jsPDF, { fullName }: CertificateData, logoDataUrl:
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   drawDecoration(doc, pageWidth, pageHeight);
   doc.setFillColor(255, 255, 255);
-  doc.roundedRect(16, 16, pageWidth - 32, pageHeight - 32, 4, 4, 'F');
+  doc.roundedRect(16, 12, pageWidth - 32, pageHeight - 18, 4, 4, 'F');
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.6);
-  doc.roundedRect(16, 16, pageWidth - 32, pageHeight - 32, 4, 4, 'S');
+  doc.roundedRect(16, 12, pageWidth - 32, pageHeight - 18, 4, 4, 'S');
 
   if (logoDataUrl) {
     const logoW = 26;
@@ -173,28 +173,26 @@ function drawCertificate(doc: jsPDF, { fullName }: CertificateData, logoDataUrl:
   doc.text(CERTIFICATE_LEVEL, centerX, 167, { align: 'center' });
 
   // Signature (single) — firma manuscrita inventada, rasterizada a imagen.
-  // Debe caber entre el fondo de la píldora (y=170) y la línea de firma (y=190).
+  // Sin línea de firma, pegada al nombre del instructor.
   const signatureDataUrl = drawSignatureDataUrl('Edgar Barragán G');
   if (signatureDataUrl) {
     const sigW = 44;
     const sigH = (200 / 620) * sigW;
-    doc.addImage(signatureDataUrl, 'PNG', centerX - sigW / 2, 174, sigW, sigH);
+    doc.addImage(signatureDataUrl, 'PNG', centerX - sigW / 2, 179, sigW, sigH);
   } else {
     doc.setFont('times', 'italic');
     doc.setFontSize(18);
     doc.setTextColor(...navy);
-    doc.text('Edgar Barragán G', centerX, 186, { align: 'center' });
+    doc.text('Edgar Barragán G', centerX, 191, { align: 'center' });
   }
-  doc.setDrawColor(180, 180, 180);
-  doc.line(centerX - 32, 189, centerX + 32, 189);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(60, 60, 60);
-  doc.text('Edgar Barragán G', centerX, 193.5, { align: 'center' });
+  doc.text('Edgar Barragán G', centerX, 196, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text('OPENVIEW · INSTRUCTOR', centerX, 197.5, { align: 'center' });
+  doc.text('OPENVIEW · INSTRUCTOR', centerX, 200, { align: 'center' });
 }
 
 /** Genera y descarga el certificado en PDF para el usuario autenticado, tras completar la Evaluación Final. */
