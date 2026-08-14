@@ -11,6 +11,23 @@ export async function saveQuizResult(lessonId: string, score: number, total: num
   if (error) throw error;
 }
 
+/** Mejor intento del usuario actual para una lección (o null si nunca la completó). */
+export async function getBestQuizResult(lessonId: string): Promise<{ score: number; total: number } | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('quiz_results')
+    .select('score, total')
+    .eq('user_id', user.id)
+    .eq('lesson_id', lessonId)
+    .order('score', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export interface AdminQuizResult {
   id: string;
   score: number;

@@ -22,6 +22,54 @@ async function loadLogoDataUrl(): Promise<string | null> {
   }
 }
 
+/** Dibuja una firma manuscrita inventada (texto en fuente script + un trazo de pluma), rasterizada a PNG. */
+function drawSignatureDataUrl(name: string): string | null {
+  try {
+    const scale = 3;
+    const w = 620 * scale;
+    const h = 200 * scale;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.scale(scale, scale);
+    const navy = '#16294a';
+
+    ctx.font = "italic 62px 'Segoe Script','Snell Roundhand','Bradley Hand','Brush Script MT',cursive";
+    ctx.fillStyle = navy;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(name, 310, 115);
+
+    // Trazo de pluma bajo la firma, con espesor variable para simular presión de mano
+    ctx.strokeStyle = navy;
+    ctx.lineCap = 'round';
+    const strokes: [number, number, number][] = [
+      [1.8, 130, 90], [3.2, 135, 60], [2.2, 138, 30], [1.2, 140, 0],
+    ];
+    strokes.forEach(([width]) => {
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(70, 128);
+      ctx.bezierCurveTo(180, 150, 420, 108, 560, 132);
+      ctx.stroke();
+    });
+
+    // Pequeño rizo final, como el remate de una firma real
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(555, 128);
+    ctx.bezierCurveTo(575, 118, 578, 100, 562, 96);
+    ctx.bezierCurveTo(550, 93, 552, 106, 566, 108);
+    ctx.stroke();
+
+    return canvas.toDataURL('image/png');
+  } catch {
+    return null;
+  }
+}
+
 interface CertificateData {
   fullName: string;
   level: CertificateLevel;
@@ -129,11 +177,18 @@ function drawCertificate(doc: jsPDF, { fullName, level }: CertificateData, logoD
   doc.setTextColor(...navy);
   doc.text(level, centerX, 167, { align: 'center' });
 
-  // Signature (single)
-  doc.setFont('times', 'italic');
-  doc.setFontSize(18);
-  doc.setTextColor(...navy);
-  doc.text('Edgar Barragán G', centerX, 188, { align: 'center' });
+  // Signature (single) — firma manuscrita inventada, rasterizada a imagen
+  const signatureDataUrl = drawSignatureDataUrl('Edgar Barragán G');
+  if (signatureDataUrl) {
+    const sigW = 50;
+    const sigH = (200 / 620) * sigW;
+    doc.addImage(signatureDataUrl, 'PNG', centerX - sigW / 2, 176 - sigH, sigW, sigH);
+  } else {
+    doc.setFont('times', 'italic');
+    doc.setFontSize(18);
+    doc.setTextColor(...navy);
+    doc.text('Edgar Barragán G', centerX, 188, { align: 'center' });
+  }
   doc.setDrawColor(180, 180, 180);
   doc.line(centerX - 32, 191, centerX + 32, 191);
 

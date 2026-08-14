@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
 import { markLessonComplete, markLessonIncomplete, getCompletedLessonIds, getEnrollmentAccess, getEnrollmentStartOverride } from '../../../../lib/enrollments';
 import { getTopicFeedback, setTopicStatus, type TopicStatus } from '../../../../lib/topicFeedback';
-import { saveQuizResult } from '../../../../lib/quizResults';
+import { saveQuizResult, getBestQuizResult } from '../../../../lib/quizResults';
 import { downloadCertificate } from '../../../../lib/certificate';
 import type { QuizQuestion } from '../quiz/types';
 import { isMatch, isOrder } from '../quiz/types';
@@ -829,6 +829,14 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
   // relanzar la animación aunque el valor anterior fuera el mismo.
   const [shake, setShake] = useState(0);
   const savedRef = useRef(false);
+  const [pastResult, setPastResult] = useState<{ score: number; total: number } | null>(null);
+
+  useEffect(() => {
+    if (lessonId !== FINAL_EVALUATION_LESSON_ID) return;
+    let active = true;
+    getBestQuizResult(lessonId).then(r => { if (active) setPastResult(r); }).catch(() => {});
+    return () => { active = false; };
+  }, [lessonId]);
 
   const q = questions[step];
   const isMultipleQ = !isMatch(q) && !isOrder(q);
@@ -837,10 +845,12 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
     if (savedRef.current) return;
     savedRef.current = true;
     const finalScore = finalTiles.filter(s => s === 'correct').length;
-    saveQuizResult(lessonId, finalScore, questions.length).catch(err => {
-      console.error('No se pudo guardar el resultado del quiz:', err);
-      toast.error('No se pudo guardar tu calificación');
-    });
+    saveQuizResult(lessonId, finalScore, questions.length)
+      .then(() => setPastResult(prev => !prev || finalScore > prev.score ? { score: finalScore, total: questions.length } : prev))
+      .catch(err => {
+        console.error('No se pudo guardar el resultado del quiz:', err);
+        toast.error('No se pudo guardar tu calificación');
+      });
   };
 
   /**
@@ -952,6 +962,15 @@ function QuizGame({ lessonId, questions }: { lessonId: string; questions: QuizQu
       transition={{ duration: 0.45 }}
       className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-50 via-white to-sky-50 border border-violet-100 p-6 shadow-lg"
     >
+      {lessonId === FINAL_EVALUATION_LESSON_ID && pastResult && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3">
+          <p className="text-xs font-bold text-amber-800">
+            Ya completaste esta evaluación ({pastResult.score}/{pastResult.total}). Puedes volver a descargar tu certificado cuando quieras.
+          </p>
+          <CertificateButton score={pastResult.score} total={pastResult.total}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 text-slate-900 text-xs font-black hover:bg-amber-300 transition-colors shadow disabled:opacity-60 shrink-0" />
+        </div>
+      )}
       {shake > 0 && (
         <motion.div
           key={`flash-${shake}`}
