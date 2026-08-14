@@ -118,7 +118,7 @@ function drawCertificate(doc: jsPDF, { fullName, level }: CertificateData, logoD
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(90, 90, 90);
-  doc.text('CONSULTORÍA & CAPACITACIÓN EN IA', centerX, 52, { align: 'center' });
+  doc.text('OPENVIEW ACADEMY', centerX, 52, { align: 'center' });
 
   doc.setDrawColor(...gold);
   doc.setLineWidth(0.5);
@@ -177,25 +177,26 @@ function drawCertificate(doc: jsPDF, { fullName, level }: CertificateData, logoD
   doc.setTextColor(...navy);
   doc.text(level, centerX, 167, { align: 'center' });
 
-  // Signature (single) — firma manuscrita inventada, rasterizada a imagen
+  // Signature (single) — firma manuscrita inventada, rasterizada a imagen.
+  // Debe caber entre el fondo de la píldora (y=170) y la línea de firma (y=190).
   const signatureDataUrl = drawSignatureDataUrl('Edgar Barragán G');
   if (signatureDataUrl) {
-    const sigW = 50;
+    const sigW = 44;
     const sigH = (200 / 620) * sigW;
-    doc.addImage(signatureDataUrl, 'PNG', centerX - sigW / 2, 176 - sigH, sigW, sigH);
+    doc.addImage(signatureDataUrl, 'PNG', centerX - sigW / 2, 174, sigW, sigH);
   } else {
     doc.setFont('times', 'italic');
     doc.setFontSize(18);
     doc.setTextColor(...navy);
-    doc.text('Edgar Barragán G', centerX, 188, { align: 'center' });
+    doc.text('Edgar Barragán G', centerX, 186, { align: 'center' });
   }
   doc.setDrawColor(180, 180, 180);
-  doc.line(centerX - 32, 191, centerX + 32, 191);
+  doc.line(centerX - 32, 190, centerX + 32, 190);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(60, 60, 60);
-  doc.text('Edgar Barragán G', centerX, 196, { align: 'center' });
+  doc.text('Edgar Barragán G', centerX, 195, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.text('OPENVIEW · INSTRUCTOR', centerX, 200, { align: 'center' });
