@@ -245,7 +245,7 @@ const PRICING_PLANS: {
     name: 'Básico',
     tagline: 'Renueva tu presencia web',
     icon: LayoutTemplate,
-    amounts: { EUR: 2000, USD: 2190, COP: 8900000 },
+    amounts: { EUR: 1995, USD: 2185, COP: 8880000 },
     features: [
       'Rediseño completo de tu página web',
       'Diseño responsive (móvil, tablet, escritorio)',
@@ -260,7 +260,7 @@ const PRICING_PLANS: {
     name: 'Intermedio',
     tagline: 'Digitaliza tus procesos clave',
     icon: GitBranch,
-    amounts: { EUR: 2750, USD: 3010, COP: 12200000 },
+    amounts: { EUR: 2745, USD: 3005, COP: 12180000 },
     features: [
       'Todo lo del paquete Básico',
       'Panel de administración a medida',
@@ -277,7 +277,7 @@ const PRICING_PLANS: {
     name: 'Premium',
     tagline: 'Transformación digital con agentes de IA',
     icon: BrainCircuit,
-    amounts: { EUR: 3500, USD: 3830, COP: 15500000 },
+    amounts: { EUR: 3945, USD: 4320, COP: 17550000 },
     features: [
       'Todo lo del paquete Intermedio',
       'Aplicación web a medida con base de datos propia',
