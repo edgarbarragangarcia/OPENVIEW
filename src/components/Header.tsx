@@ -1,4 +1,4 @@
-import { Menu, X, ChevronRight, User, Search, LogOut } from 'lucide-react';
+import { Menu, X, ChevronRight, ChevronDown, User, Search, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -10,11 +10,22 @@ interface HeaderProps {
   onNavigateView?: (view: LandingView) => void;
 }
 
-const NAV_ITEMS = ['Explorar Cursos', 'Servicios de Consultoría', 'Rutas de Aprendizaje', 'Comunidad', 'Planes'];
+interface NavGroup {
+  label: string;
+  children?: string[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  { label: 'Servicios de Consultoría', children: ['Planes'] },
+  { label: 'Explorar Cursos', children: ['Rutas de Aprendizaje'] },
+  { label: 'Comunidad' },
+];
 
 export function Header({ onLoginClick, activeView = 'home', onNavigateView }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
   const { user, signOut, isLoading } = useAuth();
 
   useEffect(() => {
@@ -25,12 +36,20 @@ export function Header({ onLoginClick, activeView = 'home', onNavigateView }: He
 
   const handleNavClick = (item: string) => {
     setIsMenuOpen(false);
+    setOpenGroup(null);
     if (item === 'Servicios de Consultoría') {
       if (activeView !== 'consultoria') {
         onNavigateView?.('consultoria');
         return;
       }
       document.getElementById('servicios-consultoria')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (item === 'Planes') {
+      if (activeView !== 'consultoria') {
+        onNavigateView?.('consultoria');
+      }
+      setTimeout(() => document.getElementById('paquetes')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), activeView !== 'consultoria' ? 50 : 0);
       return;
     }
     if (item === 'Explorar Cursos' || item === 'Rutas de Aprendizaje') {
@@ -63,22 +82,50 @@ export function Header({ onLoginClick, activeView = 'home', onNavigateView }: He
 
         {/* Center: Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-8">
-          {NAV_ITEMS.map((item) => {
-            const isActive = item === 'Servicios de Consultoría' && activeView === 'consultoria';
+          {NAV_GROUPS.map((group) => {
+            const isActive = group.label === 'Servicios de Consultoría' && activeView === 'consultoria';
+            const hasChildren = !!group.children?.length;
             return (
-              <button
-                key={item}
-                onClick={() => handleNavClick(item)}
-                className={`text-xs font-medium tracking-wide whitespace-nowrap transition-colors duration-200 ${
-                  isActive
-                    ? (isScrolled ? 'text-[#0071e3]' : 'text-white')
-                    : isScrolled
-                      ? 'text-[#1d1d1f]/80 hover:text-[#0071e3]'
-                      : 'text-white/80 hover:text-white'
-                }`}
+              <div
+                key={group.label}
+                className="relative"
+                onMouseEnter={() => hasChildren && setOpenGroup(group.label)}
+                onMouseLeave={() => hasChildren && setOpenGroup(null)}
               >
-                {item}
-              </button>
+                <button
+                  onClick={() => handleNavClick(group.label)}
+                  className={`flex items-center gap-1 text-xs font-medium tracking-wide whitespace-nowrap transition-colors duration-200 ${
+                    isActive
+                      ? (isScrolled ? 'text-[#0071e3]' : 'text-white')
+                      : isScrolled
+                        ? 'text-[#1d1d1f]/80 hover:text-[#0071e3]'
+                        : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  {group.label}
+                  {hasChildren && <ChevronDown size={12} className="opacity-60" />}
+                </button>
+
+                {hasChildren && (
+                  <div
+                    className={`absolute left-0 top-full pt-3 transition-[opacity,transform] duration-150 ${
+                      openGroup === group.label ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-1 pointer-events-none'
+                    }`}
+                  >
+                    <div className="min-w-[160px] rounded-xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] border border-black/5 py-2">
+                      {group.children!.map((child) => (
+                        <button
+                          key={child}
+                          onClick={() => handleNavClick(child)}
+                          className="block w-full text-left px-4 py-2 text-xs font-medium text-[#1d1d1f]/80 hover:text-[#0071e3] hover:bg-[#f5f5f7] whitespace-nowrap"
+                        >
+                          {child}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
@@ -144,15 +191,44 @@ export function Header({ onLoginClick, activeView = 'home', onNavigateView }: He
         }`}
       >
         <nav className="px-6 py-3 flex flex-col">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item}
-              onClick={() => handleNavClick(item)}
-              className="text-left py-3 border-b border-black/5 text-sm font-medium text-[#1d1d1f] last:border-none"
-            >
-              {item}
-            </button>
-          ))}
+          {NAV_GROUPS.map((group) => {
+            const hasChildren = !!group.children?.length;
+            const isOpen = openMobileGroup === group.label;
+            return (
+              <div key={group.label} className="border-b border-black/5 last:border-none">
+                <button
+                  onClick={() => {
+                    if (hasChildren) {
+                      setOpenMobileGroup(isOpen ? null : group.label);
+                    } else {
+                      handleNavClick(group.label);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between text-left py-3 text-sm font-medium text-[#1d1d1f]"
+                >
+                  <span onClick={(e) => { if (hasChildren) { e.stopPropagation(); handleNavClick(group.label); } }}>
+                    {group.label}
+                  </span>
+                  {hasChildren && (
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                  )}
+                </button>
+                {hasChildren && (
+                  <div className={`overflow-hidden transition-[max-height] duration-200 ${isOpen ? 'max-h-40' : 'max-h-0'}`}>
+                    {group.children!.map((child) => (
+                      <button
+                        key={child}
+                        onClick={() => handleNavClick(child)}
+                        className="block w-full text-left py-2.5 pl-4 text-sm text-[#1d1d1f]/70"
+                      >
+                        {child}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {!isLoading && (
             user ? (
