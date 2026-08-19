@@ -2,8 +2,9 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import {
   Brain, Globe, Workflow, ChevronRight, CheckCircle2,
   Target, Search, Rocket, TrendingUp, Building2, Quote,
+  Sparkles, Layout, Bot, Zap,
 } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { RevealHeading } from './effects/RevealHeading';
 import { useIsMobile } from '../lib/useIsMobile';
 
@@ -193,6 +194,212 @@ export function ConsultingServicesSection() {
             </motion.div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Paquetes / Precios ──────────────────────────────────────────────────────
+
+type CurrencyCode = 'EUR' | 'USD' | 'COP';
+
+const CURRENCY_META: Record<CurrencyCode, { symbol: string; suffix: string; locale: string }> = {
+  EUR: { symbol: '€', suffix: '', locale: 'es-ES' },
+  USD: { symbol: '$', suffix: 'USD', locale: 'en-US' },
+  COP: { symbol: '$', suffix: 'COP', locale: 'es-CO' },
+};
+
+// Zonas horarias de EE. UU. — para distinguir "América" (COP) de EE. UU. (USD).
+const US_TIMEZONES = [
+  'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+  'America/Anchorage', 'America/Phoenix', 'America/Detroit', 'America/Indiana',
+  'America/Kentucky', 'America/Boise', 'America/Juneau', 'America/Adak',
+  'Pacific/Honolulu',
+];
+
+function detectCurrency(): CurrencyCode {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (tz.startsWith('Europe/')) return 'EUR';
+    if (US_TIMEZONES.some((z) => tz.startsWith(z)) || tz === 'US/Pacific' || tz === 'US/Eastern') return 'USD';
+    if (tz.startsWith('America/') || tz.startsWith('Antarctica/Palmer')) return 'COP';
+    return 'EUR';
+  } catch {
+    return 'EUR';
+  }
+}
+
+// Precios base en EUR con equivalencias aproximadas de referencia comercial.
+const PRICING_PLANS: {
+  id: string;
+  name: string;
+  tagline: string;
+  icon: typeof Layout;
+  amounts: Record<CurrencyCode, number>;
+  features: string[];
+  highlight?: boolean;
+  cta: string;
+}[] = [
+  {
+    id: 'basico',
+    name: 'Básico',
+    tagline: 'Renueva tu presencia web',
+    icon: Layout,
+    amounts: { EUR: 2000, USD: 2190, COP: 8900000 },
+    features: [
+      'Rediseño completo de tu página web',
+      'Diseño responsive (móvil, tablet, escritorio)',
+      'Funcionalidades esenciales: formularios, WhatsApp, SEO básico',
+      'Optimización de velocidad y experiencia de usuario',
+      '1 ronda de ajustes post-entrega',
+    ],
+    cta: 'Quiero este paquete',
+  },
+  {
+    id: 'intermedio',
+    name: 'Intermedio',
+    tagline: 'Digitaliza tus procesos clave',
+    icon: Zap,
+    amounts: { EUR: 2750, USD: 3010, COP: 12200000 },
+    features: [
+      'Todo lo del paquete Básico',
+      'Panel de administración a medida',
+      'Integraciones (pagos, CRM, email marketing)',
+      'Automatizaciones simples de procesos internos',
+      'Analítica y reportes de desempeño',
+      '2 rondas de ajustes post-entrega',
+    ],
+    highlight: true,
+    cta: 'Quiero este paquete',
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    tagline: 'Transformación digital con agentes de IA',
+    icon: Bot,
+    amounts: { EUR: 3500, USD: 3830, COP: 15500000 },
+    features: [
+      'Todo lo del paquete Intermedio',
+      'Aplicación web a medida con base de datos propia',
+      '1 agente de IA con automatización de procesos (n8n + MCP)',
+      'Integración con tus herramientas y sistemas existentes',
+      'Capacitación del equipo para operar la solución',
+      'Soporte y acompañamiento durante el primer mes',
+    ],
+    cta: 'Agendar diagnóstico',
+  },
+];
+
+function formatPrice(amount: number, currency: CurrencyCode) {
+  const meta = CURRENCY_META[currency];
+  const formatted = new Intl.NumberFormat(meta.locale, {
+    maximumFractionDigits: 0,
+  }).format(amount);
+  return { symbol: meta.symbol, formatted, suffix: meta.suffix };
+}
+
+interface PricingSectionProps {
+  onCtaClick?: () => void;
+}
+
+export function PricingSection({ onCtaClick }: PricingSectionProps) {
+  const currency = useMemo(() => detectCurrency(), []);
+
+  return (
+    <section id="paquetes" className="relative py-24 sm:py-32 px-6 sm:px-10 bg-black overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none opacity-60"
+        style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,113,227,0.25) 0%, transparent 70%)' }}
+      />
+      <div className="max-w-6xl mx-auto relative z-10">
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <p className="text-sm font-semibold text-[#2997ff] mb-3 flex items-center justify-center gap-1.5">
+            <Sparkles size={14} /> Paquetes de Transformación Digital
+          </p>
+          <RevealHeading className="text-4xl sm:text-6xl font-semibold text-white leading-tight mb-4 tracking-tight">
+            Elige el nivel que necesita tu operación
+          </RevealHeading>
+          <p className="text-[#86868b] text-lg sm:text-xl font-normal">
+            Desde un rediseño web hasta agentes de IA operando tus procesos. Precios en{' '}
+            {currency === 'EUR' ? 'euros' : currency === 'USD' ? 'dólares' : 'pesos colombianos'}.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+          {PRICING_PLANS.map((plan, idx) => {
+            const Icon = plan.icon;
+            const price = formatPrice(plan.amounts[currency], currency);
+            return (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className={`relative flex flex-col rounded-3xl p-8 sm:p-9 ${
+                  plan.highlight
+                    ? 'bg-gradient-to-b from-[#0071e3] to-[#0058b3] text-white shadow-[0_30px_60px_-15px_rgba(0,113,227,0.5)] md:-translate-y-3'
+                    : 'bg-white/[0.04] border border-white/10 text-white'
+                }`}
+              >
+                {plan.highlight && (
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-1 text-xs font-semibold text-[#0071e3] shadow-md whitespace-nowrap">
+                    Más elegido
+                  </span>
+                )}
+
+                <div className={`mb-6 flex h-12 w-12 items-center justify-center rounded-2xl ${
+                  plan.highlight ? 'bg-white/15' : 'bg-[#0071e3]/15 text-[#2997ff]'
+                }`}>
+                  <Icon className="h-5 w-5" strokeWidth={1.75} />
+                </div>
+
+                <h3 className="text-2xl font-semibold tracking-tight mb-1">{plan.name}</h3>
+                <p className={`text-sm font-medium mb-6 ${plan.highlight ? 'text-white/80' : 'text-[#86868b]'}`}>
+                  {plan.tagline}
+                </p>
+
+                <div className="mb-8 flex items-baseline gap-1.5">
+                  <span className="text-4xl sm:text-5xl font-semibold tracking-tight">
+                    {price.symbol}{price.formatted}
+                  </span>
+                  {price.suffix && (
+                    <span className={`text-sm font-semibold ${plan.highlight ? 'text-white/70' : 'text-[#86868b]'}`}>
+                      {price.suffix}
+                    </span>
+                  )}
+                </div>
+
+                <ul className="flex-1 space-y-3 mb-8">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5 text-sm leading-relaxed">
+                      <CheckCircle2
+                        size={16}
+                        className={`mt-0.5 shrink-0 ${plan.highlight ? 'text-white' : 'text-[#0071e3]'}`}
+                      />
+                      <span className={plan.highlight ? 'text-white/95' : 'text-[#d2d2d7]'}>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={onCtaClick}
+                  className={`flex h-11 items-center justify-center gap-1 rounded-full px-6 text-base font-medium transition-colors duration-200 ${
+                    plan.highlight
+                      ? 'bg-white text-[#0071e3] hover:bg-white/90'
+                      : 'bg-white/10 text-white hover:bg-white/15'
+                  }`}
+                >
+                  {plan.cta} <ChevronRight size={16} />
+                </button>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <p className="text-center text-xs text-[#86868b] mt-10">
+          Precios estimados de referencia; el alcance final se ajusta a un diagnóstico previo sin costo.
+        </p>
       </div>
     </section>
   );

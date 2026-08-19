@@ -5,7 +5,7 @@ import { LMSHero } from '../components/LMSHero';
 import { CourseGrid } from '../components/CourseGrid';
 import { FeaturesLMS } from '../components/FeaturesLMS';
 import { CategoriesSection, ProcessSection, TestimonialsSection, FinalCTA } from '../components/AcademiaSections';
-import { ConsultingBanner, ConsultingHero, ConsultingServicesSection, MethodologySection, CaseStudiesSection, ConsultingCTA } from '../components/ConsultingSections';
+import { ConsultingBanner, ConsultingHero, ConsultingServicesSection, PricingSection, MethodologySection, CaseStudiesSection, ConsultingCTA } from '../components/ConsultingSections';
 import AuthPage from './AuthPage';
 import { ScrollProgressBar } from '../components/effects/ScrollProgressBar';
 import { CursorSpotlight } from '../components/effects/CursorSpotlight';
@@ -51,6 +51,7 @@ export default function LandingPage() {
           <>
             <ConsultingHero onCtaClick={openAuth} />
             <ConsultingServicesSection />
+            <PricingSection onCtaClick={openAuth} />
             <MethodologySection />
             <CaseStudiesSection />
             <ConsultingCTA onCtaClick={openAuth} />
