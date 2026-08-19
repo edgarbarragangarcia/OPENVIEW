@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import {
   Brain, Globe, Workflow, ChevronRight, CheckCircle2,
   Target, Search, Rocket, TrendingUp, Building2, Quote,
-  Sparkles, Layout, Bot, Zap,
+  Sparkles, LayoutTemplate, BrainCircuit, GitBranch,
 } from 'lucide-react';
 import { useRef, useMemo } from 'react';
 import { RevealHeading } from './effects/RevealHeading';
@@ -234,7 +234,7 @@ const PRICING_PLANS: {
   id: string;
   name: string;
   tagline: string;
-  icon: typeof Layout;
+  icon: typeof LayoutTemplate;
   amounts: Record<CurrencyCode, number>;
   features: string[];
   highlight?: boolean;
@@ -244,7 +244,7 @@ const PRICING_PLANS: {
     id: 'basico',
     name: 'Básico',
     tagline: 'Renueva tu presencia web',
-    icon: Layout,
+    icon: LayoutTemplate,
     amounts: { EUR: 2000, USD: 2190, COP: 8900000 },
     features: [
       'Rediseño completo de tu página web',
@@ -259,7 +259,7 @@ const PRICING_PLANS: {
     id: 'intermedio',
     name: 'Intermedio',
     tagline: 'Digitaliza tus procesos clave',
-    icon: Zap,
+    icon: GitBranch,
     amounts: { EUR: 2750, USD: 3010, COP: 12200000 },
     features: [
       'Todo lo del paquete Básico',
@@ -276,7 +276,7 @@ const PRICING_PLANS: {
     id: 'premium',
     name: 'Premium',
     tagline: 'Transformación digital con agentes de IA',
-    icon: Bot,
+    icon: BrainCircuit,
     amounts: { EUR: 3500, USD: 3830, COP: 15500000 },
     features: [
       'Todo lo del paquete Intermedio',
@@ -348,10 +348,20 @@ export function PricingSection({ onCtaClick }: PricingSectionProps) {
                   </span>
                 )}
 
-                <div className={`mb-6 flex h-12 w-12 items-center justify-center rounded-2xl ${
-                  plan.highlight ? 'bg-white/15' : 'bg-[#0071e3]/15 text-[#2997ff]'
-                }`}>
-                  <Icon className="h-5 w-5" strokeWidth={1.75} />
+                <div
+                  className={`relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${
+                    plan.highlight
+                      ? 'bg-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]'
+                      : 'bg-gradient-to-br from-[#0071e3]/25 to-[#5e5ce6]/10 text-[#2997ff] ring-1 ring-white/10'
+                  }`}
+                >
+                  <div
+                    aria-hidden
+                    className={`absolute inset-0 rounded-2xl blur-md opacity-60 -z-10 ${
+                      plan.highlight ? 'bg-white/20' : 'bg-[#0071e3]/30'
+                    }`}
+                  />
+                  <Icon className="h-7 w-7" strokeWidth={1.5} />
                 </div>
 
                 <h3 className="text-2xl font-semibold tracking-tight mb-1">{plan.name}</h3>
